@@ -31,21 +31,7 @@ type eventStreamStoreType struct {
 }
 
 var eventStreamStore = &eventStreamStoreType{
-	streams: map[string][]EventStream{
-		"buyvm": {
-			{ID: newID(), Name: "user-activity", Engine: "Apache Kafka", Partitions: 32, Replication: 3, Throughput: "45,000 events/s", Consumers: "analytics, ml-pipeline, audit", Retention: "7 days", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "order-events", Engine: "Apache Kafka", Partitions: 16, Replication: 3, Throughput: "12,000 events/s", Consumers: "fulfillment, billing, notifications", Retention: "14 days", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "infrastructure-events", Engine: "Apache Pulsar", Partitions: 8, Replication: 2, Throughput: "8,500 events/s", Consumers: "monitoring, alerting", Retention: "3 days", Status: "active", Updated: "2026-04-13"},
-			{ID: newID(), Name: "clickstream", Engine: "Amazon Kinesis", Partitions: 24, Replication: 3, Throughput: "95,000 events/s", Consumers: "analytics, personalization", Retention: "24 hours", Status: "active", Updated: "2026-04-11"},
-			{ID: newID(), Name: "change-data-capture", Engine: "Apache Kafka + Debezium", Partitions: 12, Replication: 3, Throughput: "6,200 events/s", Consumers: "search-indexer, cache-invalidator", Retention: "3 days", Status: "active", Updated: "2026-04-08"},
-			{ID: newID(), Name: "legacy-event-bus", Engine: "Redis Streams", Partitions: 1, Replication: 1, Throughput: "850 events/s", Consumers: "legacy-consumer", Retention: "1 day", Status: "deprecated", Updated: "2025-10-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-events", Engine: "Apache Kafka", Partitions: 24, Replication: 3, Throughput: "28,000 events/s", Consumers: "billing, monitoring, audit", Retention: "7 days", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "cdn-access-stream", Engine: "Amazon Kinesis", Partitions: 16, Replication: 2, Throughput: "120,000 events/s", Consumers: "analytics, abuse-detection", Retention: "24 hours", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "provisioning-events", Engine: "Apache Kafka", Partitions: 8, Replication: 3, Throughput: "3,400 events/s", Consumers: "orchestrator, billing, notifications", Retention: "14 days", Status: "active", Updated: "2026-04-06"},
-		},
-	},
+	streams: map[string][]EventStream{},
 }
 
 func (s *eventStreamStoreType) list(slug string) []EventStream {

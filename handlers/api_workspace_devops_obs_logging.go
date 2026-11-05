@@ -30,22 +30,7 @@ type logPipelineStoreType struct {
 }
 
 var logPipelineStore = &logPipelineStoreType{
-	pipelines: map[string][]LogPipeline{
-		"buyvm": {
-			{ID: newID(), Name: "Application Logs", Source: "Kubernetes pods", Format: "JSON structured", Storage: "Elasticsearch", Retention: "30 days", Volume: "2.4 TB/day", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Access Logs", Source: "Nginx ingress", Format: "Combined log", Storage: "Elasticsearch", Retention: "90 days", Volume: "850 GB/day", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Audit Trail", Source: "API Gateway", Format: "JSON structured", Storage: "S3 + Athena", Retention: "365 days", Volume: "120 GB/day", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Security Events", Source: "WAF / IDS", Format: "CEF", Storage: "Splunk", Retention: "180 days", Volume: "340 GB/day", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "Database Slow Queries", Source: "PostgreSQL", Format: "Plain text", Storage: "Loki", Retention: "14 days", Volume: "8 GB/day", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Legacy Syslog", Source: "Bare metal hosts", Format: "Syslog RFC5424", Storage: "Local disk", Retention: "7 days", Volume: "45 GB/day", Status: "deprecated", Updated: "2025-10-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Platform Logs", Source: "Kubernetes pods", Format: "JSON structured", Storage: "Loki", Retention: "30 days", Volume: "1.8 TB/day", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "CDN Access Logs", Source: "Edge nodes", Format: "W3C extended", Storage: "BigQuery", Retention: "60 days", Volume: "3.2 TB/day", Status: "active", Updated: "2026-04-08"},
-			{ID: newID(), Name: "CI/CD Pipeline Logs", Source: "Build agents", Format: "JSON structured", Storage: "Elasticsearch", Retention: "14 days", Volume: "95 GB/day", Status: "active", Updated: "2026-04-05"},
-			{ID: newID(), Name: "Billing Events", Source: "Billing service", Format: "JSON structured", Storage: "S3 + Athena", Retention: "365 days", Volume: "12 GB/day", Status: "active", Updated: "2026-03-30"},
-		},
-	},
+	pipelines: map[string][]LogPipeline{},
 }
 
 func (s *logPipelineStoreType) list(slug string) []LogPipeline {

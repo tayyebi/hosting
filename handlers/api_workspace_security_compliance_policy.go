@@ -29,20 +29,7 @@ type compliancePolicyStoreType struct {
 }
 
 var compliancePolicyStore = &compliancePolicyStoreType{
-	policies: map[string][]CompliancePolicy{
-		"buyvm": {
-			{ID: newID(), Name: "Require encryption at rest", Framework: "SOC 2", Scope: "All storage", Enforcement: "deny", Status: "active", Violations: "0", Updated: "2026-01-05"},
-			{ID: newID(), Name: "No public S3 buckets", Framework: "CIS Benchmark", Scope: "Object storage", Enforcement: "deny", Status: "active", Violations: "2", Updated: "2026-01-10"},
-			{ID: newID(), Name: "MFA required for admins", Framework: "ISO 27001", Scope: "IAM", Enforcement: "deny", Status: "active", Violations: "0", Updated: "2025-12-15"},
-			{ID: newID(), Name: "Tag all resources", Framework: "Internal", Scope: "All resources", Enforcement: "warn", Status: "active", Violations: "18", Updated: "2026-02-01"},
-			{ID: newID(), Name: "Restrict region to EU", Framework: "GDPR", Scope: "Compute, Storage", Enforcement: "deny", Status: "active", Violations: "0", Updated: "2025-11-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Encryption in transit required", Framework: "PCI DSS", Scope: "Networking", Enforcement: "deny", Status: "active", Violations: "0", Updated: "2026-01-18"},
-			{ID: newID(), Name: "Password rotation 90d", Framework: "SOC 2", Scope: "IAM", Enforcement: "warn", Status: "active", Violations: "5", Updated: "2026-02-10"},
-			{ID: newID(), Name: "No root account usage", Framework: "CIS Benchmark", Scope: "IAM", Enforcement: "deny", Status: "active", Violations: "1", Updated: "2026-01-25"},
-		},
-	},
+	policies: map[string][]CompliancePolicy{},
 }
 
 func (s *compliancePolicyStoreType) list(slug string) []CompliancePolicy {

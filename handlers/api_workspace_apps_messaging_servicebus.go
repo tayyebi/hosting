@@ -30,20 +30,7 @@ type serviceBusStoreType struct {
 }
 
 var serviceBusStore = &serviceBusStoreType{
-	buses: map[string][]ServiceBus{
-		"buyvm": {
-			{ID: newID(), Name: "production-bus", Tier: "Premium", Namespaces: 4, Topics: 28, Subscriptions: 96, Throughput: "18,000 msg/s", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "staging-bus", Tier: "Standard", Namespaces: 2, Topics: 28, Subscriptions: 56, Throughput: "2,400 msg/s", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "integration-bus", Tier: "Premium", Namespaces: 3, Topics: 15, Subscriptions: 42, Throughput: "5,600 msg/s", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "analytics-bus", Tier: "Standard", Namespaces: 1, Topics: 8, Subscriptions: 24, Throughput: "9,200 msg/s", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "legacy-esb", Tier: "Basic", Namespaces: 1, Topics: 5, Subscriptions: 10, Throughput: "320 msg/s", Status: "deprecated", Updated: "2025-09-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-bus", Tier: "Premium", Namespaces: 3, Topics: 22, Subscriptions: 68, Throughput: "14,000 msg/s", Status: "active", Updated: "2026-04-13"},
-			{ID: newID(), Name: "partner-integration-bus", Tier: "Standard", Namespaces: 2, Topics: 12, Subscriptions: 36, Throughput: "3,800 msg/s", Status: "active", Updated: "2026-04-08"},
-			{ID: newID(), Name: "internal-events-bus", Tier: "Standard", Namespaces: 1, Topics: 18, Subscriptions: 45, Throughput: "7,200 msg/s", Status: "active", Updated: "2026-04-04"},
-		},
-	},
+	buses: map[string][]ServiceBus{},
 }
 
 func (s *serviceBusStoreType) list(slug string) []ServiceBus {

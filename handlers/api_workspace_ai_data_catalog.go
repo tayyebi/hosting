@@ -13,13 +13,13 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type CatalogAsset struct {
-	ID     string
-	Name   string
-	Source string
-	Owner  string
-	Type   string
-	PII    string
-	Tags   string
+	ID      string
+	Name    string
+	Source  string
+	Owner   string
+	Type    string
+	PII     string
+	Tags    string
 	Updated string
 	Columns int
 	Region  string
@@ -31,19 +31,7 @@ type catalogAssetStoreType struct {
 }
 
 var catalogAssetStore = &catalogAssetStoreType{
-	assets: map[string][]CatalogAsset{
-		"buyvm": {
-			{ID: newID(), Name: "dim_user", Source: "Snowflake", Owner: "data-team@", Type: "table", PII: "pii_present", Tags: "user, demographics", Updated: "2026-04-17 08:12 UTC", Columns: 42, Region: "eu-central-1"},
-			{ID: newID(), Name: "fact_orders", Source: "Snowflake", Owner: "fin-team@", Type: "table", PII: "pseudonymised", Tags: "orders, finance", Updated: "2026-04-16 20:00 UTC", Columns: 28, Region: "eu-central-1"},
-			{ID: newID(), Name: "events_clickstream", Source: "ClickHouse", Owner: "growth-team@", Type: "table", PII: "no_pii", Tags: "events, clickstream", Updated: "2026-04-17 09:08 UTC", Columns: 18, Region: "eu-central-1"},
-			{ID: newID(), Name: "ml_features.user_v3", Source: "Feature store", Owner: "ml-team@", Type: "feature_group", PII: "pseudonymised", Tags: "ml, features", Updated: "2026-04-17 01:00 UTC", Columns: 64, Region: "us-east-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "raw_transactions", Source: "PostgreSQL", Owner: "data-eng@", Type: "table", PII: "pii_present", Tags: "transactions, raw", Updated: "2026-04-17 07:00 UTC", Columns: 34, Region: "ap-south-1"},
-			{ID: newID(), Name: "agg_daily_revenue", Source: "Redshift", Owner: "analytics@", Type: "view", PII: "no_pii", Tags: "revenue, aggregated", Updated: "2026-04-17 06:00 UTC", Columns: 12, Region: "ap-south-1"},
-			{ID: newID(), Name: "customer_profiles", Source: "DynamoDB", Owner: "crm-team@", Type: "table", PII: "pii_present", Tags: "customers, profiles", Updated: "2026-04-16 18:30 UTC", Columns: 22, Region: "ap-south-1"},
-		},
-	},
+	assets: map[string][]CatalogAsset{},
 }
 
 func (s *catalogAssetStoreType) list(slug string) []CatalogAsset {

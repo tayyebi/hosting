@@ -31,20 +31,7 @@ type modelRegistryStoreType struct {
 }
 
 var modelRegistryStore = &modelRegistryStoreType{
-	models: map[string][]ModelRegistryEntry{
-		"buyvm": {
-			{ID: newID(), Name: "acme-recommender", Stage: "production", Version: "v3.2", Owner: "growth-team", Format: "ONNX", Size: "1.2 GB", LastUsed: "12s ago", Created: "2026-04-10", Region: "eu-central-1"},
-			{ID: newID(), Name: "churn-pred", Stage: "staging", Version: "v2.0", Owner: "data-team", Format: "XGBoost", Size: "84 MB", LastUsed: "2h ago", Created: "2026-04-08", Region: "eu-central-1"},
-			{ID: newID(), Name: "llm-acme-v4", Stage: "production", Version: "v4.0", Owner: "ml-team", Format: "SafeTensors", Size: "14.2 GB", LastUsed: "1m ago", Created: "2026-04-14", Region: "eu-central-1"},
-			{ID: newID(), Name: "legacy-rules-v1", Stage: "archived", Version: "v1.0", Owner: "—", Format: "Pickle", Size: "12 MB", LastUsed: "284d ago", Created: "2025-07-01", Region: "us-east-1"},
-			{ID: newID(), Name: "vision-defect-v2", Stage: "production", Version: "v2.1", Owner: "cv-team", Format: "TorchScript", Size: "420 MB", LastUsed: "4m ago", Created: "2026-04-12", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "fraud-classifier", Stage: "production", Version: "v5.0", Owner: "security-team", Format: "ONNX", Size: "280 MB", LastUsed: "30s ago", Created: "2026-04-13", Region: "ap-south-1"},
-			{ID: newID(), Name: "price-optimizer", Stage: "staging", Version: "v1.2", Owner: "pricing-team", Format: "LightGBM", Size: "48 MB", LastUsed: "1h ago", Created: "2026-04-15", Region: "ap-south-1"},
-			{ID: newID(), Name: "embedding-model", Stage: "production", Version: "v2.0", Owner: "ml-team", Format: "SafeTensors", Size: "2.4 GB", LastUsed: "8s ago", Created: "2026-04-06", Region: "ap-south-1"},
-		},
-	},
+	models: map[string][]ModelRegistryEntry{},
 }
 
 func (s *modelRegistryStoreType) list(slug string) []ModelRegistryEntry {

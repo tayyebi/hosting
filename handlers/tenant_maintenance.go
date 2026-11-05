@@ -40,21 +40,7 @@ type maintenanceStoreType struct {
 }
 
 var maintenanceStore = &maintenanceStoreType{
-	windows: map[string][]MaintenanceWin{
-		"buyvm": {
-			{ID: newID(), RefNum: "CHG-0147", Title: "PostgreSQL 14 → 16 major upgrade", Description: "blue-green · logical replication cutover · approved by CAB 2026-04-13", Affected: "pg-primary-fra1 · pg-replica-fra1a", WindowLabel: "Nov 17 · 02:00 – 04:00", Risk: "high", Status: "scheduled", Rollback: "Promote old primary (≤ 8 min)", Created: "2026-04-13T00:00:00Z", Updated: "2026-04-13T00:00:00Z"},
-			{ID: newID(), RefNum: "CHG-0149", Title: "CDN edge fleet rotation (32 PoPs)", Description: "canary → 10% → 50% → 100% · auto-rollback on 5xx > 0.5%", Affected: "edge-* (global)", WindowLabel: "Nov 20 · 00:00 – 01:00", Risk: "low", Status: "scheduled", Rollback: "Pin previous AMI (instant)", Created: "2026-04-14T00:00:00Z", Updated: "2026-04-14T00:00:00Z"},
-			{ID: newID(), RefNum: "CHG-0151", Title: "API rate-limit config rollout (v2 token bucket)", Description: "config-only · feature-flagged · no restart required", Affected: "api-gateway · 14 pods", WindowLabel: "Nov 10 · 03:00 – 03:30", Risk: "low", Status: "completed", Rollback: "Flip flag to v1 (≤ 30s)", Created: "2026-04-10T03:00:00Z", Updated: "2026-04-10T03:32:00Z"},
-			{ID: newID(), RefNum: "CHG-0144", Title: "TLS cert renewal (Let's Encrypt, 12 SANs)", Description: "zero-downtime reload · cert-manager automated", Affected: "dashboard.* · api.*", WindowLabel: "Nov 05 · 01:00 – 01:15", Risk: "low", Status: "completed", Rollback: "Previous cert pinned (auto)", Created: "2026-04-05T01:00:00Z", Updated: "2026-04-05T01:12:00Z"},
-			{ID: newID(), RefNum: "CHG-0138", Title: "Ceph OSD rebalance (add 6 × 7.68 TB NVMe)", Description: "Cancelled — held for pg 14→16 completion, then re-plan", Affected: "ceph-osd-* (fra1)", WindowLabel: "Oct 28 · 02:00 – 05:00", Risk: "medium", Status: "cancelled", Rollback: "N/A (cancelled)", Created: "2026-04-01T00:00:00Z", Updated: "2026-04-08T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), RefNum: "CHG-0022", Title: "Network switch firmware upgrade", Description: "Staggered per-rack, < 5s failover per switch", Affected: "core-sw-01, core-sw-02", WindowLabel: "Nov 12 · 01:00 – 03:00", Risk: "medium", Status: "scheduled", Rollback: "Revert to previous firmware", Created: "2026-04-12T00:00:00Z", Updated: "2026-04-12T00:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), RefNum: "CHG-0088", Title: "Kubernetes control plane upgrade 1.28 → 1.30", Description: "Rolling upgrade, drain workers before upgrade", Affected: "k8s-master-01, k8s-worker-01", WindowLabel: "Nov 15 · 02:00 – 05:00", Risk: "high", Status: "scheduled", Rollback: "Downgrade via etcd snapshot", Created: "2026-04-15T00:00:00Z", Updated: "2026-04-15T00:00:00Z"},
-		},
-	},
+	windows: map[string][]MaintenanceWin{},
 }
 
 func (s *maintenanceStoreType) list(slug string) []MaintenanceWin {

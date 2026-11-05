@@ -33,18 +33,7 @@ type netLBAppStoreType struct {
 }
 
 var netLBAppStore = &netLBAppStoreType{
-	instances: map[string][]NetLBApp{
-		"buyvm": {
-			{ID: newID(), Name: "prod-web-alb", Scheme: "internet-facing", Protocol: "HTTPS", Port: 443, Region: "eu-central-1", Status: "active", Targets: 12, HealthCheck: "/health", SSLARN: "arn:ssl:cert-0a1b2c3d", WAF: true, RPS: 24500},
-			{ID: newID(), Name: "prod-api-alb", Scheme: "internet-facing", Protocol: "HTTPS", Port: 443, Region: "eu-central-1", Status: "active", Targets: 8, HealthCheck: "/api/health", SSLARN: "arn:ssl:cert-1b2c3d4e", WAF: true, RPS: 18200},
-			{ID: newID(), Name: "staging-alb", Scheme: "internal", Protocol: "HTTP", Port: 80, Region: "eu-central-1", Status: "active", Targets: 4, HealthCheck: "/health", SSLARN: "", WAF: false, RPS: 1200},
-			{ID: newID(), Name: "us-web-alb", Scheme: "internet-facing", Protocol: "HTTPS", Port: 443, Region: "us-east-1", Status: "active", Targets: 6, HealthCheck: "/health", SSLARN: "arn:ssl:cert-2c3d4e5f", WAF: true, RPS: 15800},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-alb", Scheme: "internet-facing", Protocol: "HTTPS", Port: 443, Region: "ap-south-1", Status: "active", Targets: 10, HealthCheck: "/ping", SSLARN: "arn:ssl:cert-5f6a7b8c", WAF: true, RPS: 31200},
-			{ID: newID(), Name: "internal-alb", Scheme: "internal", Protocol: "HTTP", Port: 8080, Region: "ap-south-1", Status: "active", Targets: 6, HealthCheck: "/status", SSLARN: "", WAF: false, RPS: 8400},
-		},
-	},
+	instances: map[string][]NetLBApp{},
 }
 
 func (s *netLBAppStoreType) list(slug string) []NetLBApp {
@@ -198,7 +187,7 @@ func apiWSNetLBAppCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Region: region, Status: "provisioning",
 		Targets: 0, HealthCheck: hc,
 		SSLARN: strings.TrimSpace(req.SSLARN),
-		WAF: req.WAF, RPS: 0,
+		WAF:    req.WAF, RPS: 0,
 	}
 	netLBAppStore.add(slug, inst)
 	apiCreated(w, toAPINetLBApp(inst))

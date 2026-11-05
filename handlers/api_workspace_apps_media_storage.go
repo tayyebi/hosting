@@ -31,22 +31,7 @@ type mediaAssetStoreType struct {
 }
 
 var mediaAssetStore = &mediaAssetStoreType{
-	assets: map[string][]MediaAsset{
-		"buyvm": {
-			{ID: newID(), Name: "hero-banner-2026.mp4", Type: "Video", Size: "245 MB", Format: "H.264 / MP4", CDN: "Enabled", Downloads: "12,400", Bucket: "media-production", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "product-shots.zip", Type: "Image archive", Size: "1.2 GB", Format: "PNG / ZIP", CDN: "Enabled", Downloads: "3,200", Bucket: "media-production", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "podcast-ep42.mp3", Type: "Audio", Size: "85 MB", Format: "MP3 320kbps", CDN: "Enabled", Downloads: "8,750", Bucket: "media-production", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "webinar-apr-2026.mp4", Type: "Video", Size: "1.8 GB", Format: "H.265 / MP4", CDN: "Disabled", Downloads: "560", Bucket: "media-archive", Status: "archived", Updated: "2026-04-14"},
-			{ID: newID(), Name: "brand-guidelines.pdf", Type: "Document", Size: "12 MB", Format: "PDF", CDN: "Enabled", Downloads: "1,100", Bucket: "media-production", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "old-promo-2024.mov", Type: "Video", Size: "4.5 GB", Format: "ProRes / MOV", CDN: "Disabled", Downloads: "23", Bucket: "media-archive", Status: "archived", Updated: "2024-12-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-tour.mp4", Type: "Video", Size: "320 MB", Format: "H.264 / MP4", CDN: "Enabled", Downloads: "6,800", Bucket: "hosting-media", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "api-docs-diagrams.svg", Type: "Image", Size: "2.4 MB", Format: "SVG", CDN: "Enabled", Downloads: "15,200", Bucket: "hosting-media", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "customer-stories.mp4", Type: "Video", Size: "890 MB", Format: "H.264 / MP4", CDN: "Enabled", Downloads: "2,100", Bucket: "hosting-media", Status: "active", Updated: "2026-04-13"},
-			{ID: newID(), Name: "conference-recordings-2025.tar", Type: "Video archive", Size: "12.5 GB", Format: "TAR (mixed)", CDN: "Disabled", Downloads: "45", Bucket: "hosting-archive", Status: "archived", Updated: "2025-11-30"},
-		},
-	},
+	assets: map[string][]MediaAsset{},
 }
 
 func (s *mediaAssetStoreType) list(slug string) []MediaAsset {

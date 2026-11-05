@@ -715,3 +715,42 @@
 - [x] Add PATCH /api/sysadmin/tenants/{id} update handler — allows sysadmin to update tenant name and domain (slug is immutable); same validation as create (name ≤100 chars, RFC-1123 domain); writes tenant.updated audit event; registered in handlers/api.go + Swagger spec updated
 - [x] Rate limit workspace creation per user (5/hour) — workspaceCreateRateLimiter (userIDRateLimiter, 5 per hour) added to handlers/rate_limit.go; applied in userWorkspacesCreateHandler before validation with 429 + Retry-After: 3600 on breach
 - [x] Prune expired unaccepted workspace invitations background job — db.PruneExpiredInvitations() deletes user_workspace_invitations where accepted_at IS NULL and expires_at older than 7 days; daily goroutine in main.go alongside sessions and audit_log pruning
+
+# Core Domain Abstractions & First Real Infrastructure Roadmap
+
+## 1. Supply & Provider Layer (Infrastructure Driver Placeholders)
+- [x] Define `SupplyPool` / `HostNode` domain types (`OwnershipType`: `OwnedBareMetal`, `Colocated`, `LeasedServer`, `CloudResellerAPI`, `NestedCluster`; capacity & supply cost attributes) in `providers/`
+- [x] Define `DriverRegistry` / `Provisioner` interfaces in `providers/`:
+  - [x] `ComputeDriver` (`ValidateConnection`, `InspectCapacity`, `BootstrapHost`, `CreateInstance`, `StartInstance`, `StopInstance`, `ResizeInstance`, `SnapshotInstance`, `DeleteInstance`, `ConsoleInfo`)
+  - [x] `HostingDriver` (`CreateAccount`, `BindDomain`, `IssueSSL`, `SetQuota`, `SuspendAccount`, `DeleteAccount`)
+  - [x] `NetworkStorageDriver` (`AllocateIP`, `ReleaseIP`, `BindIP`, `CreateVolume`, `AttachVolume`, `DetachVolume`, `DeleteVolume`)
+- [x] Implement big-picture placeholder drivers in `providers/`:
+  - [x] `QEMULibvirtDriver` (bare-metal / nested Linux KVM+QEMU host driver)
+  - [x] `ProxmoxDriver` (Proxmox VE REST API driver placeholder)
+  - [x] `VMwareVSphereDriver` (vCenter/ESXi SOAP/REST driver placeholder, including nested ESXi)
+  - [x] `UpstreamResellerDriver` (Hetzner / BuyVM / DigitalOcean / AWS / OpenStack API reseller placeholder)
+  - [x] `SharedWebDriver` & `PaaSAppDriver` (shared web hosting & PaaS buildpack/container placeholders)
+  - [x] `IPAMDriver` & `BlockStorageDriver` (IP pool allocation & Ceph/ZFS/LVM/cloud block storage placeholders)
+
+## 2. Unified Resource & Payable Item Layer (Catalog & Billable Tree Placeholders)
+- [x] Define `ProductSKU` catalog model in `catalog/` (`Kind`: `vm`, `ipv4`, `ipv6_subnet`, `block_ssd`, `shared_hosting`, `k8s_node`, `paas_app`, `backup_gb`; `BillingModel`: `RecurringFlat`, `HourlyMetered`, `UsageCounter`, `OneTimeSetup`; `ProvisionTarget` placement rules)
+- [x] Define unified `PayableResource` tree model (`Resource` node with `ParentResourceID` for child/attached payable items such as `ipv4`, `block_nvme`, `snapshot`, `ddos_prot`, plus `ProviderNodeID` and `ExternalRef`)
+- [x] Define `SubscriptionLineItem`, `UsageMeter`, and `CatalogService` placeholder interfaces & implementations in `catalog/`
+
+## 3. Cost-Centric Accounting Layer (COGS, Pricing Engine & Margin Ledger Placeholders)
+- [x] Layer A — `SupplyCostCalculator` (`DirectPassThrough`, `AmortizedHardware`, `SharedOverhead` per host/provider/resource) in `accounting/`
+- [x] Layer B — `PricingEngine` (`SellPrice = f(SupplyCost, Provider, Region, TenantTier, ClientPromo, SLA)` with `CostFloor` guard, provider/region multipliers, platform→tenant wholesale pricing, and tenant→client retail pricing) in `accounting/`
+- [x] Layer C — `MarginLedger` (`CostEvent`, `RevenueEvent`, and `MarginView` computing `GrossMargin = Revenue - SupplyCost - PaymentFee - SLACredit` grouped by Cost Center) in `accounting/`
+
+## 4. Clean Slate — Drop Dummy Data & Keep Only Real Seeders
+- [x] Remove dummy demo seeders from `db/seed.go` (demo tenants `buyvm`/`abrnoc`/`hosting`, fake `system_logs`, fake `background_job_workers`, fake `background_jobs`, fake `replicas`, fake `billing_*` logs/webhooks) and keep only the System Super Administrator seeder (`sysadmin@platform.io`, configurable via env)
+- [x] Purge hardcoded in-memory dummy fixture maps across `handlers/` (`buyvm`/`abrnoc`/`hosting` tenants, fake clients, fake VMs/resources, static mock tables) and wire tenant & workspace resolution directly to PostgreSQL
+- [x] Fix Linux build exclusion bug on `db/maintenance_windows.go` (`_windows.go` Go OS suffix) so the full codebase compiles cleanly across Linux and Windows
+
+## 5. First Real Infrastructure Case — Linux Nested VPS + Auto-Provisioning + Manual IP Pool
+- [x] Add migration `0044_supply_hosts_and_ip_pool` creating `supply_hosts`, `supply_host_ips`, and extending `resources` with `parent_resource_id`, `supply_host_id`, and `external_ref`
+- [x] Implement real `LinuxNestedQEMUDriver` (`providers/linux_nested_qemu.go`) supporting SSH connectivity & hardware/KVM capability probing, automated QEMU/KVM + libvirt virtualization stack installation (`BootstrapHost`), and guest VM creation/deletion with static IP cloud-init configuration
+- [x] Implement `db/supply_hosts.go` for CRUD on supply hosts, auto-provisioning status/log updates, manual bulk/single IP inventory management, and transactional `FOR UPDATE SKIP LOCKED` IP allocation & release
+- [x] Add Sysadmin Infrastructure UI (`/s/infrastructure/`) and REST API (`/api/sysadmin/infrastructure/*`) to onboard a Linux Nested VPS, trigger virtualization stack auto-provisioning, view live provision logs, and manually add/manage assignable IPs on that server
+- [x] Wire customer VM purchase/creation (`CreateComputeVM` & compute API handlers) to schedule onto an active `ready` Linux Nested VPS host, allocate a free IP from that server's manual IP pool as a child payable `resources` item, and invoke the driver
+

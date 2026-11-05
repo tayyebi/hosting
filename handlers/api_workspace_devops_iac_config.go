@@ -13,14 +13,14 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type IaCConfig struct {
-	ID       string
-	Name     string
-	Tool     string
-	Scope    string
-	Targets  string
-	Status   string
-	Version  string
-	Updated  string
+	ID      string
+	Name    string
+	Tool    string
+	Scope   string
+	Targets string
+	Status  string
+	Version string
+	Updated string
 }
 
 type iacConfigStoreType struct {
@@ -29,22 +29,7 @@ type iacConfigStoreType struct {
 }
 
 var iacConfigStore = &iacConfigStoreType{
-	configs: map[string][]IaCConfig{
-		"buyvm": {
-			{ID: newID(), Name: "Web Server Fleet", Tool: "Ansible", Scope: "production", Targets: "48 hosts", Status: "active", Version: "2.4.1", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Database Params", Tool: "Puppet", Scope: "production", Targets: "12 hosts", Status: "active", Version: "1.8.0", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Load Balancer Rules", Tool: "Chef", Scope: "staging", Targets: "6 hosts", Status: "active", Version: "3.1.2", Updated: "2026-03-28"},
-			{ID: newID(), Name: "Firewall Policies", Tool: "Ansible", Scope: "all", Targets: "120 hosts", Status: "active", Version: "1.2.0", Updated: "2026-04-12"},
-			{ID: newID(), Name: "SSL Certificate Rotation", Tool: "SaltStack", Scope: "production", Targets: "96 hosts", Status: "active", Version: "1.0.3", Updated: "2026-04-01"},
-			{ID: newID(), Name: "Legacy App Config", Tool: "Puppet", Scope: "staging", Targets: "8 hosts", Status: "deprecated", Version: "0.9.0", Updated: "2025-11-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Kubernetes Node Config", Tool: "Ansible", Scope: "production", Targets: "32 hosts", Status: "active", Version: "2.1.0", Updated: "2026-04-08"},
-			{ID: newID(), Name: "Nginx Configuration", Tool: "Chef", Scope: "production", Targets: "16 hosts", Status: "active", Version: "1.5.2", Updated: "2026-03-20"},
-			{ID: newID(), Name: "Monitoring Agent Setup", Tool: "Ansible", Scope: "all", Targets: "64 hosts", Status: "active", Version: "1.3.0", Updated: "2026-04-05"},
-			{ID: newID(), Name: "DNS Resolver Config", Tool: "SaltStack", Scope: "production", Targets: "24 hosts", Status: "active", Version: "1.0.1", Updated: "2026-02-28"},
-		},
-	},
+	configs: map[string][]IaCConfig{},
 }
 
 func (s *iacConfigStoreType) list(slug string) []IaCConfig {

@@ -32,20 +32,7 @@ type netVPCStoreType struct {
 }
 
 var netVPCStore = &netVPCStoreType{
-	instances: map[string][]NetVPC{
-		"buyvm": {
-			{ID: newID(), Name: "prod-vpc", CIDR: "10.0.0.0/16", Region: "eu-central-1", Status: "active", Subnets: 8, Instances: 142, Gateway: "igw-0a1b2c3d4e5f", DNS: "enabled", Peerings: 3, Encrypted: true},
-			{ID: newID(), Name: "staging-vpc", CIDR: "10.1.0.0/16", Region: "eu-central-1", Status: "active", Subnets: 4, Instances: 28, Gateway: "igw-1b2c3d4e5f6a", DNS: "enabled", Peerings: 1, Encrypted: true},
-			{ID: newID(), Name: "data-vpc", CIDR: "10.2.0.0/16", Region: "eu-central-1", Status: "active", Subnets: 6, Instances: 64, Gateway: "igw-2c3d4e5f6a7b", DNS: "enabled", Peerings: 2, Encrypted: true},
-			{ID: newID(), Name: "us-prod-vpc", CIDR: "172.16.0.0/16", Region: "us-east-1", Status: "active", Subnets: 6, Instances: 86, Gateway: "igw-3d4e5f6a7b8c", DNS: "enabled", Peerings: 2, Encrypted: true},
-			{ID: newID(), Name: "dev-vpc", CIDR: "10.99.0.0/16", Region: "eu-central-1", Status: "active", Subnets: 2, Instances: 8, Gateway: "igw-4e5f6a7b8c9d", DNS: "enabled", Peerings: 0, Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-vpc", CIDR: "10.0.0.0/16", Region: "ap-south-1", Status: "active", Subnets: 6, Instances: 94, Gateway: "igw-5f6a7b8c9d0e", DNS: "enabled", Peerings: 2, Encrypted: true},
-			{ID: newID(), Name: "backend-vpc", CIDR: "10.1.0.0/16", Region: "ap-south-1", Status: "active", Subnets: 4, Instances: 52, Gateway: "igw-6a7b8c9d0e1f", DNS: "enabled", Peerings: 1, Encrypted: true},
-			{ID: newID(), Name: "isolated-vpc", CIDR: "192.168.0.0/16", Region: "ap-south-1", Status: "active", Subnets: 2, Instances: 12, Gateway: "none", DNS: "disabled", Peerings: 0, Encrypted: true},
-		},
-	},
+	instances: map[string][]NetVPC{},
 }
 
 func (s *netVPCStoreType) list(slug string) []NetVPC {
@@ -186,7 +173,7 @@ func apiWSNetVPCCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Region: region, Status: "provisioning",
 		Subnets: 0, Instances: 0,
 		Gateway: "igw-" + newID()[:12],
-		DNS: dns, Peerings: 0,
+		DNS:     dns, Peerings: 0,
 		Encrypted: req.Encrypted,
 	}
 	netVPCStore.add(slug, inst)

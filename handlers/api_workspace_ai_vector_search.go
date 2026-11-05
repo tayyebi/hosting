@@ -38,21 +38,7 @@ type proVectorCollStoreType struct {
 }
 
 var proVectorCollStore = &proVectorCollStoreType{
-	items: map[string][]ProVectorCollection{
-		"buyvm": {
-			{ID: newID(), Name: "product-embeddings", Dimensions: 1536, VectorCount: 42000000, IndexType: "HNSW", IndexParams: "M=32, efConstruction=200", Metric: "cosine", QueriesPerSec: 1840, AvgLatencyMs: 2.4, Recall10: 97.8, StorageGB: 128.4, Replicas: 3, EmbedModel: "text-embedding-3-large", Region: "us-east-1", CostPerMonth: 420.00, Status: "serving", Updated: "2026-04-18"},
-			{ID: newID(), Name: "support-articles", Dimensions: 768, VectorCount: 2400000, IndexType: "HNSW", IndexParams: "M=16, efConstruction=128", Metric: "cosine", QueriesPerSec: 620, AvgLatencyMs: 1.2, Recall10: 98.4, StorageGB: 4.8, Replicas: 2, EmbedModel: "text-embedding-3-small", Region: "us-east-1", CostPerMonth: 85.00, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "user-profiles", Dimensions: 1536, VectorCount: 18000000, IndexType: "IVF-PQ", IndexParams: "nlist=4096, m=64", Metric: "dotproduct", QueriesPerSec: 1200, AvgLatencyMs: 3.8, Recall10: 94.2, StorageGB: 42.6, Replicas: 2, EmbedModel: "text-embedding-3-large", Region: "us-east-1", CostPerMonth: 240.00, Status: "serving", Updated: "2026-04-16"},
-			{ID: newID(), Name: "code-search", Dimensions: 1024, VectorCount: 64000000, IndexType: "HNSW", IndexParams: "M=48, efConstruction=256", Metric: "cosine", QueriesPerSec: 0, AvgLatencyMs: 0, Recall10: 0, StorageGB: 156.8, Replicas: 3, EmbedModel: "code-search-v2", Region: "us-east-1", CostPerMonth: 380.00, Status: "indexing", Updated: "2026-04-18"},
-			{ID: newID(), Name: "image-features", Dimensions: 512, VectorCount: 1800000, IndexType: "HNSW", IndexParams: "M=16, efConstruction=128", Metric: "cosine", QueriesPerSec: 340, AvgLatencyMs: 0.8, Recall10: 99.1, StorageGB: 2.2, Replicas: 1, EmbedModel: "CLIP-ViT-B/32", Region: "us-east-1", CostPerMonth: 45.00, Status: "serving", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "catalog-semantic", Dimensions: 1536, VectorCount: 280000000, IndexType: "HNSW", IndexParams: "M=64, efConstruction=400", Metric: "cosine", QueriesPerSec: 8400, AvgLatencyMs: 3.2, Recall10: 96.8, StorageGB: 840.0, Replicas: 6, EmbedModel: "text-embedding-3-large", Region: "eu-central-1", CostPerMonth: 2400.00, Status: "serving", Updated: "2026-04-18"},
-			{ID: newID(), Name: "rag-knowledge-base", Dimensions: 1536, VectorCount: 12000000, IndexType: "HNSW", IndexParams: "M=32, efConstruction=200", Metric: "cosine", QueriesPerSec: 2400, AvgLatencyMs: 1.8, Recall10: 98.2, StorageGB: 36.8, Replicas: 3, EmbedModel: "text-embedding-3-large", Region: "eu-central-1", CostPerMonth: 320.00, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "anomaly-detection", Dimensions: 256, VectorCount: 4200000, IndexType: "IVF-Flat", IndexParams: "nlist=2048", Metric: "euclidean", QueriesPerSec: 12000, AvgLatencyMs: 0.6, Recall10: 99.4, StorageGB: 2.8, Replicas: 2, EmbedModel: "custom-autoencoder-v4", Region: "eu-central-1", CostPerMonth: 95.00, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "multimodal-search", Dimensions: 768, VectorCount: 8600000, IndexType: "HNSW", IndexParams: "M=24, efConstruction=160", Metric: "cosine", QueriesPerSec: 1600, AvgLatencyMs: 2.1, Recall10: 97.5, StorageGB: 16.4, Replicas: 2, EmbedModel: "CLIP-ViT-L/14", Region: "us-west-2", CostPerMonth: 180.00, Status: "serving", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]ProVectorCollection{},
 }
 
 func (s *proVectorCollStoreType) list(slug string) []ProVectorCollection {
@@ -210,12 +196,12 @@ func apiWSAIVectorSearchCreateHandler(w http.ResponseWriter, r *http.Request) {
 		ID: newID(), Name: name, Dimensions: dims,
 		VectorCount: 0, IndexType: indexType,
 		IndexParams: "M=32, efConstruction=200",
-		Metric: metric, QueriesPerSec: 0,
+		Metric:      metric, QueriesPerSec: 0,
 		AvgLatencyMs: 0, Recall10: 0,
 		StorageGB: 0, Replicas: 1,
 		EmbedModel: embedModel, Region: region,
 		CostPerMonth: 45.00,
-		Status: "creating", Updated: "2026-04-18",
+		Status:       "creating", Updated: "2026-04-18",
 	}
 	proVectorCollStore.add(slug, coll)
 	apiCreated(w, toAPIProVectorColl(coll))

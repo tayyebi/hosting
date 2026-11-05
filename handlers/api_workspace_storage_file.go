@@ -33,20 +33,7 @@ type nfsShareStoreType struct {
 }
 
 var nfsShareStore = &nfsShareStoreType{
-	shares: map[string][]NFSShare{
-		"buyvm": {
-			{ID: newID(), Name: "home-dirs", Region: "eu-central-1", Status: "active", Protocol: "NFSv4", Size: "2 TB", Used: "1.4 TB", MountPoint: "/mnt/home", AccessCIDR: "10.0.0.0/16"},
-			{ID: newID(), Name: "shared-assets", Region: "eu-central-1", Status: "active", Protocol: "SMB3", Size: "500 GB", Used: "312 GB", MountPoint: "\\\\fs01\\assets", AccessCIDR: "10.0.0.0/16"},
-			{ID: newID(), Name: "build-artifacts", Region: "us-east-1", Status: "active", Protocol: "NFSv4", Size: "1 TB", Used: "680 GB", MountPoint: "/mnt/builds", AccessCIDR: "10.1.0.0/16"},
-			{ID: newID(), Name: "media-render-farm", Region: "eu-central-1", Status: "active", Protocol: "NFSv4", Size: "10 TB", Used: "7.8 TB", MountPoint: "/mnt/renders", AccessCIDR: "10.0.0.0/8"},
-			{ID: newID(), Name: "legacy-smb-share", Region: "eu-central-1", Status: "degraded", Protocol: "SMB2", Size: "200 GB", Used: "198 GB", MountPoint: "\\\\fs02\\legacy", AccessCIDR: "10.0.1.0/24"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "dev-workspace", Region: "ap-south-1", Status: "active", Protocol: "NFSv4", Size: "500 GB", Used: "120 GB", MountPoint: "/mnt/devws", AccessCIDR: "172.16.0.0/12"},
-			{ID: newID(), Name: "windows-profiles", Region: "ap-south-1", Status: "active", Protocol: "SMB3", Size: "200 GB", Used: "85 GB", MountPoint: "\\\\fs01\\profiles", AccessCIDR: "172.16.0.0/12"},
-			{ID: newID(), Name: "data-staging", Region: "ap-south-1", Status: "active", Protocol: "NFSv4", Size: "1 TB", Used: "340 GB", MountPoint: "/mnt/staging", AccessCIDR: "172.16.0.0/12"},
-		},
-	},
+	shares: map[string][]NFSShare{},
 }
 
 func (s *nfsShareStoreType) list(slug string) []NFSShare {
@@ -226,16 +213,16 @@ func apiWSStorageFileNFSDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ═══════════════════════════════════════════════════════════════
 
 type DistributedFS struct {
-	ID         string
-	Name       string
-	Region     string
-	Status     string
-	Type       string
-	Capacity   string
-	Used       string
-	Nodes      int
+	ID          string
+	Name        string
+	Region      string
+	Status      string
+	Type        string
+	Capacity    string
+	Used        string
+	Nodes       int
 	Replication int
-	MountPoint string
+	MountPoint  string
 }
 
 type distributedFSStoreType struct {
@@ -244,19 +231,7 @@ type distributedFSStoreType struct {
 }
 
 var distributedFSStore = &distributedFSStoreType{
-	filesystems: map[string][]DistributedFS{
-		"buyvm": {
-			{ID: newID(), Name: "hadoop-cluster-main", Region: "eu-central-1", Status: "active", Type: "HDFS", Capacity: "100 TB", Used: "72 TB", Nodes: 12, Replication: 3, MountPoint: "hdfs://namenode:8020/"},
-			{ID: newID(), Name: "ceph-prod", Region: "eu-central-1", Status: "active", Type: "CephFS", Capacity: "50 TB", Used: "31 TB", Nodes: 8, Replication: 3, MountPoint: "/mnt/cephfs"},
-			{ID: newID(), Name: "gluster-media", Region: "us-east-1", Status: "active", Type: "GlusterFS", Capacity: "20 TB", Used: "14.2 TB", Nodes: 6, Replication: 2, MountPoint: "/mnt/gluster/media"},
-			{ID: newID(), Name: "lustre-hpc", Region: "eu-central-1", Status: "active", Type: "Lustre", Capacity: "200 TB", Used: "145 TB", Nodes: 24, Replication: 2, MountPoint: "/mnt/lustre"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "ceph-shared", Region: "ap-south-1", Status: "active", Type: "CephFS", Capacity: "10 TB", Used: "4.8 TB", Nodes: 4, Replication: 3, MountPoint: "/mnt/cephfs"},
-			{ID: newID(), Name: "minio-datalake", Region: "ap-south-1", Status: "active", Type: "MinIO", Capacity: "30 TB", Used: "18 TB", Nodes: 6, Replication: 2, MountPoint: "s3://minio.internal/"},
-			{ID: newID(), Name: "gluster-dev", Region: "ap-south-1", Status: "degraded", Type: "GlusterFS", Capacity: "5 TB", Used: "4.1 TB", Nodes: 3, Replication: 2, MountPoint: "/mnt/gluster/dev"},
-		},
-	},
+	filesystems: map[string][]DistributedFS{},
 }
 
 func (s *distributedFSStoreType) list(slug string) []DistributedFS {

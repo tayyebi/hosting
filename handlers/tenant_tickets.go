@@ -34,25 +34,7 @@ type ticketStoreType struct {
 }
 
 var ticketStore = &ticketStoreType{
-	tickets: map[string][]Ticket{
-		"buyvm": {
-			{ID: newID(), Subject: "Server unreachable after reboot", Client: "james@acme.io", Status: "open", Priority: "high", Created: "2026-04-15T10:30:00Z", Updated: "2026-04-15T14:20:00Z"},
-			{ID: newID(), Subject: "Billing discrepancy on invoice #4021", Client: "sara@techblue.com", Status: "in-progress", Priority: "medium", Created: "2026-04-14T08:15:00Z", Updated: "2026-04-15T09:00:00Z"},
-			{ID: newID(), Subject: "Request for additional IP allocation", Client: "lena@bauerhosts.de", Status: "resolved", Priority: "low", Created: "2026-04-12T16:45:00Z", Updated: "2026-04-13T11:30:00Z"},
-			{ID: newID(), Subject: "DDoS attack on VPS node", Client: "omar@khalid.dev", Status: "closed", Priority: "critical", Created: "2026-04-10T02:00:00Z", Updated: "2026-04-11T18:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Subject: "DNS propagation delay", Client: "priya@infranow.in", Status: "open", Priority: "medium", Created: "2026-04-16T09:00:00Z", Updated: "2026-04-16T09:00:00Z"},
-			{ID: newID(), Subject: "SSL certificate renewal failed", Client: "tom@fischer.eu", Status: "in-progress", Priority: "high", Created: "2026-04-15T14:00:00Z", Updated: "2026-04-16T10:30:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Subject: "Kubernetes pod crash loop", Client: "alice@monroe.io", Status: "open", Priority: "critical", Created: "2026-04-17T06:00:00Z", Updated: "2026-04-17T08:45:00Z"},
-			{ID: newID(), Subject: "Cannot access control panel", Client: "ben@okonkwo.ng", Status: "open", Priority: "high", Created: "2026-04-16T22:00:00Z", Updated: "2026-04-17T01:15:00Z"},
-			{ID: newID(), Subject: "Slow disk I/O on SSD volume", Client: "chloe@martindev.fr", Status: "in-progress", Priority: "medium", Created: "2026-04-15T11:00:00Z", Updated: "2026-04-16T15:00:00Z"},
-			{ID: newID(), Subject: "Feature request: automated backups", Client: "elena@popov.ru", Status: "closed", Priority: "low", Created: "2026-04-10T07:00:00Z", Updated: "2026-04-12T09:30:00Z"},
-			{ID: newID(), Subject: "Network latency spike EU region", Client: "faisal@alamin.sa", Status: "resolved", Priority: "high", Created: "2026-04-13T19:00:00Z", Updated: "2026-04-14T12:00:00Z"},
-		},
-	},
+	tickets: map[string][]Ticket{},
 }
 
 func (s *ticketStoreType) list(slug string) []Ticket {

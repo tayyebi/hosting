@@ -37,21 +37,7 @@ type proBlockVolumeStoreType struct {
 }
 
 var proBlockVolumeStore = &proBlockVolumeStoreType{
-	items: map[string][]ProBlockVolume{
-		"buyvm": {
-			{ID: newID(), Name: "db-primary-data", SizeGB: 500, UsedGB: 342, VolumeType: "NVMe SSD (io2)", IOPS: 16000, ThroughputMB: 500, AttachedTo: "db-primary-01", MountPoint: "/data/postgres", Encrypted: true, SnapshotID: "snap-2026041700", Region: "us-east-1", AZ: "us-east-1a", CostPerMonth: 75.00, Status: "in_use", Updated: "2026-04-18"},
-			{ID: newID(), Name: "db-replica-data", SizeGB: 500, UsedGB: 340, VolumeType: "NVMe SSD (io2)", IOPS: 16000, ThroughputMB: 500, AttachedTo: "db-replica-01", MountPoint: "/data/postgres", Encrypted: true, SnapshotID: "snap-2026041700", Region: "us-east-1", AZ: "us-east-1b", CostPerMonth: 75.00, Status: "in_use", Updated: "2026-04-18"},
-			{ID: newID(), Name: "app-logs", SizeGB: 200, UsedGB: 148, VolumeType: "SSD (gp3)", IOPS: 3000, ThroughputMB: 125, AttachedTo: "log-collector-01", MountPoint: "/var/log/app", Encrypted: true, SnapshotID: "snap-2026041600", Region: "us-east-1", AZ: "us-east-1a", CostPerMonth: 16.00, Status: "in_use", Updated: "2026-04-17"},
-			{ID: newID(), Name: "backup-staging", SizeGB: 1000, UsedGB: 0, VolumeType: "HDD (st1)", IOPS: 500, ThroughputMB: 40, AttachedTo: "—", MountPoint: "—", Encrypted: true, SnapshotID: "—", Region: "us-east-1", AZ: "us-east-1c", CostPerMonth: 45.00, Status: "available", Updated: "2026-04-14"},
-			{ID: newID(), Name: "tmp-migration", SizeGB: 100, UsedGB: 88, VolumeType: "SSD (gp3)", IOPS: 3000, ThroughputMB: 125, AttachedTo: "migration-worker", MountPoint: "/mnt/migrate", Encrypted: false, SnapshotID: "—", Region: "eu-west-1", AZ: "eu-west-1a", CostPerMonth: 8.00, Status: "in_use", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "pg-prod-01", SizeGB: 2000, UsedGB: 1420, VolumeType: "NVMe SSD (io2)", IOPS: 64000, ThroughputMB: 1000, AttachedTo: "pg-primary", MountPoint: "/data/pg", Encrypted: true, SnapshotID: "snap-2026041800", Region: "eu-central-1", AZ: "eu-central-1a", CostPerMonth: 300.00, Status: "in_use", Updated: "2026-04-18"},
-			{ID: newID(), Name: "pg-prod-02", SizeGB: 2000, UsedGB: 1418, VolumeType: "NVMe SSD (io2)", IOPS: 64000, ThroughputMB: 1000, AttachedTo: "pg-replica", MountPoint: "/data/pg", Encrypted: true, SnapshotID: "snap-2026041800", Region: "eu-central-1", AZ: "eu-central-1b", CostPerMonth: 300.00, Status: "in_use", Updated: "2026-04-18"},
-			{ID: newID(), Name: "elasticsearch-data", SizeGB: 500, UsedGB: 380, VolumeType: "SSD (gp3)", IOPS: 6000, ThroughputMB: 250, AttachedTo: "es-node-01", MountPoint: "/data/es", Encrypted: true, SnapshotID: "snap-2026041700", Region: "eu-central-1", AZ: "eu-central-1a", CostPerMonth: 40.00, Status: "in_use", Updated: "2026-04-17"},
-			{ID: newID(), Name: "archive-cold", SizeGB: 5000, UsedGB: 4200, VolumeType: "HDD (sc1)", IOPS: 250, ThroughputMB: 12, AttachedTo: "archive-server", MountPoint: "/mnt/archive", Encrypted: true, SnapshotID: "snap-2026041500", Region: "eu-central-1", AZ: "eu-central-1c", CostPerMonth: 75.00, Status: "in_use", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]ProBlockVolume{},
 }
 
 func (s *proBlockVolumeStoreType) list(slug string) []ProBlockVolume {
@@ -113,7 +99,7 @@ type apiProBlockVolume struct {
 
 type apiProBlockVolumeList struct {
 	Volumes []apiProBlockVolume `json:"volumes"`
-	Total   int                `json:"total"`
+	Total   int                 `json:"total"`
 }
 
 func toAPIProBlockVolume(v ProBlockVolume) apiProBlockVolume {
@@ -212,7 +198,7 @@ func apiWSStorageBlockVolCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Encrypted: req.Encrypted, SnapshotID: "—",
 		Region: region, AZ: az,
 		CostPerMonth: float64(sizeGB) * 0.08,
-		Status: "available", Updated: "2026-04-18",
+		Status:       "available", Updated: "2026-04-18",
 	}
 	proBlockVolumeStore.add(slug, vol)
 	apiCreated(w, toAPIProBlockVolume(vol))

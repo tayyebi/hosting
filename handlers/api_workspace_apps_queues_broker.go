@@ -23,7 +23,7 @@ type ProMessageBroker struct {
 	ConsumerCount    int
 	MessagesReady    int64
 	MessagesUnacked  int64
-	PublishRate      int     // messages per second
+	PublishRate      int // messages per second
 	ConsumeRate      int
 	StorageGB        float64
 	RetentionHours   int
@@ -42,20 +42,7 @@ type proMsgBrokerStoreType struct {
 }
 
 var proMsgBrokerStore = &proMsgBrokerStoreType{
-	items: map[string][]ProMessageBroker{
-		"buyvm": {
-			{ID: newID(), Name: "orders-broker", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 24, ExchangeCount: 8, ConsumerCount: 12, MessagesReady: 1840, MessagesUnacked: 64, PublishRate: 2400, ConsumeRate: 2380, StorageGB: 4.2, RetentionHours: 72, TLSEnabled: true, ClusterNodes: 3, HighAvailability: true, Region: "us-east-1", CostPerMonth: 180.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "event-bus", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 42, ExchangeCount: 16, ConsumerCount: 28, MessagesReady: 420, MessagesUnacked: 12, PublishRate: 8400, ConsumeRate: 8390, StorageGB: 8.6, RetentionHours: 48, TLSEnabled: true, ClusterNodes: 3, HighAvailability: true, Region: "us-east-1", CostPerMonth: 240.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "iot-telemetry", Protocol: "MQTT 5", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 128, ExchangeCount: 4, ConsumerCount: 8, MessagesReady: 42000, MessagesUnacked: 860, PublishRate: 24000, ConsumeRate: 23800, StorageGB: 16.4, RetentionHours: 24, TLSEnabled: true, ClusterNodes: 5, HighAvailability: true, Region: "us-east-1", CostPerMonth: 420.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "notification-queue", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 6, ExchangeCount: 2, ConsumerCount: 4, MessagesReady: 86, MessagesUnacked: 2, PublishRate: 640, ConsumeRate: 638, StorageGB: 0.8, RetentionHours: 168, TLSEnabled: true, ClusterNodes: 2, HighAvailability: true, Region: "us-east-1", CostPerMonth: 65.00, Status: "running", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-events", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 186, ExchangeCount: 42, ConsumerCount: 96, MessagesReady: 12400, MessagesUnacked: 480, PublishRate: 64000, ConsumeRate: 63800, StorageGB: 42.0, RetentionHours: 72, TLSEnabled: true, ClusterNodes: 7, HighAvailability: true, Region: "eu-central-1", CostPerMonth: 1200.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "payment-processor", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 12, ExchangeCount: 4, ConsumerCount: 8, MessagesReady: 24, MessagesUnacked: 4, PublishRate: 1200, ConsumeRate: 1200, StorageGB: 2.4, RetentionHours: 720, TLSEnabled: true, ClusterNodes: 3, HighAvailability: true, Region: "eu-central-1", CostPerMonth: 240.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "analytics-ingestion", Protocol: "AMQP 1.0", Engine: "ActiveMQ", Version: "6.1.0", QueueCount: 8, ExchangeCount: 0, ConsumerCount: 16, MessagesReady: 84000, MessagesUnacked: 2400, PublishRate: 120000, ConsumeRate: 118000, StorageGB: 86.0, RetentionHours: 48, TLSEnabled: true, ClusterNodes: 5, HighAvailability: true, Region: "eu-central-1", CostPerMonth: 640.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "staging-broker", Protocol: "AMQP 0.9.1", Engine: "RabbitMQ", Version: "3.13.2", QueueCount: 24, ExchangeCount: 8, ConsumerCount: 6, MessagesReady: 0, MessagesUnacked: 0, PublishRate: 120, ConsumeRate: 120, StorageGB: 0.4, RetentionHours: 24, TLSEnabled: false, ClusterNodes: 1, HighAvailability: false, Region: "eu-central-1", CostPerMonth: 35.00, Status: "running", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]ProMessageBroker{},
 }
 
 func (s *proMsgBrokerStoreType) list(slug string) []ProMessageBroker {
@@ -230,7 +217,7 @@ func apiWSAppsQueuesBrokerCreateHandler(w http.ResponseWriter, r *http.Request) 
 		StorageGB: 0, RetentionHours: retention,
 		TLSEnabled: req.TLSEnabled, ClusterNodes: nodes,
 		HighAvailability: req.HighAvailability,
-		Region: region, CostPerMonth: float64(nodes) * 45.00,
+		Region:           region, CostPerMonth: float64(nodes) * 45.00,
 		Status: "provisioning", Updated: "2026-04-18",
 	}
 	proMsgBrokerStore.add(slug, broker)

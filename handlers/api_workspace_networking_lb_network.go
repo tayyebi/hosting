@@ -33,17 +33,7 @@ type netLBNetworkStoreType struct {
 }
 
 var netLBNetworkStore = &netLBNetworkStoreType{
-	instances: map[string][]NetLBNetwork{
-		"buyvm": {
-			{ID: newID(), Name: "prod-tcp-nlb", Scheme: "internet-facing", Protocol: "TCP", Port: 443, Region: "eu-central-1", Status: "active", Targets: 8, CrossZone: true, StaticIPs: 3, Throughput: "10 Gbps", PPS: 1200000},
-			{ID: newID(), Name: "prod-udp-nlb", Scheme: "internal", Protocol: "UDP", Port: 5060, Region: "eu-central-1", Status: "active", Targets: 4, CrossZone: false, StaticIPs: 1, Throughput: "5 Gbps", PPS: 480000},
-			{ID: newID(), Name: "us-tcp-nlb", Scheme: "internet-facing", Protocol: "TCP", Port: 443, Region: "us-east-1", Status: "active", Targets: 6, CrossZone: true, StaticIPs: 2, Throughput: "10 Gbps", PPS: 960000},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-nlb", Scheme: "internet-facing", Protocol: "TCP", Port: 443, Region: "ap-south-1", Status: "active", Targets: 10, CrossZone: true, StaticIPs: 3, Throughput: "20 Gbps", PPS: 2400000},
-			{ID: newID(), Name: "backend-nlb", Scheme: "internal", Protocol: "TCP", Port: 9090, Region: "ap-south-1", Status: "active", Targets: 6, CrossZone: false, StaticIPs: 1, Throughput: "5 Gbps", PPS: 600000},
-		},
-	},
+	instances: map[string][]NetLBNetwork{},
 }
 
 func (s *netLBNetworkStoreType) list(slug string) []NetLBNetwork {

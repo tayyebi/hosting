@@ -13,16 +13,16 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type APIAnalytics struct {
-	ID          string
-	Name        string
-	Endpoint    string
-	Method      string
-	AvgLatency  string
-	P99Latency  string
-	ErrorRate   string
-	Requests    string
-	Status      string
-	Updated     string
+	ID         string
+	Name       string
+	Endpoint   string
+	Method     string
+	AvgLatency string
+	P99Latency string
+	ErrorRate  string
+	Requests   string
+	Status     string
+	Updated    string
 }
 
 type apiAnalyticsStoreType struct {
@@ -31,22 +31,7 @@ type apiAnalyticsStoreType struct {
 }
 
 var apiAnalyticsStore = &apiAnalyticsStoreType{
-	analytics: map[string][]APIAnalytics{
-		"buyvm": {
-			{ID: newID(), Name: "User Auth", Endpoint: "/api/v1/auth/login", Method: "POST", AvgLatency: "45ms", P99Latency: "120ms", ErrorRate: "0.12%", Requests: "840K/day", Status: "healthy", Updated: "2026-04-17"},
-			{ID: newID(), Name: "List Products", Endpoint: "/api/v1/products", Method: "GET", AvgLatency: "78ms", P99Latency: "250ms", ErrorRate: "0.03%", Requests: "1.2M/day", Status: "healthy", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Create Order", Endpoint: "/api/v1/orders", Method: "POST", AvgLatency: "156ms", P99Latency: "480ms", ErrorRate: "0.85%", Requests: "320K/day", Status: "degraded", Updated: "2026-04-17"},
-			{ID: newID(), Name: "File Upload", Endpoint: "/api/v1/files/upload", Method: "POST", AvgLatency: "890ms", P99Latency: "2400ms", ErrorRate: "2.10%", Requests: "45K/day", Status: "degraded", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Search", Endpoint: "/api/v1/search", Method: "GET", AvgLatency: "210ms", P99Latency: "680ms", ErrorRate: "0.05%", Requests: "560K/day", Status: "healthy", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Webhook Dispatch", Endpoint: "/api/v1/webhooks/dispatch", Method: "POST", AvgLatency: "320ms", P99Latency: "950ms", ErrorRate: "1.45%", Requests: "98K/day", Status: "degraded", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Instance List", Endpoint: "/api/v2/instances", Method: "GET", AvgLatency: "62ms", P99Latency: "180ms", ErrorRate: "0.02%", Requests: "2.1M/day", Status: "healthy", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Deploy Trigger", Endpoint: "/api/v2/deploy", Method: "POST", AvgLatency: "340ms", P99Latency: "1200ms", ErrorRate: "0.48%", Requests: "28K/day", Status: "healthy", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Billing Summary", Endpoint: "/api/v2/billing/summary", Method: "GET", AvgLatency: "95ms", P99Latency: "310ms", ErrorRate: "0.01%", Requests: "180K/day", Status: "healthy", Updated: "2026-04-17"},
-			{ID: newID(), Name: "DNS Update", Endpoint: "/api/v2/dns/records", Method: "PUT", AvgLatency: "125ms", P99Latency: "420ms", ErrorRate: "0.22%", Requests: "65K/day", Status: "healthy", Updated: "2026-04-14"},
-		},
-	},
+	analytics: map[string][]APIAnalytics{},
 }
 
 func (s *apiAnalyticsStoreType) list(slug string) []APIAnalytics {

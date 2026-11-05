@@ -1,10 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"platform/db"
 )
 
 // ════════════════════════════════════════════════════════════════
@@ -13,21 +19,21 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type LinuxVM struct {
-	ID        string
-	Name      string
-	Distro    string
-	Version   string
-	VCPUs     int
-	MemoryGB  int
-	DiskGB    int
-	Region    string
-	PublicIP  string
-	PrivateIP string
-	SSHKey    string
-	Status    string
-	Uptime    string
+	ID          string
+	Name        string
+	Distro      string
+	Version     string
+	VCPUs       int
+	MemoryGB    int
+	DiskGB      int
+	Region      string
+	PublicIP    string
+	PrivateIP   string
+	SSHKey      string
+	Status      string
+	Uptime      string
 	MonthlyCost string
-	Updated   string
+	Updated     string
 }
 
 type linuxVMStoreType struct {
@@ -36,21 +42,7 @@ type linuxVMStoreType struct {
 }
 
 var linuxVMStore = &linuxVMStoreType{
-	items: map[string][]LinuxVM{
-		"buyvm": {
-			{ID: newID(), Name: "web-prod-01", Distro: "Ubuntu", Version: "24.04 LTS", VCPUs: 4, MemoryGB: 8, DiskGB: 160, Region: "us-east-1", PublicIP: "203.0.113.10", PrivateIP: "10.0.1.10", SSHKey: "ops-team-key", Status: "running", Uptime: "45d 12h", MonthlyCost: "$48.00", Updated: "2026-04-17"},
-			{ID: newID(), Name: "db-replica-02", Distro: "Debian", Version: "12 Bookworm", VCPUs: 8, MemoryGB: 32, DiskGB: 500, Region: "us-east-1", PublicIP: "—", PrivateIP: "10.0.1.20", SSHKey: "db-admin-key", Status: "running", Uptime: "120d 3h", MonthlyCost: "$128.00", Updated: "2026-04-16"},
-			{ID: newID(), Name: "ci-runner-03", Distro: "Rocky Linux", Version: "9.3", VCPUs: 2, MemoryGB: 4, DiskGB: 80, Region: "eu-west-1", PublicIP: "198.51.100.5", PrivateIP: "10.0.2.15", SSHKey: "ci-key", Status: "running", Uptime: "10d 8h", MonthlyCost: "$24.00", Updated: "2026-04-15"},
-			{ID: newID(), Name: "staging-app", Distro: "Ubuntu", Version: "22.04 LTS", VCPUs: 2, MemoryGB: 4, DiskGB: 80, Region: "us-west-2", PublicIP: "203.0.113.55", PrivateIP: "10.0.3.10", SSHKey: "dev-key", Status: "stopped", Uptime: "—", MonthlyCost: "$6.00", Updated: "2026-04-14"},
-			{ID: newID(), Name: "monitoring-node", Distro: "AlmaLinux", Version: "9.3", VCPUs: 4, MemoryGB: 16, DiskGB: 200, Region: "us-east-1", PublicIP: "203.0.113.99", PrivateIP: "10.0.1.50", SSHKey: "ops-team-key", Status: "running", Uptime: "60d 0h", MonthlyCost: "$72.00", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "api-gateway-01", Distro: "Ubuntu", Version: "24.04 LTS", VCPUs: 8, MemoryGB: 16, DiskGB: 200, Region: "eu-central-1", PublicIP: "198.51.100.20", PrivateIP: "10.1.0.10", SSHKey: "platform-key", Status: "running", Uptime: "90d 6h", MonthlyCost: "$96.00", Updated: "2026-04-17"},
-			{ID: newID(), Name: "worker-pool-01", Distro: "Debian", Version: "12 Bookworm", VCPUs: 16, MemoryGB: 64, DiskGB: 1000, Region: "eu-central-1", PublicIP: "—", PrivateIP: "10.1.0.20", SSHKey: "platform-key", Status: "running", Uptime: "30d 18h", MonthlyCost: "$256.00", Updated: "2026-04-16"},
-			{ID: newID(), Name: "bastion-host", Distro: "Alpine", Version: "3.19", VCPUs: 1, MemoryGB: 1, DiskGB: 20, Region: "eu-central-1", PublicIP: "198.51.100.30", PrivateIP: "10.1.0.5", SSHKey: "admin-key", Status: "running", Uptime: "180d 0h", MonthlyCost: "$5.00", Updated: "2026-04-10"},
-			{ID: newID(), Name: "ml-training-gpu", Distro: "Ubuntu", Version: "22.04 LTS", VCPUs: 32, MemoryGB: 128, DiskGB: 2000, Region: "us-east-1", PublicIP: "203.0.113.200", PrivateIP: "10.2.0.10", SSHKey: "ml-team-key", Status: "stopped", Uptime: "—", MonthlyCost: "$45.00", Updated: "2026-04-12"},
-		},
-	},
+	items: map[string][]LinuxVM{},
 }
 
 func (s *linuxVMStoreType) list(slug string) []LinuxVM {
@@ -124,6 +116,46 @@ func toAPILinuxVM(v LinuxVM) apiLinuxVM {
 	}
 }
 
+func linuxVMFromDB(r db.LinuxVMDB) LinuxVM {
+	st := r.VMStatus
+	if st == "" {
+		st = r.Status
+	}
+	return LinuxVM{
+		ID:          strconv.FormatInt(r.ResourceID, 10),
+		Name:        r.Name,
+		Distro:      r.Distro,
+		Version:     r.Version,
+		VCPUs:       r.VCPUs,
+		MemoryGB:    r.MemoryGB,
+		DiskGB:      r.DiskGB,
+		Region:      r.Region,
+		PublicIP:    r.PublicIP,
+		PrivateIP:   r.PrivateIP,
+		SSHKey:      r.SSHKey,
+		Status:      st,
+		Uptime:      r.Uptime,
+		MonthlyCost: r.MonthlyCost,
+		Updated:     r.CreatedAt.Format("2006-01-02"),
+	}
+}
+
+func loadWorkspaceLinuxVMs(ctx context.Context, slug, wsID string) []LinuxVM {
+	if Pools != nil {
+		_, wsDBID, err := resolveTenantAndWorkspaceDBIDs(ctx, slug, wsID)
+		if err == nil && wsDBID > 0 {
+			if rows, qErr := db.ListLinuxVMs(ctx, Pools.Admin, wsDBID); qErr == nil {
+				out := make([]LinuxVM, len(rows))
+				for i, r := range rows {
+					out[i] = linuxVMFromDB(r)
+				}
+				return out
+			}
+		}
+	}
+	return linuxVMStore.list(slug)
+}
+
 func filterLinuxVMs(all []LinuxVM, search, status string) []LinuxVM {
 	var out []LinuxVM
 	q := strings.ToLower(search)
@@ -143,11 +175,14 @@ func filterLinuxVMs(all []LinuxVM, search, status string) []LinuxVM {
 }
 
 func apiWSComputeVMsLinuxListHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	items := filterLinuxVMs(linuxVMStore.list(slug), r.URL.Query().Get("q"), r.URL.Query().Get("status"))
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	items := filterLinuxVMs(loadWorkspaceLinuxVMs(ctx, slug, wsID), r.URL.Query().Get("q"), r.URL.Query().Get("status"))
 	out := make([]apiLinuxVM, len(items))
 	for i, v := range items {
 		out[i] = toAPILinuxVM(v)
@@ -167,10 +202,12 @@ type apiCreateLinuxVMRequest struct {
 }
 
 func apiWSComputeVMsLinuxCreateHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
+	user, _ := getSession(r)
+
 	var req apiCreateLinuxVMRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		apiError(w, http.StatusBadRequest, "Invalid JSON body.")
@@ -195,53 +232,129 @@ func apiWSComputeVMsLinuxCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	memGB := req.MemoryGB
 	if memGB <= 0 {
-		memGB = 1
+		memGB = 2
 	}
 	diskGB := req.DiskGB
 	if diskGB <= 0 {
 		diskGB = 20
 	}
 	region := strings.TrimSpace(req.Region)
-	if region == "" {
-		region = "us-east-1"
-	}
 	sshKey := strings.TrimSpace(req.SSHKey)
-	if sshKey == "" {
-		sshKey = "default-key"
+
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+		defer cancel()
+
+		res, err := ProvisionCustomerVM(ctx, CustomerVMPurchaseInput{
+			TenantSlug:      slug,
+			WorkspaceIDStr:  wsID,
+			ActorUserID:     user.ID,
+			Name:            name,
+			Distro:          distro,
+			Version:         version,
+			SSHPublicKey:    sshKey,
+			VCPUs:           vcpus,
+			MemoryGB:        memGB,
+			DiskGB:          diskGB,
+			PreferredRegion: region,
+		})
+		if err != nil {
+			if errors.Is(err, db.ErrNoAssignableInventory) {
+				apiError(w, http.StatusConflict, "No online provisioned supply host with available assignable IPs in inventory. Onboard a Linux Nested VPS, run Auto-Provision, and add manual IPs in /s/infrastructure/.")
+				return
+			}
+			apiError(w, http.StatusBadGateway, "VM provisioning failed: "+err.Error())
+			return
+		}
+
+		vm := LinuxVM{
+			ID:          strconv.FormatInt(res.VMResourceID, 10),
+			Name:        name,
+			Distro:      distro,
+			Version:     version,
+			VCPUs:       vcpus,
+			MemoryGB:    memGB,
+			DiskGB:      diskGB,
+			Region:      res.RegionSlug,
+			PublicIP:    res.AssignedIPv4,
+			PrivateIP:   "",
+			SSHKey:      sshKey,
+			Status:      res.Status,
+			Uptime:      "Just started",
+			MonthlyCost: res.MonthlyCostDisplay,
+			Updated:     time.Now().UTC().Format("2006-01-02"),
+		}
+		apiCreated(w, toAPILinuxVM(vm))
+		return
 	}
+
 	vm := LinuxVM{
 		ID: newID(), Name: name, Distro: distro,
 		Version: version, VCPUs: vcpus, MemoryGB: memGB,
 		DiskGB: diskGB, Region: region, PublicIP: "Pending",
-		PrivateIP: "Pending", SSHKey: sshKey, Status: "provisioning",
-		Uptime: "—", MonthlyCost: "Calculating...", Updated: "2026-04-17",
+		PrivateIP: "", SSHKey: sshKey, Status: "provisioning",
+		Uptime: "—", MonthlyCost: "$0.00", Updated: time.Now().UTC().Format("2006-01-02"),
 	}
 	linuxVMStore.add(slug, vm)
 	apiCreated(w, toAPILinuxVM(vm))
 }
 
 func apiWSComputeVMsLinuxGetHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	vm, found := linuxVMStore.getByID(slug, r.PathValue("vid"))
-	if !found {
-		apiError(w, http.StatusNotFound, "Linux VM not found.")
-		return
+	targetID := r.PathValue("vid")
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	for _, vm := range loadWorkspaceLinuxVMs(ctx, slug, wsID) {
+		if vm.ID == targetID {
+			apiOK(w, toAPILinuxVM(vm))
+			return
+		}
 	}
-	apiOK(w, toAPILinuxVM(vm))
+	apiError(w, http.StatusNotFound, "Linux VM not found.")
 }
 
 func apiWSComputeVMsLinuxDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	if _, found := linuxVMStore.getByID(slug, r.PathValue("vid")); !found {
+	vid := r.PathValue("vid")
+	if Pools != nil {
+		numID, err := strconv.ParseInt(vid, 10, 64)
+		if err != nil || numID <= 0 {
+			apiError(w, http.StatusNotFound, "Linux VM not found.")
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+		defer cancel()
+
+		found := false
+		for _, vm := range loadWorkspaceLinuxVMs(ctx, slug, wsID) {
+			if vm.ID == vid {
+				found = true
+				break
+			}
+		}
+		if !found {
+			apiError(w, http.StatusNotFound, "Linux VM not found.")
+			return
+		}
+		if err := TerminateCustomerVM(ctx, numID); err != nil {
+			apiError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		apiOK(w, map[string]any{"ok": true, "message": "Linux VM terminated and assignable IP returned to host pool."})
+		return
+	}
+
+	if _, found := linuxVMStore.getByID(slug, vid); !found {
 		apiError(w, http.StatusNotFound, "Linux VM not found.")
 		return
 	}
-	linuxVMStore.delete(slug, r.PathValue("vid"))
+	linuxVMStore.delete(slug, vid)
 	apiOK(w, map[string]any{"ok": true, "message": "Linux VM deleted."})
 }

@@ -30,20 +30,7 @@ type deployPipelineStoreType struct {
 }
 
 var deployPipelineStore = &deployPipelineStoreType{
-	pipelines: map[string][]DeployPipeline{
-		"buyvm": {
-			{ID: newID(), Name: "Production Deploy", Environment: "production", Strategy: "blue-green", Target: "Kubernetes", Status: "active", LastDeploy: "2026-04-16 18:00", Duration: "3m 45s", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Staging Deploy", Environment: "staging", Strategy: "rolling", Target: "Kubernetes", Status: "active", LastDeploy: "2026-04-17 09:30", Duration: "2m 10s", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Dev Deploy", Environment: "development", Strategy: "recreate", Target: "Docker Compose", Status: "active", LastDeploy: "2026-04-17 10:15", Duration: "0m 48s", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Canary Release", Environment: "production", Strategy: "canary", Target: "Kubernetes", Status: "active", LastDeploy: "2026-04-14 12:00", Duration: "15m 20s", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Hotfix Pipeline", Environment: "production", Strategy: "rolling", Target: "Kubernetes", Status: "inactive", LastDeploy: "2026-03-20 22:00", Duration: "2m 05s", Updated: "2026-03-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Production Release", Environment: "production", Strategy: "blue-green", Target: "Kubernetes", Status: "active", LastDeploy: "2026-04-13 16:00", Duration: "4m 30s", Updated: "2026-04-13"},
-			{ID: newID(), Name: "Staging Pipeline", Environment: "staging", Strategy: "rolling", Target: "Kubernetes", Status: "active", LastDeploy: "2026-04-14 08:45", Duration: "2m 55s", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Edge Deploy", Environment: "edge", Strategy: "canary", Target: "Edge Nodes", Status: "active", LastDeploy: "2026-04-10 14:00", Duration: "8m 12s", Updated: "2026-04-10"},
-		},
-	},
+	pipelines: map[string][]DeployPipeline{},
 }
 
 func (s *deployPipelineStoreType) list(slug string) []DeployPipeline {

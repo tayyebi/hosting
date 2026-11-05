@@ -32,20 +32,7 @@ type controlPlaneStoreType struct {
 }
 
 var controlPlaneStore = &controlPlaneStoreType{
-	items: map[string][]ControlPlane{
-		"buyvm": {
-			{ID: newID(), Name: "primary-control", Provider: "AWS + On-Prem", Region: "us-east-1 / NYC DC", Clusters: 8, ManagedServices: 42, Policies: 18, SyncInterval: "30s", HealthScore: "98.5%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "eu-control-plane", Provider: "Azure + GCP", Region: "eu-west-1 / eu-central", Clusters: 5, ManagedServices: 28, Policies: 15, SyncInterval: "30s", HealthScore: "97.2%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-controller", Provider: "Multi-edge", Region: "Global (12 PoPs)", Clusters: 12, ManagedServices: 15, Policies: 8, SyncInterval: "60s", HealthScore: "95.8%", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "staging-control", Provider: "AWS", Region: "us-west-2", Clusters: 2, ManagedServices: 10, Policies: 5, SyncInterval: "120s", HealthScore: "100%", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "legacy-bridge", Provider: "On-Prem only", Region: "Chicago DC", Clusters: 1, ManagedServices: 4, Policies: 3, SyncInterval: "300s", HealthScore: "88.0%", Status: "degraded", Updated: "2026-03-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "global-control-plane", Provider: "AWS + Azure + GCP", Region: "Multi-region", Clusters: 15, ManagedServices: 65, Policies: 30, SyncInterval: "15s", HealthScore: "99.1%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "apac-control", Provider: "AWS + Alibaba", Region: "ap-southeast-1 / cn-east", Clusters: 6, ManagedServices: 22, Policies: 12, SyncInterval: "30s", HealthScore: "96.7%", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "dev-sandbox-ctrl", Provider: "AWS", Region: "us-east-2", Clusters: 1, ManagedServices: 5, Policies: 2, SyncInterval: "60s", HealthScore: "100%", Status: "active", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]ControlPlane{},
 }
 
 func (s *controlPlaneStoreType) list(slug string) []ControlPlane {

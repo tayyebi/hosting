@@ -40,20 +40,7 @@ type proDocumentDBStoreType struct {
 }
 
 var proDocumentDBStore = &proDocumentDBStoreType{
-	items: map[string][]ProDocumentDB{
-		"buyvm": {
-			{ID: newID(), Name: "app-data-prod", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 3, StorageGB: 240, DocumentCount: 18400000, CollectionCount: 42, ReadsPerSec: 12400, WritesPerSec: 3200, AvgLatencyMs: 1.8, Encrypted: true, BackupEnabled: true, BackupRetention: 30, Region: "us-east-1", MultiAZ: true, CostPerMonth: 420.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "user-profiles", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 3, StorageGB: 85, DocumentCount: 4200000, CollectionCount: 8, ReadsPerSec: 8600, WritesPerSec: 640, AvgLatencyMs: 0.9, Encrypted: true, BackupEnabled: true, BackupRetention: 14, Region: "us-east-1", MultiAZ: true, CostPerMonth: 280.00, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "event-store", Engine: "MongoDB", EngineVersion: "6.0.18", ClusterNodes: 1, StorageGB: 420, DocumentCount: 124000000, CollectionCount: 6, ReadsPerSec: 2200, WritesPerSec: 8400, AvgLatencyMs: 2.4, Encrypted: true, BackupEnabled: true, BackupRetention: 7, Region: "us-east-1", MultiAZ: false, CostPerMonth: 180.00, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "staging-docs", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 1, StorageGB: 12, DocumentCount: 86000, CollectionCount: 42, ReadsPerSec: 120, WritesPerSec: 80, AvgLatencyMs: 3.2, Encrypted: false, BackupEnabled: false, BackupRetention: 0, Region: "us-east-1", MultiAZ: false, CostPerMonth: 45.00, Status: "running", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-core", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 5, StorageGB: 1200, DocumentCount: 890000000, CollectionCount: 86, ReadsPerSec: 42000, WritesPerSec: 12000, AvgLatencyMs: 1.2, Encrypted: true, BackupEnabled: true, BackupRetention: 30, Region: "eu-central-1", MultiAZ: true, CostPerMonth: 1800.00, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "search-index", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 3, StorageGB: 320, DocumentCount: 42000000, CollectionCount: 12, ReadsPerSec: 18000, WritesPerSec: 4200, AvgLatencyMs: 1.5, Encrypted: true, BackupEnabled: true, BackupRetention: 14, Region: "eu-central-1", MultiAZ: true, CostPerMonth: 640.00, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "cms-content", Engine: "MongoDB", EngineVersion: "7.0.12", ClusterNodes: 2, StorageGB: 64, DocumentCount: 1800000, CollectionCount: 24, ReadsPerSec: 6400, WritesPerSec: 420, AvgLatencyMs: 1.1, Encrypted: true, BackupEnabled: true, BackupRetention: 14, Region: "us-west-2", MultiAZ: true, CostPerMonth: 220.00, Status: "running", Updated: "2026-04-16"},
-			{ID: newID(), Name: "analytics-staging", Engine: "MongoDB", EngineVersion: "6.0.18", ClusterNodes: 1, StorageGB: 28, DocumentCount: 2400000, CollectionCount: 8, ReadsPerSec: 800, WritesPerSec: 200, AvgLatencyMs: 4.8, Encrypted: false, BackupEnabled: false, BackupRetention: 0, Region: "eu-central-1", MultiAZ: false, CostPerMonth: 65.00, Status: "stopped", Updated: "2026-04-12"},
-		},
-	},
+	items: map[string][]ProDocumentDB{},
 }
 
 func (s *proDocumentDBStoreType) list(slug string) []ProDocumentDB {
@@ -127,7 +114,7 @@ func toAPIProDocumentDB(d ProDocumentDB) apiProDocumentDB {
 		EngineVersion: d.EngineVersion, ClusterNodes: d.ClusterNodes,
 		StorageGB: d.StorageGB, DocumentCount: d.DocumentCount,
 		CollectionCount: d.CollectionCount,
-		ReadsPerSec: d.ReadsPerSec, WritesPerSec: d.WritesPerSec,
+		ReadsPerSec:     d.ReadsPerSec, WritesPerSec: d.WritesPerSec,
 		AvgLatencyMs: d.AvgLatencyMs, Encrypted: d.Encrypted,
 		BackupEnabled: d.BackupEnabled, BackupRetention: d.BackupRetention,
 		Region: d.Region, MultiAZ: d.MultiAZ,
@@ -222,7 +209,7 @@ func apiWSDBNoSQLDocDBCreateHandler(w http.ResponseWriter, r *http.Request) {
 		BackupEnabled: false, BackupRetention: 0,
 		Region: region, MultiAZ: req.MultiAZ,
 		CostPerMonth: float64(nodes) * 95.00,
-		Status: "provisioning", Updated: "2026-04-18",
+		Status:       "provisioning", Updated: "2026-04-18",
 	}
 	proDocumentDBStore.add(slug, db)
 	apiCreated(w, toAPIProDocumentDB(db))

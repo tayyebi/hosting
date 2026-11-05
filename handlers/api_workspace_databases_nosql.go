@@ -36,20 +36,7 @@ type dbDocumentStoreType struct {
 }
 
 var dbDocumentStore = &dbDocumentStoreType{
-	instances: map[string][]DBDocument{
-		"buyvm": {
-			{ID: newID(), Name: "user-profiles", Engine: "mongodb", Version: "7.0", Region: "eu-central-1", Status: "running", Size: "M30", Storage: "250 GB", Collections: 18, Documents: "4,200,000", Endpoint: "user-profiles.mongo.eu-central-1.example.com:27017", Encrypted: true},
-			{ID: newID(), Name: "product-catalog", Engine: "mongodb", Version: "7.0", Region: "eu-central-1", Status: "running", Size: "M40", Storage: "120 GB", Collections: 8, Documents: "890,000", Endpoint: "product-catalog.mongo.eu-central-1.example.com:27017", Encrypted: true},
-			{ID: newID(), Name: "event-store", Engine: "couchdb", Version: "3.3", Region: "us-east-1", Status: "running", Size: "large", Storage: "500 GB", Collections: 12, Documents: "28,400,000", Endpoint: "event-store.couch.us-east-1.example.com:5984", Encrypted: true},
-			{ID: newID(), Name: "cms-content", Engine: "mongodb", Version: "6.0", Region: "eu-central-1", Status: "running", Size: "M20", Storage: "80 GB", Collections: 24, Documents: "120,000", Endpoint: "cms-content.mongo.eu-central-1.example.com:27017", Encrypted: false},
-			{ID: newID(), Name: "staging-docs", Engine: "mongodb", Version: "7.0", Region: "eu-central-1", Status: "stopped", Size: "M10", Storage: "10 GB", Collections: 5, Documents: "8,400", Endpoint: "staging-docs.mongo.eu-central-1.example.com:27017", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app-data", Engine: "mongodb", Version: "7.0", Region: "ap-south-1", Status: "running", Size: "M30", Storage: "180 GB", Collections: 14, Documents: "2,100,000", Endpoint: "app-data.mongo.ap-south-1.example.com:27017", Encrypted: true},
-			{ID: newID(), Name: "audit-logs", Engine: "couchdb", Version: "3.3", Region: "ap-south-1", Status: "running", Size: "medium", Storage: "90 GB", Collections: 4, Documents: "6,800,000", Endpoint: "audit-logs.couch.ap-south-1.example.com:5984", Encrypted: true},
-			{ID: newID(), Name: "config-store", Engine: "mongodb", Version: "7.0", Region: "ap-south-1", Status: "running", Size: "M10", Storage: "5 GB", Collections: 6, Documents: "2,400", Endpoint: "config-store.mongo.ap-south-1.example.com:27017", Encrypted: false},
-		},
-	},
+	instances: map[string][]DBDocument{},
 }
 
 func (s *dbDocumentStoreType) list(slug string) []DBDocument {
@@ -205,7 +192,7 @@ func apiWSDBNoSQLDocumentCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Version: version, Region: region,
 		Status: "provisioning", Size: size,
 		Storage: "10 GB", Collections: 0, Documents: "0",
-		Endpoint: name + "." + engine[:5] + "." + region + ".example.com:" + port,
+		Endpoint:  name + "." + engine[:5] + "." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbDocumentStore.add(slug, inst)
@@ -263,19 +250,7 @@ type dbKeyValueStoreType struct {
 }
 
 var dbKeyValueStore = &dbKeyValueStoreType{
-	instances: map[string][]DBKeyValue{
-		"buyvm": {
-			{ID: newID(), Name: "session-cache", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.r7g.xlarge", Storage: "—", Keys: "2,400,000", MaxMemory: "32 GB", Endpoint: "session-cache.kv.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "rate-limiter", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.m7g.large", Storage: "—", Keys: "180,000", MaxMemory: "8 GB", Endpoint: "rate-limiter.kv.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "feature-flags", Engine: "etcd", Version: "3.5", Region: "us-east-1", Status: "running", Size: "medium", Storage: "2 GB", Keys: "1,240", MaxMemory: "4 GB", Endpoint: "feature-flags.kv.us-east-1.example.com:2379", Encrypted: true},
-			{ID: newID(), Name: "config-kv", Engine: "consul", Version: "1.18", Region: "eu-central-1", Status: "running", Size: "small", Storage: "500 MB", Keys: "890", MaxMemory: "2 GB", Endpoint: "config-kv.kv.eu-central-1.example.com:8500", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app-cache", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.m7g.large", Storage: "—", Keys: "820,000", MaxMemory: "16 GB", Endpoint: "app-cache.kv.ap-south-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "job-queue", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.m7g.medium", Storage: "—", Keys: "45,000", MaxMemory: "4 GB", Endpoint: "job-queue.kv.ap-south-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "service-discovery", Engine: "consul", Version: "1.18", Region: "ap-south-1", Status: "running", Size: "small", Storage: "200 MB", Keys: "320", MaxMemory: "2 GB", Endpoint: "service-discovery.kv.ap-south-1.example.com:8500", Encrypted: false},
-		},
-	},
+	instances: map[string][]DBKeyValue{},
 }
 
 func (s *dbKeyValueStoreType) list(slug string) []DBKeyValue {
@@ -442,7 +417,7 @@ func apiWSDBNoSQLKeyValueCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Version: version, Region: region,
 		Status: "provisioning", Size: size,
 		Storage: "—", Keys: "0", MaxMemory: maxMem,
-		Endpoint: name + ".kv." + region + ".example.com:" + port,
+		Endpoint:  name + ".kv." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbKeyValueStore.add(slug, inst)
@@ -500,18 +475,7 @@ type dbWideColumnStoreType struct {
 }
 
 var dbWideColumnStore = &dbWideColumnStoreType{
-	instances: map[string][]DBWideColumn{
-		"buyvm": {
-			{ID: newID(), Name: "timeseries-ingest", Engine: "cassandra", Version: "4.1", Region: "eu-central-1", Status: "running", Nodes: 6, Storage: "12 TB", Keyspaces: 4, Throughput: "50,000 ops/s", Endpoint: "timeseries-ingest.wc.eu-central-1.example.com:9042", Encrypted: true},
-			{ID: newID(), Name: "iot-events", Engine: "scylladb", Version: "5.4", Region: "us-east-1", Status: "running", Nodes: 9, Storage: "24 TB", Keyspaces: 3, Throughput: "200,000 ops/s", Endpoint: "iot-events.wc.us-east-1.example.com:9042", Encrypted: true},
-			{ID: newID(), Name: "user-activity", Engine: "cassandra", Version: "4.1", Region: "eu-central-1", Status: "running", Nodes: 3, Storage: "4 TB", Keyspaces: 2, Throughput: "18,000 ops/s", Endpoint: "user-activity.wc.eu-central-1.example.com:9042", Encrypted: true},
-			{ID: newID(), Name: "analytics-raw", Engine: "hbase", Version: "2.5", Region: "eu-central-1", Status: "maintenance", Nodes: 12, Storage: "48 TB", Keyspaces: 8, Throughput: "80,000 ops/s", Endpoint: "analytics-raw.wc.eu-central-1.example.com:16010", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "clickstream", Engine: "cassandra", Version: "4.1", Region: "ap-south-1", Status: "running", Nodes: 4, Storage: "8 TB", Keyspaces: 2, Throughput: "35,000 ops/s", Endpoint: "clickstream.wc.ap-south-1.example.com:9042", Encrypted: true},
-			{ID: newID(), Name: "messaging-history", Engine: "scylladb", Version: "5.4", Region: "ap-south-1", Status: "running", Nodes: 3, Storage: "3 TB", Keyspaces: 1, Throughput: "120,000 ops/s", Endpoint: "messaging-history.wc.ap-south-1.example.com:9042", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBWideColumn{},
 }
 
 func (s *dbWideColumnStoreType) list(slug string) []DBWideColumn {
@@ -670,7 +634,7 @@ func apiWSDBNoSQLWideColumnCreateHandler(w http.ResponseWriter, r *http.Request)
 		Version: version, Region: region,
 		Status: "provisioning", Nodes: nodes,
 		Storage: "0 B", Keyspaces: 0, Throughput: "0 ops/s",
-		Endpoint: name + ".wc." + region + ".example.com:" + port,
+		Endpoint:  name + ".wc." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbWideColumnStore.add(slug, inst)
@@ -728,18 +692,7 @@ type dbGraphStoreType struct {
 }
 
 var dbGraphStore = &dbGraphStoreType{
-	instances: map[string][]DBGraph{
-		"buyvm": {
-			{ID: newID(), Name: "social-graph", Engine: "neo4j", Version: "5.18", Region: "eu-central-1", Status: "running", Size: "enterprise.large", Storage: "180 GB", Nodes: "42,000,000", Edges: "280,000,000", Endpoint: "social-graph.graph.eu-central-1.example.com:7687", Encrypted: true},
-			{ID: newID(), Name: "knowledge-base", Engine: "neo4j", Version: "5.18", Region: "eu-central-1", Status: "running", Size: "enterprise.medium", Storage: "45 GB", Nodes: "8,200,000", Edges: "24,600,000", Endpoint: "knowledge-base.graph.eu-central-1.example.com:7687", Encrypted: true},
-			{ID: newID(), Name: "fraud-detection", Engine: "neptune", Version: "1.3", Region: "us-east-1", Status: "running", Size: "db.r6g.xlarge", Storage: "120 GB", Nodes: "18,000,000", Edges: "95,000,000", Endpoint: "fraud-detection.graph.us-east-1.example.com:8182", Encrypted: true},
-			{ID: newID(), Name: "recommendation-dev", Engine: "neo4j", Version: "5.18", Region: "eu-central-1", Status: "stopped", Size: "community.small", Storage: "5 GB", Nodes: "120,000", Edges: "450,000", Endpoint: "recommendation-dev.graph.eu-central-1.example.com:7687", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "product-relations", Engine: "neo4j", Version: "5.18", Region: "ap-south-1", Status: "running", Size: "enterprise.medium", Storage: "60 GB", Nodes: "5,400,000", Edges: "18,000,000", Endpoint: "product-relations.graph.ap-south-1.example.com:7687", Encrypted: true},
-			{ID: newID(), Name: "access-graph", Engine: "neptune", Version: "1.3", Region: "ap-south-1", Status: "running", Size: "db.r6g.large", Storage: "30 GB", Nodes: "2,100,000", Edges: "8,400,000", Endpoint: "access-graph.graph.ap-south-1.example.com:8182", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBGraph{},
 }
 
 func (s *dbGraphStoreType) list(slug string) []DBGraph {
@@ -899,7 +852,7 @@ func apiWSDBNoSQLGraphCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Version: version, Region: region,
 		Status: "provisioning", Size: size,
 		Storage: "0 B", Nodes: "0", Edges: "0",
-		Endpoint: name + ".graph." + region + ".example.com:" + port,
+		Endpoint:  name + ".graph." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbGraphStore.add(slug, inst)

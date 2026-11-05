@@ -39,24 +39,7 @@ type tenantTxnStoreType struct {
 }
 
 var tenantTxnStore = &tenantTxnStoreType{
-	transactions: map[string][]TenantTxn{
-		"buyvm": {
-			{ID: newID(), Reference: "INV-1091", Client: "James Wright", ClientCo: "Acme Inc.", Description: "Monthly — Production cluster · 8 vCPU, 32 GB (Nov)", TxnType: "charge", Amount: "+$480.00", AmountClass: "txn-amount--pos", Status: "completed", DateLabel: "2024-11-03 14:22", Created: "2024-11-03T14:22:00Z", Updated: "2024-11-03T14:22:00Z"},
-			{ID: newID(), Reference: "INV-1090", Client: "Alice Monroe", ClientCo: "Monroe LLC", Description: "Monthly — us-east-1 workspace · 4 vCPU, 16 GB (Nov)", TxnType: "charge", Amount: "+$320.00", AmountClass: "txn-amount--pos", Status: "completed", DateLabel: "2024-11-03 12:05", Created: "2024-11-03T12:05:00Z", Updated: "2024-11-03T12:05:00Z"},
-			{ID: newID(), Reference: "INV-1089", Client: "Faisal Al-Amin", ClientCo: "Al-Amin Corp", Description: "Annual plan renewal — Business tier · 32 vCPU, 128 GB, 1 TB SSD", TxnType: "charge", Amount: "+$2,160.00", AmountClass: "txn-amount--pos", Status: "pending", DateLabel: "2024-11-02 09:47", Created: "2024-11-02T09:47:00Z", Updated: "2024-11-02T09:47:00Z"},
-			{ID: newID(), Reference: "CR-0042", Client: "Lena Bauer", ClientCo: "BauerHosts", Description: "SLA credit — 27 min compute outage, eu-central-1 (Nov 12)", TxnType: "credit", Amount: "−$120.00", AmountClass: "txn-amount--credit", Status: "completed", DateLabel: "2024-11-01 18:30", Created: "2024-11-01T18:30:00Z", Updated: "2024-11-01T18:30:00Z"},
-			{ID: newID(), Reference: "RF-0019", Client: "Tom Fischer", ClientCo: "Fischer GmbH", Description: "Refund — cancelled managed backup addon (90-day retention)", TxnType: "refund", Amount: "−$80.00", AmountClass: "txn-amount--neg", Status: "completed", DateLabel: "2024-10-31 11:15", Created: "2024-10-31T11:15:00Z", Updated: "2024-10-31T11:15:00Z"},
-			{ID: newID(), Reference: "INV-1088", Client: "Ben Okonkwo", ClientCo: "Okonkwo Tech", Description: "Metered — 842 compute-hours + 2.4 TB egress (Oct)", TxnType: "metered", Amount: "+$120.00", AmountClass: "txn-amount--pos", Status: "completed", DateLabel: "2024-10-30 16:02", Created: "2024-10-30T16:02:00Z", Updated: "2024-10-30T16:02:00Z"},
-			{ID: newID(), Reference: "INV-1087", Client: "Chloe Martin", ClientCo: "MartinDev", Description: "Add-on — dedicated IPv4 block /28 (16 IPs)", TxnType: "charge", Amount: "+$40.00", AmountClass: "txn-amount--pos", Status: "failed", DateLabel: "2024-10-28 08:55", Created: "2024-10-28T08:55:00Z", Updated: "2024-10-28T08:55:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Reference: "INV-0221", Client: "NocAdmin", ClientCo: "ABRNOC", Description: "Monthly colocation fee — rack 7A", TxnType: "charge", Amount: "+$850.00", AmountClass: "txn-amount--pos", Status: "completed", DateLabel: "2024-11-01 09:00", Created: "2024-11-01T09:00:00Z", Updated: "2024-11-01T09:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Reference: "INV-2041", Client: "Diego Vega", ClientCo: "Vega Systems", Description: "Kubernetes managed cluster — 10 worker nodes (Nov)", TxnType: "charge", Amount: "+$1,200.00", AmountClass: "txn-amount--pos", Status: "completed", DateLabel: "2024-11-02 10:00", Created: "2024-11-02T10:00:00Z", Updated: "2024-11-02T10:00:00Z"},
-			{ID: newID(), Reference: "CR-0011", Client: "Santiago López", ClientCo: "López Cloud", Description: "SLA credit — worker node failure (INC-2026-012)", TxnType: "credit", Amount: "−$240.00", AmountClass: "txn-amount--credit", Status: "pending", DateLabel: "2024-10-30 14:00", Created: "2024-10-30T14:00:00Z", Updated: "2024-10-30T14:00:00Z"},
-		},
-	},
+	transactions: map[string][]TenantTxn{},
 }
 
 func (s *tenantTxnStoreType) list(slug string) []TenantTxn {

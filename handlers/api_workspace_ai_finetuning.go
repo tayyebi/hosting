@@ -13,19 +13,19 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type FineTuningJob struct {
-	ID          string
-	Name        string
-	Status      string
-	BaseModel   string
-	Method      string
-	Dataset     string
-	Epochs      int
+	ID           string
+	Name         string
+	Status       string
+	BaseModel    string
+	Method       string
+	Dataset      string
+	Epochs       int
 	LearningRate string
-	Progress    string
-	Runtime     string
-	Cost        string
-	Region      string
-	OutputModel string
+	Progress     string
+	Runtime      string
+	Cost         string
+	Region       string
+	OutputModel  string
 }
 
 type fineTuningJobStoreType struct {
@@ -34,20 +34,7 @@ type fineTuningJobStoreType struct {
 }
 
 var fineTuningJobStore = &fineTuningJobStoreType{
-	jobs: map[string][]FineTuningJob{
-		"buyvm": {
-			{ID: newID(), Name: "support-chatbot-v3", Status: "completed", BaseModel: "llama-3-8b", Method: "LoRA", Dataset: "support-tickets-2024 (12K examples)", Epochs: 3, LearningRate: "2e-4", Progress: "100%", Runtime: "4h 22m", Cost: "$180", Region: "eu-central-1", OutputModel: "ft:support-chatbot-v3-20260415"},
-			{ID: newID(), Name: "code-review-assistant", Status: "running", BaseModel: "codellama-34b", Method: "QLoRA", Dataset: "code-reviews (28K examples)", Epochs: 5, LearningRate: "1e-4", Progress: "62%", Runtime: "6h 10m", Cost: "$420", Region: "us-east-1", OutputModel: ""},
-			{ID: newID(), Name: "product-classifier", Status: "completed", BaseModel: "bert-base", Method: "full", Dataset: "product-catalog (85K examples)", Epochs: 10, LearningRate: "5e-5", Progress: "100%", Runtime: "1h 45m", Cost: "$32", Region: "eu-central-1", OutputModel: "ft:product-classifier-20260410"},
-			{ID: newID(), Name: "sentiment-analyzer-v2", Status: "queued", BaseModel: "roberta-large", Method: "full", Dataset: "reviews-labeled (42K examples)", Epochs: 8, LearningRate: "3e-5", Progress: "0%", Runtime: "—", Cost: "$0", Region: "eu-central-1", OutputModel: ""},
-			{ID: newID(), Name: "translation-en-de", Status: "failed", BaseModel: "mbart-50", Method: "LoRA", Dataset: "parallel-corpus (200K pairs)", Epochs: 5, LearningRate: "1e-4", Progress: "34%", Runtime: "2h 8m", Cost: "$64", Region: "eu-central-1", OutputModel: ""},
-		},
-		"hosting": {
-			{ID: newID(), Name: "customer-intent", Status: "completed", BaseModel: "llama-3-8b", Method: "LoRA", Dataset: "chat-intents (18K examples)", Epochs: 3, LearningRate: "2e-4", Progress: "100%", Runtime: "3h 50m", Cost: "$142", Region: "ap-south-1", OutputModel: "ft:customer-intent-20260412"},
-			{ID: newID(), Name: "doc-summarizer", Status: "running", BaseModel: "mistral-7b", Method: "QLoRA", Dataset: "documents-summary (8K examples)", Epochs: 4, LearningRate: "1e-4", Progress: "78%", Runtime: "2h 40m", Cost: "$86", Region: "ap-south-1", OutputModel: ""},
-			{ID: newID(), Name: "ner-custom", Status: "completed", BaseModel: "bert-base", Method: "full", Dataset: "ner-tagged (22K examples)", Epochs: 15, LearningRate: "5e-5", Progress: "100%", Runtime: "58m", Cost: "$18", Region: "ap-south-1", OutputModel: "ft:ner-custom-20260408"},
-		},
-	},
+	jobs: map[string][]FineTuningJob{},
 }
 
 func (s *fineTuningJobStoreType) list(slug string) []FineTuningJob {

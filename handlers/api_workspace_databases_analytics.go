@@ -37,20 +37,7 @@ type dbWarehouseStoreType struct {
 }
 
 var dbWarehouseStore = &dbWarehouseStoreType{
-	instances: map[string][]DBWarehouse{
-		"buyvm": {
-			{ID: newID(), Name: "analytics-main", Engine: "clickhouse", Version: "24.3", Region: "eu-central-1", Status: "running", Size: "dw.x2large", Storage: "12 TB", Tables: 248, Queries24h: "18,400", ScanBytes: "4.2 TB", Endpoint: "analytics-main.warehouse.eu-central-1.example.com:8443", Encrypted: true},
-			{ID: newID(), Name: "bi-reporting", Engine: "snowflake", Version: "8.x", Region: "eu-central-1", Status: "running", Size: "X-Large", Storage: "8 TB", Tables: 142, Queries24h: "6,200", ScanBytes: "1.8 TB", Endpoint: "bi-reporting.warehouse.eu-central-1.example.com:443", Encrypted: true},
-			{ID: newID(), Name: "events-warehouse", Engine: "clickhouse", Version: "24.3", Region: "us-east-1", Status: "running", Size: "dw.xlarge", Storage: "24 TB", Tables: 86, Queries24h: "42,000", ScanBytes: "9.6 TB", Endpoint: "events-warehouse.warehouse.us-east-1.example.com:8443", Encrypted: true},
-			{ID: newID(), Name: "finance-dwh", Engine: "redshift", Version: "1.0", Region: "eu-central-1", Status: "running", Size: "ra3.xlplus", Storage: "4 TB", Tables: 320, Queries24h: "2,800", ScanBytes: "800 GB", Endpoint: "finance-dwh.warehouse.eu-central-1.example.com:5439", Encrypted: true},
-			{ID: newID(), Name: "staging-dwh", Engine: "clickhouse", Version: "24.3", Region: "eu-central-1", Status: "stopped", Size: "dw.medium", Storage: "500 GB", Tables: 42, Queries24h: "0", ScanBytes: "0 B", Endpoint: "staging-dwh.warehouse.eu-central-1.example.com:8443", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "product-analytics", Engine: "clickhouse", Version: "24.3", Region: "ap-south-1", Status: "running", Size: "dw.xlarge", Storage: "6 TB", Tables: 94, Queries24h: "8,400", ScanBytes: "2.1 TB", Endpoint: "product-analytics.warehouse.ap-south-1.example.com:8443", Encrypted: true},
-			{ID: newID(), Name: "customer-insights", Engine: "snowflake", Version: "8.x", Region: "ap-south-1", Status: "running", Size: "Large", Storage: "3 TB", Tables: 68, Queries24h: "3,200", ScanBytes: "900 GB", Endpoint: "customer-insights.warehouse.ap-south-1.example.com:443", Encrypted: true},
-			{ID: newID(), Name: "log-analytics", Engine: "clickhouse", Version: "24.3", Region: "ap-south-1", Status: "running", Size: "dw.large", Storage: "18 TB", Tables: 32, Queries24h: "24,000", ScanBytes: "5.4 TB", Endpoint: "log-analytics.warehouse.ap-south-1.example.com:8443", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBWarehouse{},
 }
 
 func (s *dbWarehouseStoreType) list(slug string) []DBWarehouse {
@@ -280,20 +267,7 @@ type dbTimeSeriesStoreType struct {
 }
 
 var dbTimeSeriesStore = &dbTimeSeriesStoreType{
-	instances: map[string][]DBTimeSeries{
-		"buyvm": {
-			{ID: newID(), Name: "infra-metrics", Engine: "influxdb", Version: "3.0", Region: "eu-central-1", Status: "running", Size: "ts.xlarge", Storage: "2 TB", Metrics: "48,000", DataPoints: "12.4 B", Retention: "90d", Endpoint: "infra-metrics.ts.eu-central-1.example.com:8086", Encrypted: true},
-			{ID: newID(), Name: "app-telemetry", Engine: "timescaledb", Version: "2.14", Region: "eu-central-1", Status: "running", Size: "ts.large", Storage: "800 GB", Metrics: "12,000", DataPoints: "4.8 B", Retention: "30d", Endpoint: "app-telemetry.ts.eu-central-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "iot-sensor-data", Engine: "influxdb", Version: "3.0", Region: "us-east-1", Status: "running", Size: "ts.x2large", Storage: "8 TB", Metrics: "120,000", DataPoints: "48.2 B", Retention: "365d", Endpoint: "iot-sensor-data.ts.us-east-1.example.com:8086", Encrypted: true},
-			{ID: newID(), Name: "business-kpis", Engine: "prometheus", Version: "2.51", Region: "eu-central-1", Status: "running", Size: "ts.medium", Storage: "200 GB", Metrics: "8,400", DataPoints: "2.1 B", Retention: "15d", Endpoint: "business-kpis.ts.eu-central-1.example.com:9090", Encrypted: false},
-			{ID: newID(), Name: "dev-metrics", Engine: "influxdb", Version: "3.0", Region: "eu-central-1", Status: "stopped", Size: "ts.small", Storage: "50 GB", Metrics: "2,400", DataPoints: "180 M", Retention: "7d", Endpoint: "dev-metrics.ts.eu-central-1.example.com:8086", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-metrics", Engine: "influxdb", Version: "3.0", Region: "ap-south-1", Status: "running", Size: "ts.large", Storage: "1.5 TB", Metrics: "32,000", DataPoints: "8.6 B", Retention: "60d", Endpoint: "platform-metrics.ts.ap-south-1.example.com:8086", Encrypted: true},
-			{ID: newID(), Name: "cdn-analytics", Engine: "timescaledb", Version: "2.14", Region: "ap-south-1", Status: "running", Size: "ts.large", Storage: "600 GB", Metrics: "6,800", DataPoints: "3.2 B", Retention: "30d", Endpoint: "cdn-analytics.ts.ap-south-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "network-telemetry", Engine: "prometheus", Version: "2.51", Region: "ap-south-1", Status: "running", Size: "ts.medium", Storage: "300 GB", Metrics: "14,200", DataPoints: "4.4 B", Retention: "15d", Endpoint: "network-telemetry.ts.ap-south-1.example.com:9090", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBTimeSeries{},
 }
 
 func (s *dbTimeSeriesStoreType) list(slug string) []DBTimeSeries {
@@ -522,20 +496,7 @@ type dbSearchStoreType struct {
 }
 
 var dbSearchStore = &dbSearchStoreType{
-	instances: map[string][]DBSearch{
-		"buyvm": {
-			{ID: newID(), Name: "product-search", Engine: "elasticsearch", Version: "8.13", Region: "eu-central-1", Status: "running", Size: "search.xlarge", Nodes: 5, Storage: "2 TB", Indices: 12, Documents: "24,000,000", Queries24h: "840,000", Endpoint: "product-search.search.eu-central-1.example.com:9200", Encrypted: true},
-			{ID: newID(), Name: "log-search", Engine: "opensearch", Version: "2.13", Region: "eu-central-1", Status: "running", Size: "search.x2large", Nodes: 8, Storage: "12 TB", Indices: 48, Documents: "180,000,000", Queries24h: "120,000", Endpoint: "log-search.search.eu-central-1.example.com:9200", Encrypted: true},
-			{ID: newID(), Name: "content-index", Engine: "elasticsearch", Version: "8.13", Region: "us-east-1", Status: "running", Size: "search.large", Nodes: 3, Storage: "500 GB", Indices: 8, Documents: "6,200,000", Queries24h: "280,000", Endpoint: "content-index.search.us-east-1.example.com:9200", Encrypted: true},
-			{ID: newID(), Name: "autocomplete", Engine: "meilisearch", Version: "1.7", Region: "eu-central-1", Status: "running", Size: "search.medium", Nodes: 2, Storage: "80 GB", Indices: 4, Documents: "1,200,000", Queries24h: "2,400,000", Endpoint: "autocomplete.search.eu-central-1.example.com:7700", Encrypted: true},
-			{ID: newID(), Name: "dev-search", Engine: "elasticsearch", Version: "8.13", Region: "eu-central-1", Status: "stopped", Size: "search.small", Nodes: 1, Storage: "20 GB", Indices: 3, Documents: "45,000", Queries24h: "0", Endpoint: "dev-search.search.eu-central-1.example.com:9200", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app-search", Engine: "elasticsearch", Version: "8.13", Region: "ap-south-1", Status: "running", Size: "search.large", Nodes: 3, Storage: "800 GB", Indices: 10, Documents: "14,000,000", Queries24h: "520,000", Endpoint: "app-search.search.ap-south-1.example.com:9200", Encrypted: true},
-			{ID: newID(), Name: "docs-search", Engine: "meilisearch", Version: "1.7", Region: "ap-south-1", Status: "running", Size: "search.medium", Nodes: 1, Storage: "40 GB", Indices: 6, Documents: "480,000", Queries24h: "86,000", Endpoint: "docs-search.search.ap-south-1.example.com:7700", Encrypted: true},
-			{ID: newID(), Name: "audit-search", Engine: "opensearch", Version: "2.13", Region: "ap-south-1", Status: "running", Size: "search.large", Nodes: 3, Storage: "4 TB", Indices: 24, Documents: "62,000,000", Queries24h: "18,000", Endpoint: "audit-search.search.ap-south-1.example.com:9200", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBSearch{},
 }
 
 func (s *dbSearchStoreType) list(slug string) []DBSearch {

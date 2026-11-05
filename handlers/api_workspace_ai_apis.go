@@ -13,18 +13,18 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type VisionAPI struct {
-	ID        string
-	Name      string
-	Status    string
-	Model     string
+	ID         string
+	Name       string
+	Status     string
+	Model      string
 	Capability string
-	Version   string
-	Requests  string
-	Latency   string
-	Accuracy  string
-	Region    string
-	Endpoint  string
-	APIKey    string
+	Version    string
+	Requests   string
+	Latency    string
+	Accuracy   string
+	Region     string
+	Endpoint   string
+	APIKey     string
 }
 
 type visionAPIStoreType struct {
@@ -33,20 +33,7 @@ type visionAPIStoreType struct {
 }
 
 var visionAPIStore = &visionAPIStoreType{
-	apis: map[string][]VisionAPI{
-		"buyvm": {
-			{ID: newID(), Name: "object-detection-v3", Status: "active", Model: "yolov8-x", Capability: "object-detection", Version: "v3.2.0", Requests: "2.4M/mo", Latency: "42ms p99", Accuracy: "94.2% mAP", Region: "eu-central-1", Endpoint: "vision-objdet.api.eu-central-1.example.com", APIKey: "vk_prod_****8a2f"},
-			{ID: newID(), Name: "image-classification", Status: "active", Model: "efficientnet-v2-l", Capability: "classification", Version: "v2.0.0", Requests: "1.8M/mo", Latency: "18ms p99", Accuracy: "96.8% top-5", Region: "eu-central-1", Endpoint: "vision-classify.api.eu-central-1.example.com", APIKey: "vk_prod_****c4d1"},
-			{ID: newID(), Name: "ocr-document", Status: "active", Model: "trocr-large", Capability: "ocr", Version: "v1.5.0", Requests: "480K/mo", Latency: "320ms p99", Accuracy: "99.1% CER", Region: "us-east-1", Endpoint: "vision-ocr.api.us-east-1.example.com", APIKey: "vk_prod_****e7b3"},
-			{ID: newID(), Name: "face-analysis", Status: "active", Model: "arcface-r100", Capability: "face-detection", Version: "v2.1.0", Requests: "920K/mo", Latency: "56ms p99", Accuracy: "99.8% LFW", Region: "eu-central-1", Endpoint: "vision-face.api.eu-central-1.example.com", APIKey: "vk_prod_****1f9e"},
-			{ID: newID(), Name: "segmentation-beta", Status: "beta", Model: "sam-2-large", Capability: "segmentation", Version: "v0.9.0", Requests: "12K/mo", Latency: "180ms p99", Accuracy: "91.4% IoU", Region: "eu-central-1", Endpoint: "vision-seg.api.eu-central-1.example.com", APIKey: "vk_beta_****4d2a"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "product-recognition", Status: "active", Model: "resnet-101-custom", Capability: "classification", Version: "v1.2.0", Requests: "640K/mo", Latency: "24ms p99", Accuracy: "97.4% top-5", Region: "ap-south-1", Endpoint: "vision-product.api.ap-south-1.example.com", APIKey: "vk_prod_****a8c2"},
-			{ID: newID(), Name: "barcode-scanner", Status: "active", Model: "barcode-det-v2", Capability: "ocr", Version: "v2.0.0", Requests: "1.2M/mo", Latency: "12ms p99", Accuracy: "99.9%", Region: "ap-south-1", Endpoint: "vision-barcode.api.ap-south-1.example.com", APIKey: "vk_prod_****b5e7"},
-			{ID: newID(), Name: "defect-detection", Status: "active", Model: "yolov8-custom", Capability: "object-detection", Version: "v1.0.0", Requests: "280K/mo", Latency: "38ms p99", Accuracy: "92.6% mAP", Region: "ap-south-1", Endpoint: "vision-defect.api.ap-south-1.example.com", APIKey: "vk_prod_****f3a1"},
-		},
-	},
+	apis: map[string][]VisionAPI{},
 }
 
 func (s *visionAPIStoreType) list(slug string) []VisionAPI {
@@ -188,9 +175,9 @@ func apiWSAIAPIsVisionCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Model: model, Capability: capability,
 		Version: "v1.0.0", Requests: "0/mo",
 		Latency: "—", Accuracy: "—",
-		Region: region,
+		Region:   region,
 		Endpoint: "vision-" + strings.ReplaceAll(strings.ToLower(name), " ", "-") + ".api." + region + ".example.com",
-		APIKey: "vk_new_****" + newID()[:4],
+		APIKey:   "vk_new_****" + newID()[:4],
 	}
 	visionAPIStore.add(slug, api)
 	apiCreated(w, toAPIVisionAPI(api))

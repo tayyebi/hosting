@@ -28,25 +28,7 @@ type monitoringCheckStoreType struct {
 }
 
 var monitoringCheckStore = &monitoringCheckStoreType{
-	checks: map[string][]MonitoringCheck{
-		"buyvm": {
-			{ID: newID(), Name: "buyvm.io", Type: "http", Endpoint: "https://buyvm.io", Status: "up", Latency: "34ms", Interval: "30s", Region: "us-east", Created: "2026-01-15T08:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "api.buyvm.io/health", Type: "http", Endpoint: "https://api.buyvm.io/health", Status: "up", Latency: "22ms", Interval: "30s", Region: "us-east", Created: "2026-01-15T08:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "api.buyvm.io/graphql", Type: "http", Endpoint: "https://api.buyvm.io/graphql", Status: "degraded", Latency: "148ms", Interval: "30s", Region: "us-east", Created: "2026-02-10T10:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "auth.buyvm.io", Type: "http", Endpoint: "https://auth.buyvm.io", Status: "up", Latency: "41ms", Interval: "60s", Region: "eu-west", Created: "2026-01-20T09:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "cdn.buyvm.io", Type: "http", Endpoint: "https://cdn.buyvm.io", Status: "up", Latency: "11ms", Interval: "30s", Region: "global", Created: "2026-03-01T12:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "db-pg-prod:5432", Type: "tcp", Endpoint: "tcp://db-pg-prod.buyvm.io:5432", Status: "up", Latency: "4ms", Interval: "15s", Region: "us-east", Created: "2025-12-01T08:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "abrnoc.io", Type: "http", Endpoint: "https://abrnoc.io", Status: "up", Latency: "28ms", Interval: "30s", Region: "eu-west", Created: "2026-02-01T10:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "api.abrnoc.io/health", Type: "http", Endpoint: "https://api.abrnoc.io/health", Status: "up", Latency: "19ms", Interval: "30s", Region: "eu-west", Created: "2026-02-01T10:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "hosting.com", Type: "http", Endpoint: "https://hosting.com", Status: "up", Latency: "42ms", Interval: "60s", Region: "us-east", Created: "2026-03-05T14:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "cdn-edge-fra", Type: "icmp", Endpoint: "icmp://cdn-edge-fra.hosting.com", Status: "up", Latency: "8ms", Interval: "10s", Region: "eu-west", Created: "2026-03-10T08:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-			{ID: newID(), Name: "dns.hosting.com", Type: "dns", Endpoint: "dns://ns1.hosting.com", Status: "up", Latency: "6ms", Interval: "60s", Region: "global", Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T14:38:00Z"},
-		},
-	},
+	checks: map[string][]MonitoringCheck{},
 }
 
 func (s *monitoringCheckStoreType) list(slug string) []MonitoringCheck {
@@ -157,7 +139,7 @@ func apiTenantMonitoringListHandler(w http.ResponseWriter, r *http.Request) {
 			ID: c.ID, Name: c.Name, Type: c.Type,
 			Endpoint: c.Endpoint, Status: c.Status,
 			Latency: c.Latency, Interval: c.Interval,
-			Region: c.Region,
+			Region:  c.Region,
 			Created: c.Created, Updated: c.Updated,
 		}
 	}
@@ -230,7 +212,7 @@ func apiTenantMonitoringCreateHandler(w http.ResponseWriter, r *http.Request) {
 		ID: c.ID, Name: c.Name, Type: c.Type,
 		Endpoint: c.Endpoint, Status: c.Status,
 		Latency: c.Latency, Interval: c.Interval,
-		Region: c.Region,
+		Region:  c.Region,
 		Created: c.Created, Updated: c.Updated,
 	})
 }
@@ -265,7 +247,7 @@ func apiTenantMonitoringGetHandler(w http.ResponseWriter, r *http.Request) {
 		ID: c.ID, Name: c.Name, Type: c.Type,
 		Endpoint: c.Endpoint, Status: c.Status,
 		Latency: c.Latency, Interval: c.Interval,
-		Region: c.Region,
+		Region:  c.Region,
 		Created: c.Created, Updated: c.Updated,
 	})
 }

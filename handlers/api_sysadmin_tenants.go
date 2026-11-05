@@ -147,7 +147,7 @@ func apiSysadminTenantsCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := Tenant{ID: newID(), Name: name, Slug: slug, Domain: domain}
-	store.add(t)
+	t = store.add(t)
 
 	go db.InsertAuditEvent(context.Background(), Pools.Admin, user.ID, string(user.Role),
 		"tenant.created", "info", map[string]any{"name": name, "slug": slug, "domain": domain},

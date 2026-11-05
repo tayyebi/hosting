@@ -35,21 +35,7 @@ type s3BucketStoreType struct {
 }
 
 var s3BucketStore = &s3BucketStoreType{
-	items: map[string][]S3Bucket{
-		"buyvm": {
-			{ID: newID(), Name: "buyvm-assets-prod", Region: "us-east-1", StorageClass: "Standard", SizeGB: 245.8, ObjectCount: 1284500, Versioning: true, Encryption: "AES-256", AccessPolicy: "Private", Endpoint: "s3.us-east-1.buyvm.cloud", CDNEnabled: true, LifecycleRule: "Archive after 90d", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "buyvm-backups", Region: "us-east-1", StorageClass: "Infrequent Access", SizeGB: 1024.0, ObjectCount: 8450, Versioning: true, Encryption: "AES-256", AccessPolicy: "Private", Endpoint: "s3.us-east-1.buyvm.cloud", CDNEnabled: false, LifecycleRule: "Delete after 365d", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "buyvm-logs", Region: "us-east-1", StorageClass: "Standard", SizeGB: 89.2, ObjectCount: 450000, Versioning: false, Encryption: "AES-256", AccessPolicy: "Private", Endpoint: "s3.us-east-1.buyvm.cloud", CDNEnabled: false, LifecycleRule: "Archive after 30d", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "buyvm-static-cdn", Region: "us-west-2", StorageClass: "Standard", SizeGB: 12.5, ObjectCount: 3200, Versioning: false, Encryption: "None", AccessPolicy: "Public-read", Endpoint: "s3.us-west-2.buyvm.cloud", CDNEnabled: true, LifecycleRule: "None", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "buyvm-uploads-staging", Region: "us-east-1", StorageClass: "Standard", SizeGB: 5.1, ObjectCount: 850, Versioning: false, Encryption: "AES-256", AccessPolicy: "Private", Endpoint: "s3.us-east-1.buyvm.cloud", CDNEnabled: false, LifecycleRule: "Delete after 7d", Status: "active", Updated: "2026-04-14"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "hosting-platform-data", Region: "eu-central-1", StorageClass: "Standard", SizeGB: 890.4, ObjectCount: 5600000, Versioning: true, Encryption: "AES-256-KMS", AccessPolicy: "Private", Endpoint: "s3.eu-central-1.hosting.cloud", CDNEnabled: false, LifecycleRule: "Transition to IA after 60d", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "hosting-media", Region: "eu-central-1", StorageClass: "Standard", SizeGB: 2048.0, ObjectCount: 125000, Versioning: true, Encryption: "AES-256", AccessPolicy: "Private", Endpoint: "s3.eu-central-1.hosting.cloud", CDNEnabled: true, LifecycleRule: "None", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "hosting-terraform-state", Region: "eu-central-1", StorageClass: "Standard", SizeGB: 0.5, ObjectCount: 320, Versioning: true, Encryption: "AES-256-KMS", AccessPolicy: "Private", Endpoint: "s3.eu-central-1.hosting.cloud", CDNEnabled: false, LifecycleRule: "None", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "hosting-public-docs", Region: "us-east-1", StorageClass: "Standard", SizeGB: 3.2, ObjectCount: 1500, Versioning: false, Encryption: "None", AccessPolicy: "Public-read", Endpoint: "s3.us-east-1.hosting.cloud", CDNEnabled: true, LifecycleRule: "None", Status: "active", Updated: "2026-04-12"},
-		},
-	},
+	items: map[string][]S3Bucket{},
 }
 
 func (s *s3BucketStoreType) list(slug string) []S3Bucket {
@@ -200,8 +186,8 @@ func apiWSStorageObjectS3CreateHandler(w http.ResponseWriter, r *http.Request) {
 		StorageClass: storageClass, SizeGB: 0, ObjectCount: 0,
 		Versioning: req.Versioning, Encryption: encryption,
 		AccessPolicy: accessPolicy,
-		Endpoint: "s3." + region + ".cloud",
-		CDNEnabled: false, LifecycleRule: "None",
+		Endpoint:     "s3." + region + ".cloud",
+		CDNEnabled:   false, LifecycleRule: "None",
 		Status: "active", Updated: "2026-04-17",
 	}
 	s3BucketStore.add(slug, bucket)

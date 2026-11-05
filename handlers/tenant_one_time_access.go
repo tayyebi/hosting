@@ -36,21 +36,7 @@ type oneTimeAccessStoreType struct {
 }
 
 var oneTimeAccessStore = &oneTimeAccessStoreType{
-	tokens: map[string][]OneTimeAccess{
-		"buyvm": {
-			{ID: newID(), Label: "Emergency DB access for Acme", Token: "ota-a1b2c3d4", Target: "workspace:production", GrantedTo: "james@acme.io", GrantedBy: "alice@buyvm.net", Status: "used", ExpiresAt: "2026-04-16T23:59:00Z", Created: "2026-04-16T10:00:00Z"},
-			{ID: newID(), Label: "Vendor audit access", Token: "ota-e5f6g7h8", Target: "workspace:staging", GrantedTo: "auditor@external.com", GrantedBy: "alice@buyvm.net", Status: "active", ExpiresAt: "2026-04-18T23:59:00Z", Created: "2026-04-17T08:00:00Z"},
-			{ID: newID(), Label: "Temp support access", Token: "ota-i9j0k1l2", Target: "workspace:default", GrantedTo: "contractor@support.io", GrantedBy: "bob@buyvm.net", Status: "expired", ExpiresAt: "2026-04-14T12:00:00Z", Created: "2026-04-13T09:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Label: "Partner integration test", Token: "ota-m3n4o5p6", Target: "workspace:backup", GrantedTo: "dev@partner.io", GrantedBy: "david@abrnoc.com", Status: "active", ExpiresAt: "2026-04-19T18:00:00Z", Created: "2026-04-17T06:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Label: "Client data export", Token: "ota-q7r8s9t0", Target: "workspace:us-east", GrantedTo: "alice@monroe.io", GrantedBy: "frank@hosting.com", Status: "active", ExpiresAt: "2026-04-18T12:00:00Z", Created: "2026-04-17T09:00:00Z"},
-			{ID: newID(), Label: "Security scan access", Token: "ota-u1v2w3x4", Target: "workspace:prod", GrantedTo: "scanner@secops.com", GrantedBy: "frank@hosting.com", Status: "revoked", ExpiresAt: "2026-04-20T00:00:00Z", Created: "2026-04-15T14:00:00Z"},
-			{ID: newID(), Label: "Migration helper token", Token: "ota-y5z6a7b8", Target: "workspace:eu-central", GrantedTo: "chloe@martindev.fr", GrantedBy: "grace@hosting.com", Status: "used", ExpiresAt: "2026-04-16T20:00:00Z", Created: "2026-04-16T08:00:00Z"},
-		},
-	},
+	tokens: map[string][]OneTimeAccess{},
 }
 
 func (s *oneTimeAccessStoreType) list(slug string) []OneTimeAccess {

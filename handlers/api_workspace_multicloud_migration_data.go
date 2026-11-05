@@ -13,19 +13,19 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type DataMigrationJob struct {
-	ID             string
-	Name           string
-	SourceStore    string
-	TargetStore    string
-	DataType       string
-	TotalSize      string
-	Transferred    string
-	ProgressPct    string
-	Throughput     string
-	Validation     string
-	StartedAt      string
-	Status         string
-	Updated        string
+	ID          string
+	Name        string
+	SourceStore string
+	TargetStore string
+	DataType    string
+	TotalSize   string
+	Transferred string
+	ProgressPct string
+	Throughput  string
+	Validation  string
+	StartedAt   string
+	Status      string
+	Updated     string
 }
 
 type dataMigrationJobStoreType struct {
@@ -34,21 +34,7 @@ type dataMigrationJobStoreType struct {
 }
 
 var dataMigrationJobStore = &dataMigrationJobStoreType{
-	items: map[string][]DataMigrationJob{
-		"buyvm": {
-			{ID: newID(), Name: "prod-db-to-rds", SourceStore: "On-prem PostgreSQL", TargetStore: "AWS RDS PostgreSQL", DataType: "Relational", TotalSize: "2.4 TB", Transferred: "2.4 TB", ProgressPct: "100%", Throughput: "—", Validation: "Checksums passed", StartedAt: "2026-04-14 02:00", Status: "completed", Updated: "2026-04-15"},
-			{ID: newID(), Name: "blob-storage-sync", SourceStore: "Azure Blob Storage", TargetStore: "AWS S3", DataType: "Object", TotalSize: "18.7 TB", Transferred: "12.3 TB", ProgressPct: "66%", Throughput: "850 MB/s", Validation: "In progress", StartedAt: "2026-04-16 08:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "analytics-warehouse", SourceStore: "On-prem Hadoop", TargetStore: "GCP BigQuery", DataType: "Analytics", TotalSize: "45.2 TB", Transferred: "8.1 TB", ProgressPct: "18%", Throughput: "1.2 GB/s", Validation: "Pending", StartedAt: "2026-04-17 00:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "redis-cache-migrate", SourceStore: "Self-hosted Redis", TargetStore: "AWS ElastiCache", DataType: "Key-value", TotalSize: "128 GB", Transferred: "128 GB", ProgressPct: "100%", Throughput: "—", Validation: "Key count matched", StartedAt: "2026-04-16 14:00", Status: "completed", Updated: "2026-04-16"},
-			{ID: newID(), Name: "document-db-sync", SourceStore: "MongoDB Atlas", TargetStore: "AWS DocumentDB", DataType: "Document", TotalSize: "890 GB", Transferred: "0 GB", ProgressPct: "0%", Throughput: "—", Validation: "Not started", StartedAt: "—", Status: "pending", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "multi-region-s3-sync", SourceStore: "AWS S3 us-east-1", TargetStore: "AWS S3 eu-west-1 + ap-south-1", DataType: "Object", TotalSize: "120 TB", Transferred: "95 TB", ProgressPct: "79%", Throughput: "2.1 GB/s", Validation: "Incremental check", StartedAt: "2026-04-10 00:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "gcp-to-aws-bigdata", SourceStore: "GCP Cloud Storage", TargetStore: "AWS S3 + Glue", DataType: "Data lake", TotalSize: "68 TB", Transferred: "68 TB", ProgressPct: "100%", Throughput: "—", Validation: "Row counts verified", StartedAt: "2026-04-05 06:00", Status: "completed", Updated: "2026-04-12"},
-			{ID: newID(), Name: "alibaba-oss-migration", SourceStore: "Alibaba OSS", TargetStore: "AWS S3", DataType: "Object", TotalSize: "8.5 TB", Transferred: "3.2 TB", ProgressPct: "38%", Throughput: "420 MB/s", Validation: "In progress", StartedAt: "2026-04-16 20:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "timeseries-influx-to-ts", SourceStore: "InfluxDB", TargetStore: "AWS Timestream", DataType: "Time-series", TotalSize: "1.8 TB", Transferred: "0 TB", ProgressPct: "0%", Throughput: "—", Validation: "Not started", StartedAt: "—", Status: "pending", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]DataMigrationJob{},
 }
 
 func (s *dataMigrationJobStoreType) list(slug string) []DataMigrationJob {

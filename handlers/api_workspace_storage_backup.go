@@ -31,22 +31,7 @@ type snapshotStoreType struct {
 }
 
 var snapshotStore = &snapshotStoreType{
-	snapshots: map[string][]Snapshot{
-		"buyvm": {
-			{ID: newID(), Name: "db-primary-daily-0416", Region: "eu-central-1", Status: "completed", SourceType: "block-ssd", SourceName: "db-primary-data", Size: "480 GB", CreatedAt: "2026-04-16T02:00:00Z", Retention: "30 days", Encrypted: true},
-			{ID: newID(), Name: "db-primary-daily-0415", Region: "eu-central-1", Status: "completed", SourceType: "block-ssd", SourceName: "db-primary-data", Size: "478 GB", CreatedAt: "2026-04-15T02:00:00Z", Retention: "30 days", Encrypted: true},
-			{ID: newID(), Name: "app-server-weekly-w15", Region: "us-east-1", Status: "completed", SourceType: "vm", SourceName: "vm-app-server-03", Size: "120 GB", CreatedAt: "2026-04-13T04:00:00Z", Retention: "90 days", Encrypted: true},
-			{ID: newID(), Name: "elasticsearch-pre-upgrade", Region: "eu-central-1", Status: "completed", SourceType: "block-ssd", SourceName: "elasticsearch-hot", Size: "940 GB", CreatedAt: "2026-04-10T18:30:00Z", Retention: "180 days", Encrypted: true},
-			{ID: newID(), Name: "media-vol-snapshot-q1", Region: "us-east-1", Status: "completed", SourceType: "block-hdd", SourceName: "media-ingest", Size: "7.2 TB", CreatedAt: "2026-03-31T00:00:00Z", Retention: "365 days", Encrypted: true},
-			{ID: newID(), Name: "staging-scratch-snap", Region: "eu-central-1", Status: "in-progress", SourceType: "block-ssd", SourceName: "staging-scratch", Size: "—", CreatedAt: "2026-04-17T10:15:00Z", Retention: "7 days", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "mongo-daily-0416", Region: "ap-south-1", Status: "completed", SourceType: "block-ssd", SourceName: "mongo-data", Size: "240 GB", CreatedAt: "2026-04-16T03:00:00Z", Retention: "30 days", Encrypted: true},
-			{ID: newID(), Name: "redis-aof-snap-0414", Region: "ap-south-1", Status: "completed", SourceType: "block-ssd", SourceName: "redis-aof", Size: "92 GB", CreatedAt: "2026-04-14T03:00:00Z", Retention: "14 days", Encrypted: true},
-			{ID: newID(), Name: "file-share-pre-migration", Region: "ap-south-1", Status: "completed", SourceType: "block-hdd", SourceName: "file-share-data", Size: "980 GB", CreatedAt: "2026-04-12T22:00:00Z", Retention: "60 days", Encrypted: false},
-			{ID: newID(), Name: "dev-scratch-snap", Region: "ap-south-1", Status: "failed", SourceType: "block-hdd", SourceName: "dev-scratch", Size: "—", CreatedAt: "2026-04-16T06:00:00Z", Retention: "7 days", Encrypted: false},
-		},
-	},
+	snapshots: map[string][]Snapshot{},
 }
 
 func (s *snapshotStoreType) list(slug string) []Snapshot {

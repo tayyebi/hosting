@@ -37,26 +37,7 @@ type tenantMonitoringStoreType struct {
 }
 
 var tenantMonitoringStore = &tenantMonitoringStoreType{
-	checks: map[string][]TenantMonitoringCheck{
-		"buyvm": {
-			{ID: newID(), Name: "web-prod-01", CheckType: "HTTP", Target: "https://web-prod-01.buyvm.net/health", Status: "up", Uptime30d: "100.00", LatencyMs: 22, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "web-prod-02", CheckType: "HTTP", Target: "https://web-prod-02.buyvm.net/health", Status: "up", Uptime30d: "100.00", LatencyMs: 19, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "api-gateway", CheckType: "TCP", Target: "185.22.153.1:443", Status: "degraded", Uptime30d: "99.72", LatencyMs: 148, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "db-primary", CheckType: "TCP", Target: "185.22.153.11:5432", Status: "up", Uptime30d: "100.00", LatencyMs: 4, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "cache-redis-01", CheckType: "TCP", Target: "185.22.153.12:6379", Status: "up", Uptime30d: "100.00", LatencyMs: 1, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "worker-queue-1", CheckType: "HTTP", Target: "http://worker-01.buyvm.net/status", Status: "degraded", Uptime30d: "98.82", LatencyMs: 0, LastChecked: "2026-04-16T22:00:00Z", Created: "2026-02-01T08:00:00Z", Updated: "2026-04-16T22:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "node-fra-01", CheckType: "ICMP", Target: "93.115.20.44", Status: "up", Uptime30d: "99.99", LatencyMs: 8, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-01-05T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "node-fra-02", CheckType: "ICMP", Target: "93.115.20.45", Status: "paused", Uptime30d: "99.50", LatencyMs: 0, LastChecked: "2026-04-16T20:00:00Z", Created: "2026-01-05T08:00:00Z", Updated: "2026-04-16T20:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "k8s-master-01", CheckType: "HTTP", Target: "https://k8s-api.hosting.io/healthz", Status: "up", Uptime30d: "99.95", LatencyMs: 15, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "k8s-worker-01", CheckType: "TCP", Target: "172.16.50.10:10250", Status: "up", Uptime30d: "99.95", LatencyMs: 12, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "k8s-worker-02", CheckType: "TCP", Target: "172.16.50.11:10250", Status: "down", Uptime30d: "97.40", LatencyMs: 0, LastChecked: "2026-04-16T22:00:00Z", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-16T22:00:00Z"},
-			{ID: newID(), Name: "cache-redis-01", CheckType: "TCP", Target: "172.16.50.50:6379", Status: "up", Uptime30d: "100.00", LatencyMs: 2, LastChecked: "2026-04-17T00:00:00Z", Created: "2026-03-01T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-		},
-	},
+	checks: map[string][]TenantMonitoringCheck{},
 }
 
 func (s *tenantMonitoringStoreType) list(slug string) []TenantMonitoringCheck {

@@ -32,21 +32,7 @@ type workloadProfileStoreType struct {
 }
 
 var workloadProfileStore = &workloadProfileStoreType{
-	items: map[string][]WorkloadProfile{
-		"buyvm": {
-			{ID: newID(), Name: "web-frontend-stack", SourceProvider: "AWS", TargetProvider: "Azure", WorkloadType: "Container", Components: 12, Portability: "95%", DriftStatus: "In sync", LastSync: "2026-04-17 08:30", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "payment-service", SourceProvider: "AWS", TargetProvider: "GCP", WorkloadType: "VM-based", Components: 5, Portability: "78%", DriftStatus: "Drift detected", LastSync: "2026-04-16 22:00", Status: "warning", Updated: "2026-04-17"},
-			{ID: newID(), Name: "analytics-pipeline", SourceProvider: "GCP", TargetProvider: "AWS", WorkloadType: "Serverless", Components: 8, Portability: "62%", DriftStatus: "In sync", LastSync: "2026-04-17 06:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "auth-microservice", SourceProvider: "Azure", TargetProvider: "AWS", WorkloadType: "Container", Components: 3, Portability: "100%", DriftStatus: "In sync", LastSync: "2026-04-17 09:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "legacy-erp-bridge", SourceProvider: "On-premises", TargetProvider: "Azure", WorkloadType: "VM-based", Components: 22, Portability: "41%", DriftStatus: "Not portable", LastSync: "2026-04-10 12:00", Status: "critical", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "global-api-gateway", SourceProvider: "AWS", TargetProvider: "Multi-cloud", WorkloadType: "Container", Components: 15, Portability: "91%", DriftStatus: "In sync", LastSync: "2026-04-17 07:45", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "ml-training-cluster", SourceProvider: "GCP", TargetProvider: "AWS", WorkloadType: "VM-based", Components: 9, Portability: "72%", DriftStatus: "Drift detected", LastSync: "2026-04-16 18:00", Status: "warning", Updated: "2026-04-17"},
-			{ID: newID(), Name: "data-warehouse-sync", SourceProvider: "AWS", TargetProvider: "GCP", WorkloadType: "Managed service", Components: 4, Portability: "55%", DriftStatus: "In sync", LastSync: "2026-04-17 03:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "edge-cdn-workers", SourceProvider: "Cloudflare", TargetProvider: "AWS", WorkloadType: "Serverless", Components: 18, Portability: "88%", DriftStatus: "In sync", LastSync: "2026-04-17 09:15", Status: "active", Updated: "2026-04-15"},
-		},
-	},
+	items: map[string][]WorkloadProfile{},
 }
 
 func (s *workloadProfileStoreType) list(slug string) []WorkloadProfile {

@@ -33,19 +33,7 @@ type vpnGatewayStoreType struct {
 }
 
 var vpnGatewayStore = &vpnGatewayStoreType{
-	gateways: map[string][]VPNGateway{
-		"buyvm": {
-			{ID: newID(), Name: "prod-vpn-eu", Type: "site-to-site", Status: "active", Region: "eu-central-1", PublicIP: "203.0.113.10", RemoteIP: "198.51.100.1", Tunnels: 2, Throughput: "1.25 Gbps", Encryption: "AES-256-GCM", IKEVersion: "IKEv2", Uptime: "99.98%"},
-			{ID: newID(), Name: "office-vpn-us", Type: "site-to-site", Status: "active", Region: "us-east-1", PublicIP: "203.0.113.20", RemoteIP: "198.51.100.2", Tunnels: 1, Throughput: "500 Mbps", Encryption: "AES-256-GCM", IKEVersion: "IKEv2", Uptime: "99.95%"},
-			{ID: newID(), Name: "dev-client-vpn", Type: "client", Status: "active", Region: "eu-central-1", PublicIP: "203.0.113.30", RemoteIP: "—", Tunnels: 24, Throughput: "250 Mbps", Encryption: "AES-128-GCM", IKEVersion: "IKEv2", Uptime: "99.99%"},
-			{ID: newID(), Name: "dr-vpn-apac", Type: "site-to-site", Status: "standby", Region: "ap-southeast-1", PublicIP: "203.0.113.40", RemoteIP: "198.51.100.3", Tunnels: 2, Throughput: "1 Gbps", Encryption: "AES-256-GCM", IKEVersion: "IKEv2", Uptime: "—"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "hq-tunnel", Type: "site-to-site", Status: "active", Region: "ap-south-1", PublicIP: "203.0.113.50", RemoteIP: "198.51.100.10", Tunnels: 2, Throughput: "2 Gbps", Encryption: "AES-256-GCM", IKEVersion: "IKEv2", Uptime: "99.97%"},
-			{ID: newID(), Name: "remote-access-vpn", Type: "client", Status: "active", Region: "ap-south-1", PublicIP: "203.0.113.60", RemoteIP: "—", Tunnels: 48, Throughput: "500 Mbps", Encryption: "AES-256-GCM", IKEVersion: "IKEv2", Uptime: "99.99%"},
-			{ID: newID(), Name: "partner-vpn", Type: "site-to-site", Status: "active", Region: "eu-west-1", PublicIP: "203.0.113.70", RemoteIP: "198.51.100.11", Tunnels: 1, Throughput: "1 Gbps", Encryption: "AES-256-CBC", IKEVersion: "IKEv1", Uptime: "99.90%"},
-		},
-	},
+	gateways: map[string][]VPNGateway{},
 }
 
 func (s *vpnGatewayStoreType) list(slug string) []VPNGateway {
@@ -236,18 +224,18 @@ func apiWSNetPrivVPNDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type DirectConnect struct {
-	ID        string
-	Name      string
-	Status    string
-	Region    string
-	Location  string
-	Port      string
-	Bandwidth string
-	VLAN      int
-	BGP_ASN   string
+	ID         string
+	Name       string
+	Status     string
+	Region     string
+	Location   string
+	Port       string
+	Bandwidth  string
+	VLAN       int
+	BGP_ASN    string
 	Redundancy string
-	Latency   string
-	MACsec    bool
+	Latency    string
+	MACsec     bool
 }
 
 type directConnectStoreType struct {
@@ -256,17 +244,7 @@ type directConnectStoreType struct {
 }
 
 var directConnectStore = &directConnectStoreType{
-	connections: map[string][]DirectConnect{
-		"buyvm": {
-			{ID: newID(), Name: "prod-dx-fra", Status: "active", Region: "eu-central-1", Location: "Equinix FR5, Frankfurt", Port: "10 GbE", Bandwidth: "10 Gbps", VLAN: 100, BGP_ASN: "65001", Redundancy: "dual", Latency: "0.4 ms", MACsec: true},
-			{ID: newID(), Name: "prod-dx-iad", Status: "active", Region: "us-east-1", Location: "Equinix DC2, Ashburn", Port: "10 GbE", Bandwidth: "10 Gbps", VLAN: 101, BGP_ASN: "65001", Redundancy: "dual", Latency: "0.3 ms", MACsec: true},
-			{ID: newID(), Name: "backup-dx-ams", Status: "standby", Region: "eu-west-1", Location: "Interxion AMS7, Amsterdam", Port: "1 GbE", Bandwidth: "1 Gbps", VLAN: 200, BGP_ASN: "65001", Redundancy: "single", Latency: "1.2 ms", MACsec: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "hq-direct-link", Status: "active", Region: "ap-south-1", Location: "STT Mumbai DC1", Port: "10 GbE", Bandwidth: "10 Gbps", VLAN: 300, BGP_ASN: "65100", Redundancy: "dual", Latency: "0.5 ms", MACsec: true},
-			{ID: newID(), Name: "eu-direct-link", Status: "active", Region: "eu-west-1", Location: "Equinix LD8, London", Port: "1 GbE", Bandwidth: "1 Gbps", VLAN: 301, BGP_ASN: "65100", Redundancy: "single", Latency: "0.8 ms", MACsec: false},
-		},
-	},
+	connections: map[string][]DirectConnect{},
 }
 
 func (s *directConnectStoreType) list(slug string) []DirectConnect {
@@ -484,17 +462,7 @@ type sdwanStoreType struct {
 }
 
 var sdwanStore = &sdwanStoreType{
-	networks: map[string][]SDWAN{
-		"buyvm": {
-			{ID: newID(), Name: "global-sdwan", Status: "active", Topology: "hub-and-spoke", Sites: 12, Hubs: 3, Bandwidth: "10 Gbps aggregate", Protocol: "IPsec + VXLAN", Encryption: "AES-256-GCM", QoS: true, Uptime: "99.97%", Region: "global"},
-			{ID: newID(), Name: "eu-mesh-sdwan", Status: "active", Topology: "full-mesh", Sites: 5, Hubs: 0, Bandwidth: "4 Gbps aggregate", Protocol: "WireGuard", Encryption: "ChaCha20-Poly1305", QoS: true, Uptime: "99.99%", Region: "eu"},
-			{ID: newID(), Name: "dev-sdwan", Status: "active", Topology: "hub-and-spoke", Sites: 3, Hubs: 1, Bandwidth: "1 Gbps aggregate", Protocol: "IPsec", Encryption: "AES-128-GCM", QoS: false, Uptime: "99.90%", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "apac-sdwan", Status: "active", Topology: "hub-and-spoke", Sites: 8, Hubs: 2, Bandwidth: "6 Gbps aggregate", Protocol: "IPsec + VXLAN", Encryption: "AES-256-GCM", QoS: true, Uptime: "99.95%", Region: "apac"},
-			{ID: newID(), Name: "multicloud-fabric", Status: "active", Topology: "full-mesh", Sites: 4, Hubs: 0, Bandwidth: "8 Gbps aggregate", Protocol: "WireGuard", Encryption: "ChaCha20-Poly1305", QoS: true, Uptime: "99.98%", Region: "global"},
-		},
-	},
+	networks: map[string][]SDWAN{},
 }
 
 func (s *sdwanStoreType) list(slug string) []SDWAN {

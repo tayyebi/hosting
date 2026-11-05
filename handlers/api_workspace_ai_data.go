@@ -32,19 +32,7 @@ type etlPipelineStoreType struct {
 }
 
 var etlPipelineStore = &etlPipelineStoreType{
-	pipelines: map[string][]ETLPipeline{
-		"buyvm": {
-			{ID: newID(), Name: "user-events-pipeline", Status: "active", Type: "etl", Source: "Kafka: user-events", Destination: "S3: datalake/user-events/", Schedule: "*/15 * * * *", LastRun: "2026-04-17 08:45 UTC", Duration: "3m 22s", Records: "2.4M rows", Region: "eu-central-1"},
-			{ID: newID(), Name: "order-sync", Status: "active", Type: "elt", Source: "PostgreSQL: orders", Destination: "BigQuery: analytics.orders", Schedule: "0 */2 * * *", LastRun: "2026-04-17 08:00 UTC", Duration: "8m 14s", Records: "180K rows", Region: "eu-central-1"},
-			{ID: newID(), Name: "log-aggregation", Status: "active", Type: "etl", Source: "Fluentd: app-logs", Destination: "Elasticsearch: logs-*", Schedule: "*/5 * * * *", LastRun: "2026-04-17 09:10 UTC", Duration: "1m 48s", Records: "12M rows", Region: "us-east-1"},
-			{ID: newID(), Name: "crm-data-sync", Status: "paused", Type: "elt", Source: "Salesforce API", Destination: "Snowflake: raw.crm", Schedule: "0 6 * * *", LastRun: "2026-04-15 06:00 UTC", Duration: "22m 10s", Records: "45K rows", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "payment-events", Status: "active", Type: "etl", Source: "Kafka: payments", Destination: "S3: datalake/payments/", Schedule: "*/10 * * * *", LastRun: "2026-04-17 09:00 UTC", Duration: "2m 05s", Records: "680K rows", Region: "ap-south-1"},
-			{ID: newID(), Name: "inventory-sync", Status: "active", Type: "elt", Source: "MySQL: inventory", Destination: "Redshift: warehouse.inventory", Schedule: "0 */4 * * *", LastRun: "2026-04-17 08:00 UTC", Duration: "5m 30s", Records: "120K rows", Region: "ap-south-1"},
-			{ID: newID(), Name: "clickstream-etl", Status: "failed", Type: "etl", Source: "Kinesis: clicks", Destination: "S3: datalake/clicks/", Schedule: "*/5 * * * *", LastRun: "2026-04-16 14:22 UTC", Duration: "\u2014", Records: "0 rows", Region: "ap-south-1"},
-		},
-	},
+	pipelines: map[string][]ETLPipeline{},
 }
 
 func (s *etlPipelineStoreType) list(slug string) []ETLPipeline {
@@ -253,18 +241,7 @@ type streamIngestionStoreType struct {
 }
 
 var streamIngestionStore = &streamIngestionStoreType{
-	streams: map[string][]StreamIngestion{
-		"buyvm": {
-			{ID: newID(), Name: "real-time-events", Status: "active", Engine: "kafka", Source: "App: event-producer", Destination: "S3 + Elasticsearch", Throughput: "48K msg/s", Partitions: 12, Retention: "7 days", Lag: "120ms", Region: "eu-central-1"},
-			{ID: newID(), Name: "iot-telemetry", Status: "active", Engine: "kinesis", Source: "IoT Gateway", Destination: "Timestream + S3", Throughput: "8.2K msg/s", Partitions: 8, Retention: "24 hours", Lag: "340ms", Region: "us-east-1"},
-			{ID: newID(), Name: "change-data-capture", Status: "active", Engine: "kafka", Source: "PostgreSQL CDC", Destination: "Kafka Topics \u2192 Consumers", Throughput: "2.4K msg/s", Partitions: 6, Retention: "3 days", Lag: "45ms", Region: "eu-central-1"},
-			{ID: newID(), Name: "click-stream", Status: "active", Engine: "pulsar", Source: "Web SDK", Destination: "ClickHouse", Throughput: "120K msg/s", Partitions: 24, Retention: "48 hours", Lag: "80ms", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "order-stream", Status: "active", Engine: "kafka", Source: "API Gateway", Destination: "DynamoDB + S3", Throughput: "12K msg/s", Partitions: 8, Retention: "7 days", Lag: "95ms", Region: "ap-south-1"},
-			{ID: newID(), Name: "sensor-ingest", Status: "active", Engine: "kinesis", Source: "Edge Devices", Destination: "TimescaleDB", Throughput: "3.8K msg/s", Partitions: 4, Retention: "24 hours", Lag: "210ms", Region: "ap-south-1"},
-		},
-	},
+	streams: map[string][]StreamIngestion{},
 }
 
 func (s *streamIngestionStoreType) list(slug string) []StreamIngestion {

@@ -13,19 +13,19 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type DistributedTraining struct {
-	ID         string
-	Name       string
-	Status     string
-	Framework  string
-	Nodes      int
+	ID          string
+	Name        string
+	Status      string
+	Framework   string
+	Nodes       int
 	GPUsPerNode int
-	GPUType    string
-	Dataset    string
-	Epochs     int
-	Progress   string
-	Runtime    string
-	Cost       string
-	Region     string
+	GPUType     string
+	Dataset     string
+	Epochs      int
+	Progress    string
+	Runtime     string
+	Cost        string
+	Region      string
 }
 
 type distributedTrainingStoreType struct {
@@ -34,19 +34,7 @@ type distributedTrainingStoreType struct {
 }
 
 var distributedTrainingStore = &distributedTrainingStoreType{
-	jobs: map[string][]DistributedTraining{
-		"buyvm": {
-			{ID: newID(), Name: "llm-pretrain-7b", Status: "running", Framework: "PyTorch + DeepSpeed", Nodes: 8, GPUsPerNode: 8, GPUType: "A100 80GB", Dataset: "webtext-2024 (420 GB)", Epochs: 3, Progress: "67%", Runtime: "14d 6h", Cost: "$42,800", Region: "us-east-1"},
-			{ID: newID(), Name: "vision-transformer-finetune", Status: "running", Framework: "PyTorch + FSDP", Nodes: 4, GPUsPerNode: 4, GPUType: "A100 40GB", Dataset: "imagenet-22k (256 GB)", Epochs: 20, Progress: "84%", Runtime: "3d 12h", Cost: "$6,200", Region: "eu-central-1"},
-			{ID: newID(), Name: "speech-recognition-v3", Status: "completed", Framework: "JAX + Flax", Nodes: 16, GPUsPerNode: 8, GPUType: "H100", Dataset: "librispeech-960h (120 GB)", Epochs: 50, Progress: "100%", Runtime: "7d 0h", Cost: "$28,400", Region: "us-west-2"},
-			{ID: newID(), Name: "recommendation-model", Status: "queued", Framework: "TensorFlow", Nodes: 2, GPUsPerNode: 4, GPUType: "A100 40GB", Dataset: "user-interactions (89 GB)", Epochs: 10, Progress: "0%", Runtime: "—", Cost: "$0", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "nlp-multilingual", Status: "running", Framework: "PyTorch + DeepSpeed", Nodes: 4, GPUsPerNode: 8, GPUType: "A100 80GB", Dataset: "mc4-multilingual (1.2 TB)", Epochs: 5, Progress: "32%", Runtime: "8d 4h", Cost: "$18,600", Region: "ap-south-1"},
-			{ID: newID(), Name: "fraud-detection-train", Status: "completed", Framework: "PyTorch", Nodes: 2, GPUsPerNode: 4, GPUType: "V100", Dataset: "transactions-2024 (45 GB)", Epochs: 30, Progress: "100%", Runtime: "1d 8h", Cost: "$1,200", Region: "ap-south-1"},
-			{ID: newID(), Name: "image-segmentation-v2", Status: "running", Framework: "PyTorch + FSDP", Nodes: 4, GPUsPerNode: 4, GPUType: "A100 40GB", Dataset: "coco-2024 (38 GB)", Epochs: 100, Progress: "56%", Runtime: "2d 18h", Cost: "$3,800", Region: "eu-west-1"},
-		},
-	},
+	jobs: map[string][]DistributedTraining{},
 }
 
 func (s *distributedTrainingStoreType) list(slug string) []DistributedTraining {
@@ -249,19 +237,19 @@ func apiWSAITrainDistDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type AutoML struct {
-	ID          string
-	Name        string
-	Status      string
-	TaskType    string
-	Dataset     string
-	Target      string
-	Trials      int
-	BestModel   string
-	BestScore   string
-	Metric      string
-	Runtime     string
-	Cost        string
-	Region      string
+	ID        string
+	Name      string
+	Status    string
+	TaskType  string
+	Dataset   string
+	Target    string
+	Trials    int
+	BestModel string
+	BestScore string
+	Metric    string
+	Runtime   string
+	Cost      string
+	Region    string
 }
 
 type autoMLStoreType struct {
@@ -270,19 +258,7 @@ type autoMLStoreType struct {
 }
 
 var autoMLStore = &autoMLStoreType{
-	runs: map[string][]AutoML{
-		"buyvm": {
-			{ID: newID(), Name: "churn-prediction", Status: "completed", TaskType: "classification", Dataset: "customer-events (2.4 GB)", Target: "churned", Trials: 200, BestModel: "XGBoost", BestScore: "0.942 AUC", Metric: "AUC", Runtime: "4h 22m", Cost: "$86", Region: "eu-central-1"},
-			{ID: newID(), Name: "revenue-forecast", Status: "running", TaskType: "regression", Dataset: "sales-history (890 MB)", Target: "monthly_revenue", Trials: 150, BestModel: "LightGBM", BestScore: "0.89 R²", Metric: "R²", Runtime: "2h 10m", Cost: "$42", Region: "eu-central-1"},
-			{ID: newID(), Name: "image-classifier-automl", Status: "completed", TaskType: "image-classification", Dataset: "product-images (12 GB)", Target: "category", Trials: 50, BestModel: "EfficientNet-B4", BestScore: "96.2% acc", Metric: "accuracy", Runtime: "8h 45m", Cost: "$340", Region: "us-east-1"},
-			{ID: newID(), Name: "anomaly-detector", Status: "queued", TaskType: "anomaly-detection", Dataset: "server-metrics (560 MB)", Target: "is_anomaly", Trials: 100, BestModel: "—", BestScore: "—", Metric: "F1", Runtime: "—", Cost: "$0", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "lead-scoring", Status: "completed", TaskType: "classification", Dataset: "crm-leads (1.1 GB)", Target: "converted", Trials: 180, BestModel: "CatBoost", BestScore: "0.918 AUC", Metric: "AUC", Runtime: "3h 48m", Cost: "$72", Region: "ap-south-1"},
-			{ID: newID(), Name: "demand-forecast", Status: "running", TaskType: "time-series", Dataset: "order-history (2.8 GB)", Target: "daily_orders", Trials: 120, BestModel: "Prophet + LGBM", BestScore: "12.4 MAPE", Metric: "MAPE", Runtime: "1h 55m", Cost: "$38", Region: "ap-south-1"},
-			{ID: newID(), Name: "text-classifier", Status: "completed", TaskType: "text-classification", Dataset: "support-tickets (340 MB)", Target: "category", Trials: 80, BestModel: "DistilBERT fine-tuned", BestScore: "93.8% acc", Metric: "accuracy", Runtime: "6h 12m", Cost: "$248", Region: "eu-west-1"},
-		},
-	},
+	runs: map[string][]AutoML{},
 }
 
 func (s *autoMLStoreType) list(slug string) []AutoML {

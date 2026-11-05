@@ -31,19 +31,7 @@ type mlExperimentStoreType struct {
 }
 
 var mlExperimentStore = &mlExperimentStoreType{
-	experiments: map[string][]MLExperiment{
-		"buyvm": {
-			{ID: newID(), Name: "exp-0412-lora-r32", Status: "best", BestRun: "run-8421", Metric: "loss 0.42 · acc 0.89", Runs: 48, Framework: "PyTorch", Owner: "ml-team", Created: "2026-04-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "exp-0411-lora-r16", Status: "superseded", BestRun: "run-8412", Metric: "loss 0.48 · acc 0.86", Runs: 32, Framework: "PyTorch", Owner: "ml-team", Created: "2026-04-11", Region: "eu-central-1"},
-			{ID: newID(), Name: "exp-recommender-v2", Status: "active", BestRun: "run-8430", Metric: "MAP@10 0.62", Runs: 84, Framework: "TensorFlow", Owner: "growth-team", Created: "2026-04-08", Region: "eu-central-1"},
-			{ID: newID(), Name: "exp-churn-xgb", Status: "active", BestRun: "run-8440", Metric: "AUC 0.94", Runs: 120, Framework: "XGBoost", Owner: "data-team", Created: "2026-04-05", Region: "us-east-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "exp-fraud-detector-v3", Status: "active", BestRun: "run-2041", Metric: "F1 0.91", Runs: 64, Framework: "PyTorch", Owner: "security-team", Created: "2026-04-10", Region: "ap-south-1"},
-			{ID: newID(), Name: "exp-price-optimizer", Status: "best", BestRun: "run-2055", Metric: "RMSE 2.14", Runs: 42, Framework: "LightGBM", Owner: "pricing-team", Created: "2026-04-14", Region: "ap-south-1"},
-			{ID: newID(), Name: "exp-embeddings-v2", Status: "superseded", BestRun: "run-2030", Metric: "recall@100 0.84", Runs: 28, Framework: "PyTorch", Owner: "ml-team", Created: "2026-04-03", Region: "ap-south-1"},
-		},
-	},
+	experiments: map[string][]MLExperiment{},
 }
 
 func (s *mlExperimentStoreType) list(slug string) []MLExperiment {

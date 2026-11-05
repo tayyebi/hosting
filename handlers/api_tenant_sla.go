@@ -38,24 +38,7 @@ type slaStoreType struct {
 }
 
 var slaStore = &slaStoreType{
-	policies: map[string][]SLAPolicy{
-		"buyvm": {
-			{ID: newID(), Name: "Infrastructure Uptime SLA", Service: "Compute & Networking", Status: "active", UptimeTarget: "99.99", UptimeActual: "99.97", ResponseTime: "< 100ms", CreditPolicy: "10x credit for downtime minutes exceeding SLA", PenaltyRate: "10%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-01-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "API Availability SLA", Service: "API Gateway", Status: "active", UptimeTarget: "99.95", UptimeActual: "99.92", ResponseTime: "< 200ms", CreditPolicy: "5% credit per 0.1% below target", PenaltyRate: "5%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-01-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "Database SLA", Service: "Managed PostgreSQL", Status: "at-risk", UptimeTarget: "99.99", UptimeActual: "99.96", ResponseTime: "< 50ms", CreditPolicy: "15x credit for downtime exceeding SLA", PenaltyRate: "15%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-03-15T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "Support Response SLA", Service: "Technical Support", Status: "active", UptimeTarget: "100.00", UptimeActual: "100.00", ResponseTime: "< 15min (critical), < 1h (high), < 4h (normal)", CreditPolicy: "Service credit for missed response times", PenaltyRate: "2%", ReviewPeriod: "quarterly", LastReviewed: "2026-04-01", Created: "2025-01-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "CDN Performance SLA", Service: "Content Delivery", Status: "active", UptimeTarget: "99.99", UptimeActual: "99.99", ResponseTime: "< 50ms global p95", CreditPolicy: "5x credit for SLA breach", PenaltyRate: "5%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-06-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "EU Cloud Availability SLA", Service: "EU Infrastructure", Status: "active", UptimeTarget: "99.95", UptimeActual: "99.98", ResponseTime: "< 150ms", CreditPolicy: "10% credit per hour of downtime beyond SLA", PenaltyRate: "10%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-01-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "DNS Resolution SLA", Service: "DNS Infrastructure", Status: "breached", UptimeTarget: "99.999", UptimeActual: "99.990", ResponseTime: "< 10ms", CreditPolicy: "20% credit for any breach in reporting period", PenaltyRate: "20%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-01-01T00:00:00Z", Updated: "2026-04-10T00:00:00Z"},
-			{ID: newID(), Name: "GDPR Data Processing SLA", Service: "Data Platform", Status: "active", UptimeTarget: "99.99", UptimeActual: "100.00", ResponseTime: "< 72h breach notification", CreditPolicy: "Contract penalty per GDPR guidelines", PenaltyRate: "N/A", ReviewPeriod: "quarterly", LastReviewed: "2026-03-01", Created: "2025-05-01T00:00:00Z", Updated: "2026-03-01T00:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "GPU Cluster Availability SLA", Service: "GPU Compute", Status: "active", UptimeTarget: "99.90", UptimeActual: "99.93", ResponseTime: "< 500ms job start", CreditPolicy: "2x credit for missed GPU hours", PenaltyRate: "8%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-08-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-			{ID: newID(), Name: "K8s Control Plane SLA", Service: "Managed Kubernetes", Status: "active", UptimeTarget: "99.95", UptimeActual: "99.96", ResponseTime: "< 200ms API server", CreditPolicy: "10% credit per 0.05% below target", PenaltyRate: "10%", ReviewPeriod: "monthly", LastReviewed: "2026-04-01", Created: "2025-08-01T00:00:00Z", Updated: "2026-04-01T00:00:00Z"},
-		},
-	},
+	policies: map[string][]SLAPolicy{},
 }
 
 func (s *slaStoreType) list(slug string) []SLAPolicy {

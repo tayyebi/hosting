@@ -29,20 +29,7 @@ type rbacRoleStoreType struct {
 }
 
 var rbacRoleStore = &rbacRoleStoreType{
-	roles: map[string][]RBACRole{
-		"buyvm": {
-			{ID: newID(), Name: "Admin", Type: "Built-in", Users: 4, Permissions: "all (284)", Status: "active", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "DevOps Engineer", Type: "Custom", Users: 14, Permissions: "compute, networking, observability", Status: "active", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), Name: "Billing Viewer", Type: "Custom", Users: 6, Permissions: "billing.read only", Status: "active", Created: "2025-10-15", Region: "eu-central-1"},
-			{ID: newID(), Name: "Support Agent", Type: "Custom", Users: 8, Permissions: "tickets.* + clients.read", Status: "active", Created: "2025-11-01", Region: "eu-central-1"},
-			{ID: newID(), Name: "Read-only Auditor", Type: "Custom", Users: 2, Permissions: "*.read across all", Status: "active", Created: "2026-01-10", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Admin", Type: "Built-in", Users: 2, Permissions: "all (284)", Status: "active", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), Name: "Developer", Type: "Custom", Users: 18, Permissions: "compute, databases, devops", Status: "active", Created: "2025-10-15", Region: "ap-south-1"},
-			{ID: newID(), Name: "Viewer", Type: "Built-in", Users: 10, Permissions: "*.read", Status: "active", Created: "2025-10-01", Region: "ap-south-1"},
-		},
-	},
+	roles: map[string][]RBACRole{},
 }
 
 func (s *rbacRoleStoreType) list(slug string) []RBACRole {

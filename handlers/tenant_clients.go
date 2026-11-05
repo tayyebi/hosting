@@ -58,28 +58,27 @@ func mkWorkspaces(names ...string) []Workspace {
 }
 
 var clientStore = &clientStoreType{
-	clients: map[string][]Client{
-		"buyvm": {
-			{ID: newID(), Name: "James Wright", Email: "james@acme.io", Company: "Acme Inc.", Status: "active", Workspaces: mkWorkspaces("default", "staging", "production")},
-			{ID: newID(), Name: "Sara Nguyen", Email: "sara@techblue.com", Company: "TechBlue", Status: "active", Workspaces: mkWorkspaces("default")},
-			{ID: newID(), Name: "Omar Khalid", Email: "omar@khalid.dev", Company: "", Status: "suspended", Workspaces: mkWorkspaces("default", "dev")},
-			{ID: newID(), Name: "Lena Bauer", Email: "lena@bauerhosts.de", Company: "BauerHosts", Status: "active", Workspaces: mkWorkspaces("default", "eu-west")},
-			{ID: newID(), Name: "Carlos Diaz", Email: "carlos@diaznet.mx", Company: "DiazNet", Status: "active", Workspaces: []Workspace{{ID: newID(), Name: "production"}}}, // missing default
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "Priya Sharma", Email: "priya@infranow.in", Company: "InfraNow", Status: "active", Workspaces: mkWorkspaces("default")},
-			{ID: newID(), Name: "Tom Fischer", Email: "tom@fischer.eu", Company: "Fischer GmbH", Status: "active", Workspaces: mkWorkspaces("default", "backup")},
-			{ID: newID(), Name: "Yuki Tanaka", Email: "yuki@tanaka.jp", Company: "", Status: "suspended", Workspaces: mkWorkspaces("default")},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Alice Monroe", Email: "alice@monroe.io", Company: "Monroe LLC", Status: "active", Workspaces: mkWorkspaces("default", "us-east", "eu-central")},
-			{ID: newID(), Name: "Ben Okonkwo", Email: "ben@okonkwo.ng", Company: "Okonkwo Tech", Status: "active", Workspaces: mkWorkspaces("default")},
-			{ID: newID(), Name: "Chloe Martin", Email: "chloe@martindev.fr", Company: "MartinDev", Status: "active", Workspaces: mkWorkspaces("default", "test")},
-			{ID: newID(), Name: "Diego Vega", Email: "diego@vega.ar", Company: "", Status: "suspended", Workspaces: []Workspace{{ID: newID(), Name: "legacy"}}}, // missing default
-			{ID: newID(), Name: "Elena Popov", Email: "elena@popov.ru", Company: "Popov Systems", Status: "active", Workspaces: mkWorkspaces("default")},
-			{ID: newID(), Name: "Faisal Al-Amin", Email: "faisal@alamin.sa", Company: "Al-Amin Corp", Status: "active", Workspaces: mkWorkspaces("default", "prod", "staging")},
-		},
-	},
+	clients: map[string][]Client{},
+}
+
+func slugifyWorkspaceName(clientID int64, name string) string {
+	raw := strings.ToLower(strings.TrimSpace(name))
+	var b strings.Builder
+	for _, r := range raw {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else if r == '-' || r == '_' || r == ' ' {
+			b.WriteByte('-')
+		}
+	}
+	cleaned := strings.Trim(b.String(), "-")
+	if cleaned == "" {
+		cleaned = "default"
+	}
+	if clientID > 0 {
+		return fmt.Sprintf("c%d-%s", clientID, cleaned)
+	}
+	return cleaned
 }
 
 func (s *clientStoreType) list(slug string) []Client {
@@ -120,6 +119,43 @@ func (s *clientStoreType) update(slug string, c Client) {
 }
 
 func (s *clientStoreType) getWorkspace(slug, workspaceID string) (Client, Workspace, bool) {
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		tRow, ok, err := db.GetTenantBySlug(ctx, Pools.Admin, slug)
+		if err == nil && ok {
+			// 1. Check tenant_clients + tenant_client_workspaces (ID = clientID*100 + idx)
+			if dbClients, lcErr := db.ListTenantClients(ctx, Pools.Admin, tRow.ID, "", ""); lcErr == nil {
+				for _, dc := range dbClients {
+					c := dbClientToLocal(dc)
+					for _, w := range c.Workspaces {
+						if w.ID == workspaceID {
+							wsSlug := slugifyWorkspaceName(dc.ID, w.Name)
+							if dbID, eErr := db.EnsureWorkspaceRow(ctx, Pools.Admin, tRow.ID, wsSlug, w.Name); eErr == nil {
+								w.DBID = dbID
+							}
+							return c, w, true
+						}
+					}
+				}
+			}
+			// 2. Check `workspaces` table directly by numeric ID or slug
+			if wsRows, wErr := db.ListWorkspacesByTenantID(ctx, Pools.Admin, tRow.ID); wErr == nil {
+				for _, wr := range wsRows {
+					idStr := strconv.FormatInt(wr.ID, 10)
+					if idStr == workspaceID || wr.Slug == workspaceID {
+						return Client{
+							ID:     "0",
+							Name:   tRow.Name,
+							Email:  tRow.OwnerEmail,
+							Status: "active",
+						}, Workspace{ID: idStr, Name: wr.Name, DBID: wr.ID}, true
+					}
+				}
+			}
+		}
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, c := range s.clients[slug] {

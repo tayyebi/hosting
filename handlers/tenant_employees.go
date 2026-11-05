@@ -108,23 +108,7 @@ type employeeStoreType struct {
 }
 
 var employeeStore = &employeeStoreType{
-	employees: map[string][]Employee{
-		"buyvm": {
-			{ID: newID(), Name: "Alice Smith", Email: "alice@buyvm.net", Role: "Admin", Active: true, Permissions: fullPerms()},
-			{ID: newID(), Name: "Bob Carter", Email: "bob@buyvm.net", Role: "Support Agent", Active: true, Permissions: supportPerms()},
-			{ID: newID(), Name: "Carol White", Email: "carol@buyvm.net", Role: "Finance Manager", Active: false, Permissions: financePerms()},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "David Lee", Email: "david@abrnoc.com", Role: "Admin", Active: true, Permissions: fullPerms()},
-			{ID: newID(), Name: "Eva Müller", Email: "eva@abrnoc.com", Role: "Infrastructure Lead", Active: true, Permissions: infraPerms()},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Frank Hassan", Email: "frank@hosting.com", Role: "Admin", Active: true, Permissions: fullPerms()},
-			{ID: newID(), Name: "Grace Kim", Email: "grace@hosting.com", Role: "Support Agent", Active: true, Permissions: supportPerms()},
-			{ID: newID(), Name: "Henry Patel", Email: "henry@hosting.com", Role: "Finance Manager", Active: true, Permissions: financePerms()},
-			{ID: newID(), Name: "Irene Russo", Email: "irene@hosting.com", Role: "Infrastructure Lead", Active: false, Permissions: infraPerms()},
-		},
-	},
+	employees: map[string][]Employee{},
 }
 
 func (s *employeeStoreType) list(slug string) []Employee {

@@ -31,18 +31,7 @@ type netPeeringStoreType struct {
 }
 
 var netPeeringStore = &netPeeringStoreType{
-	instances: map[string][]NetPeering{
-		"buyvm": {
-			{ID: newID(), Name: "prod-to-data", LocalVPC: "prod-vpc", RemoteVPC: "data-vpc", RemoteOwner: "self", Status: "active", Direction: "bidirectional", Bandwidth: "10 Gbps", Region: "eu-central-1", Encrypted: true},
-			{ID: newID(), Name: "prod-to-us", LocalVPC: "prod-vpc", RemoteVPC: "us-prod-vpc", RemoteOwner: "self", Status: "active", Direction: "bidirectional", Bandwidth: "5 Gbps", Region: "cross-region", Encrypted: true},
-			{ID: newID(), Name: "staging-to-prod", LocalVPC: "staging-vpc", RemoteVPC: "prod-vpc", RemoteOwner: "self", Status: "active", Direction: "bidirectional", Bandwidth: "1 Gbps", Region: "eu-central-1", Encrypted: false},
-			{ID: newID(), Name: "transit-partner-a", LocalVPC: "prod-vpc", RemoteVPC: "partner-vpc-001", RemoteOwner: "acct-9182736450", Status: "active", Direction: "requester", Bandwidth: "2 Gbps", Region: "eu-central-1", Encrypted: true},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-to-backend", LocalVPC: "main-vpc", RemoteVPC: "backend-vpc", RemoteOwner: "self", Status: "active", Direction: "bidirectional", Bandwidth: "10 Gbps", Region: "ap-south-1", Encrypted: true},
-			{ID: newID(), Name: "main-to-isolated", LocalVPC: "main-vpc", RemoteVPC: "isolated-vpc", RemoteOwner: "self", Status: "pending-acceptance", Direction: "requester", Bandwidth: "1 Gbps", Region: "ap-south-1", Encrypted: true},
-		},
-	},
+	instances: map[string][]NetPeering{},
 }
 
 func (s *netPeeringStoreType) list(slug string) []NetPeering {

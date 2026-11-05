@@ -35,23 +35,7 @@ type monitoringAlertStoreType struct {
 }
 
 var monitoringAlertStore = &monitoringAlertStoreType{
-	items: map[string][]MonitoringAlert{
-		"buyvm": {
-			{ID: newID(), Name: "High CPU Usage", Metric: "system.cpu.usage", Condition: ">", Threshold: 85, Window: "5m", Severity: "warning", NotifyChannels: "Slack #ops, PagerDuty", EvalInterval: "30s", State: "ok", LastTriggered: "2026-04-16 14:22", Silenced: false, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Memory Pressure", Metric: "system.memory.usage_percent", Condition: ">", Threshold: 90, Window: "5m", Severity: "critical", NotifyChannels: "PagerDuty", EvalInterval: "15s", State: "ok", LastTriggered: "2026-04-14 08:10", Silenced: false, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "API Error Rate", Metric: "http.server.errors_5xx.rate", Condition: ">", Threshold: 5, Window: "3m", Severity: "critical", NotifyChannels: "Slack #alerts, PagerDuty", EvalInterval: "15s", State: "alerting", LastTriggered: "2026-04-17 22:05", Silenced: false, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Disk Space Low", Metric: "system.disk.usage_percent", Condition: ">", Threshold: 80, Window: "10m", Severity: "warning", NotifyChannels: "Slack #ops", EvalInterval: "60s", State: "ok", LastTriggered: "2026-04-10 03:45", Silenced: false, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Request Latency p99", Metric: "http.server.latency_p99", Condition: ">", Threshold: 500, Window: "5m", Severity: "warning", NotifyChannels: "Slack #perf", EvalInterval: "30s", State: "ok", LastTriggered: "2026-04-15 19:30", Silenced: true, Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "SSL Cert Expiry", Metric: "tls.certificate.days_remaining", Condition: "<", Threshold: 14, Window: "1h", Severity: "critical", NotifyChannels: "Slack #ops, Email", EvalInterval: "300s", State: "ok", LastTriggered: "—", Silenced: false, Status: "active", Updated: "2026-04-12"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Node CPU Alert", Metric: "k8s.node.cpu.utilization", Condition: ">", Threshold: 80, Window: "5m", Severity: "warning", NotifyChannels: "Slack #infra", EvalInterval: "30s", State: "ok", LastTriggered: "2026-04-16 11:00", Silenced: false, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Pod Restart Loop", Metric: "k8s.pod.restarts.rate", Condition: ">", Threshold: 3, Window: "10m", Severity: "critical", NotifyChannels: "PagerDuty, Slack #alerts", EvalInterval: "30s", State: "alerting", LastTriggered: "2026-04-17 20:44", Silenced: false, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "Queue Depth", Metric: "messaging.queue.depth", Condition: ">", Threshold: 10000, Window: "5m", Severity: "warning", NotifyChannels: "Slack #backend", EvalInterval: "60s", State: "ok", LastTriggered: "2026-04-13 07:15", Silenced: false, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Database Connections", Metric: "db.connections.active", Condition: ">", Threshold: 180, Window: "3m", Severity: "critical", NotifyChannels: "PagerDuty", EvalInterval: "15s", State: "ok", LastTriggered: "2026-04-11 16:32", Silenced: false, Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Ingress 5xx Spike", Metric: "nginx.ingress.5xx.rate", Condition: ">", Threshold: 10, Window: "2m", Severity: "critical", NotifyChannels: "PagerDuty, Slack #alerts", EvalInterval: "15s", State: "ok", LastTriggered: "2026-04-17 09:20", Silenced: false, Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]MonitoringAlert{},
 }
 
 func (s *monitoringAlertStoreType) list(slug string) []MonitoringAlert {

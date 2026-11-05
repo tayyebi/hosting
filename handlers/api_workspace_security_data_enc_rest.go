@@ -29,18 +29,7 @@ type encAtRestStoreType struct {
 }
 
 var encAtRestStore = &encAtRestStoreType{
-	resources: map[string][]EncAtRestResource{
-		"buyvm": {
-			{ID: newID(), Name: "vol-data-db-primary", Type: "EBS volume", Algorithm: "AES-256-XTS", Key: "alias/db-master", Status: "encrypted", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "acme-user-uploads", Type: "S3 bucket", Algorithm: "AES-256 (SSE-KMS)", Key: "alias/uploads-key", Status: "encrypted", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), Name: "prod-main", Type: "RDS Postgres", Algorithm: "AES-256", Key: "alias/rds-default", Status: "encrypted", Created: "2025-10-15", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "vol-app-data", Type: "EBS volume", Algorithm: "AES-256-XTS", Key: "alias/app-master", Status: "encrypted", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), Name: "hosting-assets", Type: "S3 bucket", Algorithm: "AES-256 (SSE-KMS)", Key: "alias/assets-key", Status: "encrypted", Created: "2025-10-15", Region: "ap-south-1"},
-			{ID: newID(), Name: "analytics-db", Type: "RDS MySQL", Algorithm: "AES-256", Key: "alias/rds-analytics", Status: "encrypted", Created: "2025-11-20", Region: "ap-south-1"},
-		},
-	},
+	resources: map[string][]EncAtRestResource{},
 }
 
 func (s *encAtRestStoreType) list(slug string) []EncAtRestResource {

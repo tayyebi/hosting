@@ -13,14 +13,14 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type DNSZone struct {
-	ID        string
-	Name      string
-	Type      string
-	Region    string
-	Status    string
-	Records   int
-	TTL       string
-	DNSSEC    string
+	ID          string
+	Name        string
+	Type        string
+	Region      string
+	Status      string
+	Records     int
+	TTL         string
+	DNSSEC      string
 	Nameservers string
 }
 
@@ -30,20 +30,7 @@ type dnsZoneStoreType struct {
 }
 
 var dnsZoneStore = &dnsZoneStoreType{
-	zones: map[string][]DNSZone{
-		"buyvm": {
-			{ID: newID(), Name: "example.com", Type: "public", Region: "global", Status: "active", Records: 48, TTL: "300", DNSSEC: "enabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-			{ID: newID(), Name: "api.example.com", Type: "public", Region: "global", Status: "active", Records: 12, TTL: "60", DNSSEC: "enabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-			{ID: newID(), Name: "internal.corp", Type: "private", Region: "eu-central-1", Status: "active", Records: 86, TTL: "300", DNSSEC: "disabled", Nameservers: "ns-priv-1.eu-central-1.example.com"},
-			{ID: newID(), Name: "staging.example.com", Type: "public", Region: "global", Status: "active", Records: 22, TTL: "300", DNSSEC: "disabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-			{ID: newID(), Name: "legacy.oldsite.io", Type: "public", Region: "global", Status: "degraded", Records: 8, TTL: "3600", DNSSEC: "disabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "hosting.app", Type: "public", Region: "global", Status: "active", Records: 34, TTL: "300", DNSSEC: "enabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-			{ID: newID(), Name: "shop.hosting.app", Type: "public", Region: "global", Status: "active", Records: 14, TTL: "60", DNSSEC: "enabled", Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com"},
-			{ID: newID(), Name: "priv.hosting.internal", Type: "private", Region: "ap-south-1", Status: "active", Records: 42, TTL: "300", DNSSEC: "disabled", Nameservers: "ns-priv-1.ap-south-1.example.com"},
-		},
-	},
+	zones: map[string][]DNSZone{},
 }
 
 func (s *dnsZoneStoreType) list(slug string) []DNSZone {
@@ -230,16 +217,16 @@ func apiWSNetDNSManageDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type DomainRegistration struct {
-	ID         string
-	Domain     string
-	TLD        string
-	Status     string
-	Registrar  string
-	ExpiresAt  string
-	AutoRenew  bool
-	Privacy    bool
+	ID          string
+	Domain      string
+	TLD         string
+	Status      string
+	Registrar   string
+	ExpiresAt   string
+	AutoRenew   bool
+	Privacy     bool
 	Nameservers string
-	CreatedAt  string
+	CreatedAt   string
 }
 
 type domainRegistrationStoreType struct {
@@ -248,19 +235,7 @@ type domainRegistrationStoreType struct {
 }
 
 var domainRegistrationStore = &domainRegistrationStoreType{
-	domains: map[string][]DomainRegistration{
-		"buyvm": {
-			{ID: newID(), Domain: "example.com", TLD: ".com", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2027-03-15", AutoRenew: true, Privacy: true, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2020-03-15"},
-			{ID: newID(), Domain: "example.io", TLD: ".io", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2027-06-01", AutoRenew: true, Privacy: true, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2021-06-01"},
-			{ID: newID(), Domain: "myapp.dev", TLD: ".dev", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2026-11-20", AutoRenew: true, Privacy: true, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2022-11-20"},
-			{ID: newID(), Domain: "oldsite.io", TLD: ".io", Status: "expiring", Registrar: "CloudRegistrar", ExpiresAt: "2026-05-01", AutoRenew: false, Privacy: false, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2019-05-01"},
-		},
-		"hosting": {
-			{ID: newID(), Domain: "hosting.app", TLD: ".app", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2028-01-10", AutoRenew: true, Privacy: true, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2022-01-10"},
-			{ID: newID(), Domain: "hosting.com", TLD: ".com", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2027-08-22", AutoRenew: true, Privacy: true, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2020-08-22"},
-			{ID: newID(), Domain: "shop-hosting.store", TLD: ".store", Status: "active", Registrar: "CloudRegistrar", ExpiresAt: "2026-12-05", AutoRenew: true, Privacy: false, Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com", CreatedAt: "2023-12-05"},
-		},
-	},
+	domains: map[string][]DomainRegistration{},
 }
 
 func (s *domainRegistrationStoreType) list(slug string) []DomainRegistration {
@@ -389,9 +364,9 @@ func apiWSNetDNSDomainsCreateHandler(w http.ResponseWriter, r *http.Request) {
 		ID: newID(), Domain: domain, TLD: tld,
 		Status: "pending", Registrar: "CloudRegistrar",
 		ExpiresAt: "2027-04-17", AutoRenew: req.AutoRenew,
-		Privacy: req.Privacy,
+		Privacy:     req.Privacy,
 		Nameservers: "ns1.cloud.example.com, ns2.cloud.example.com",
-		CreatedAt: "2026-04-17",
+		CreatedAt:   "2026-04-17",
 	}
 	domainRegistrationStore.add(slug, d)
 	apiCreated(w, toAPIDomainRegistration(d))

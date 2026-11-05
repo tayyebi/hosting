@@ -31,20 +31,7 @@ type netNSGStoreType struct {
 }
 
 var netNSGStore = &netNSGStoreType{
-	instances: map[string][]NetNSG{
-		"buyvm": {
-			{ID: newID(), Name: "prod-web-nsg", VPC: "prod-vpc", Region: "eu-central-1", Status: "active", InboundRules: 12, OutboundRules: 5, AssociatedNICs: 28, DefaultAction: "deny", Logging: true},
-			{ID: newID(), Name: "prod-db-nsg", VPC: "prod-vpc", Region: "eu-central-1", Status: "active", InboundRules: 4, OutboundRules: 2, AssociatedNICs: 8, DefaultAction: "deny", Logging: true},
-			{ID: newID(), Name: "staging-nsg", VPC: "staging-vpc", Region: "eu-central-1", Status: "active", InboundRules: 8, OutboundRules: 8, AssociatedNICs: 14, DefaultAction: "deny", Logging: false},
-			{ID: newID(), Name: "data-nsg", VPC: "data-vpc", Region: "eu-central-1", Status: "active", InboundRules: 6, OutboundRules: 3, AssociatedNICs: 18, DefaultAction: "deny", Logging: true},
-			{ID: newID(), Name: "dev-open-nsg", VPC: "dev-vpc", Region: "eu-central-1", Status: "active", InboundRules: 2, OutboundRules: 1, AssociatedNICs: 4, DefaultAction: "allow", Logging: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-nsg", VPC: "main-vpc", Region: "ap-south-1", Status: "active", InboundRules: 10, OutboundRules: 6, AssociatedNICs: 32, DefaultAction: "deny", Logging: true},
-			{ID: newID(), Name: "backend-nsg", VPC: "backend-vpc", Region: "ap-south-1", Status: "active", InboundRules: 5, OutboundRules: 3, AssociatedNICs: 16, DefaultAction: "deny", Logging: true},
-			{ID: newID(), Name: "isolated-nsg", VPC: "isolated-vpc", Region: "ap-south-1", Status: "active", InboundRules: 1, OutboundRules: 1, AssociatedNICs: 6, DefaultAction: "deny", Logging: true},
-		},
-	},
+	instances: map[string][]NetNSG{},
 }
 
 func (s *netNSGStoreType) list(slug string) []NetNSG {

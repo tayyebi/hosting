@@ -33,22 +33,7 @@ type edgeNodeStoreType struct {
 }
 
 var edgeNodeStore = &edgeNodeStoreType{
-	items: map[string][]EdgeNode{
-		"buyvm": {
-			{ID: newID(), Name: "edge-nyc-pop1", Location: "New York, US", Provider: "Equinix Metal", CPUCores: 16, MemoryGB: 64, Workloads: 8, Uptime: "99.98%", Latency: "2 ms", LastContact: "2026-04-17 09:58", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-lon-pop1", Location: "London, UK", Provider: "Packet", CPUCores: 16, MemoryGB: 64, Workloads: 6, Uptime: "99.95%", Latency: "14 ms", LastContact: "2026-04-17 09:57", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-tok-pop1", Location: "Tokyo, JP", Provider: "Equinix Metal", CPUCores: 8, MemoryGB: 32, Workloads: 4, Uptime: "99.92%", Latency: "85 ms", LastContact: "2026-04-17 09:55", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "edge-syd-pop1", Location: "Sydney, AU", Provider: "Vultr Bare Metal", CPUCores: 8, MemoryGB: 32, Workloads: 3, Uptime: "99.88%", Latency: "120 ms", LastContact: "2026-04-17 09:50", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "edge-retail-store42", Location: "Dallas, US", Provider: "On-premises", CPUCores: 4, MemoryGB: 16, Workloads: 2, Uptime: "98.5%", Latency: "8 ms", LastContact: "2026-04-17 08:30", Status: "degraded", Updated: "2026-04-15"},
-			{ID: newID(), Name: "edge-factory-floor", Location: "Detroit, US", Provider: "On-premises", CPUCores: 4, MemoryGB: 8, Workloads: 1, Uptime: "95.0%", Latency: "5 ms", LastContact: "2026-04-16 22:00", Status: "inactive", Updated: "2026-04-10"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "edge-ams-pop1", Location: "Amsterdam, NL", Provider: "Equinix Metal", CPUCores: 32, MemoryGB: 128, Workloads: 14, Uptime: "99.99%", Latency: "3 ms", LastContact: "2026-04-17 09:59", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-sgp-pop1", Location: "Singapore, SG", Provider: "Packet", CPUCores: 16, MemoryGB: 64, Workloads: 9, Uptime: "99.96%", Latency: "45 ms", LastContact: "2026-04-17 09:58", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-sao-pop1", Location: "São Paulo, BR", Provider: "Equinix Metal", CPUCores: 8, MemoryGB: 32, Workloads: 5, Uptime: "99.90%", Latency: "72 ms", LastContact: "2026-04-17 09:56", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "edge-mum-pop1", Location: "Mumbai, IN", Provider: "Vultr Bare Metal", CPUCores: 8, MemoryGB: 32, Workloads: 4, Uptime: "99.85%", Latency: "95 ms", LastContact: "2026-04-17 09:54", Status: "active", Updated: "2026-04-15"},
-		},
-	},
+	items: map[string][]EdgeNode{},
 }
 
 func (s *edgeNodeStoreType) list(slug string) []EdgeNode {

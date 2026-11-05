@@ -27,24 +27,12 @@ type CDNStatic struct {
 }
 
 type cdnStaticStoreType struct {
-	mu           sync.RWMutex
+	mu            sync.RWMutex
 	distributions map[string][]CDNStatic
 }
 
 var cdnStaticStore = &cdnStaticStoreType{
-	distributions: map[string][]CDNStatic{
-		"buyvm": {
-			{ID: newID(), Name: "prod-assets-cdn", Domain: "cdn.example.com", Origin: "prod-assets.s3.eu-central-1.example.com", Status: "deployed", Region: "global", CachePolicy: "aggressive", Bandwidth: "4.2 TB/mo", Requests: "128M/mo", HitRate: "96.8%", SSL: true},
-			{ID: newID(), Name: "static-site-cdn", Domain: "static.example.com", Origin: "static-site.s3.eu-central-1.example.com", Status: "deployed", Region: "global", CachePolicy: "standard", Bandwidth: "890 GB/mo", Requests: "42M/mo", HitRate: "98.2%", SSL: true},
-			{ID: newID(), Name: "api-cache-cdn", Domain: "api-cache.example.com", Origin: "api-lb.eu-central-1.example.com", Status: "deployed", Region: "eu + us", CachePolicy: "api", Bandwidth: "1.2 TB/mo", Requests: "85M/mo", HitRate: "72.4%", SSL: true},
-			{ID: newID(), Name: "staging-cdn", Domain: "staging-cdn.example.com", Origin: "staging-site.s3.eu-central-1.example.com", Status: "deployed", Region: "eu-only", CachePolicy: "no-cache", Bandwidth: "12 GB/mo", Requests: "240K/mo", HitRate: "45.0%", SSL: true},
-		},
-		"hosting": {
-			{ID: newID(), Name: "shop-cdn", Domain: "cdn.hosting.app", Origin: "shop-assets.s3.ap-south-1.example.com", Status: "deployed", Region: "global", CachePolicy: "aggressive", Bandwidth: "2.1 TB/mo", Requests: "68M/mo", HitRate: "95.4%", SSL: true},
-			{ID: newID(), Name: "app-assets-cdn", Domain: "assets.hosting.app", Origin: "app-static.s3.ap-south-1.example.com", Status: "deployed", Region: "apac + eu", CachePolicy: "standard", Bandwidth: "560 GB/mo", Requests: "22M/mo", HitRate: "97.1%", SSL: true},
-			{ID: newID(), Name: "img-cdn", Domain: "img.hosting.app", Origin: "images.s3.ap-south-1.example.com", Status: "deployed", Region: "global", CachePolicy: "aggressive", Bandwidth: "3.4 TB/mo", Requests: "180M/mo", HitRate: "99.1%", SSL: true},
-		},
-	},
+	distributions: map[string][]CDNStatic{},
 }
 
 func (s *cdnStaticStoreType) list(slug string) []CDNStatic {
@@ -230,17 +218,17 @@ func apiWSNetCDNStaticDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type CDNVideo struct {
-	ID         string
-	Name       string
-	Domain     string
-	Origin     string
-	Status     string
-	Region     string
-	Protocol   string
-	Bandwidth  string
-	Viewers    string
+	ID          string
+	Name        string
+	Domain      string
+	Origin      string
+	Status      string
+	Region      string
+	Protocol    string
+	Bandwidth   string
+	Viewers     string
 	Transcoding string
-	DRM        bool
+	DRM         bool
 }
 
 type cdnVideoStoreType struct {
@@ -249,17 +237,7 @@ type cdnVideoStoreType struct {
 }
 
 var cdnVideoStore = &cdnVideoStoreType{
-	streams: map[string][]CDNVideo{
-		"buyvm": {
-			{ID: newID(), Name: "vod-platform", Domain: "video.example.com", Origin: "media-origin.s3.eu-central-1.example.com", Status: "active", Region: "global", Protocol: "HLS + DASH", Bandwidth: "12.4 TB/mo", Viewers: "84,000/mo", Transcoding: "adaptive", DRM: true},
-			{ID: newID(), Name: "webinar-stream", Domain: "live.example.com", Origin: "rtmp-ingest.eu-central-1.example.com", Status: "active", Region: "eu + us", Protocol: "HLS", Bandwidth: "2.8 TB/mo", Viewers: "12,000/mo", Transcoding: "realtime", DRM: false},
-			{ID: newID(), Name: "training-videos", Domain: "learn.example.com", Origin: "training-media.s3.us-east-1.example.com", Status: "active", Region: "global", Protocol: "HLS", Bandwidth: "890 GB/mo", Viewers: "5,200/mo", Transcoding: "adaptive", DRM: true},
-		},
-		"hosting": {
-			{ID: newID(), Name: "product-demos", Domain: "demos.hosting.app", Origin: "demo-media.s3.ap-south-1.example.com", Status: "active", Region: "apac + eu", Protocol: "HLS + DASH", Bandwidth: "1.4 TB/mo", Viewers: "18,000/mo", Transcoding: "adaptive", DRM: false},
-			{ID: newID(), Name: "live-events", Domain: "live.hosting.app", Origin: "rtmp-ingest.ap-south-1.example.com", Status: "standby", Region: "global", Protocol: "HLS", Bandwidth: "0 B/mo", Viewers: "0/mo", Transcoding: "realtime", DRM: false},
-		},
-	},
+	streams: map[string][]CDNVideo{},
 }
 
 func (s *cdnVideoStoreType) list(slug string) []CDNVideo {
@@ -469,19 +447,7 @@ type cdnEdgeStoreType struct {
 }
 
 var cdnEdgeStore = &cdnEdgeStoreType{
-	edges: map[string][]CDNEdge{
-		"buyvm": {
-			{ID: newID(), Name: "prod-edge-global", Region: "global", Status: "active", POPs: 84, Rules: 12, CacheSize: "2.4 TB", HitRate: "94.2%", Bandwidth: "18 TB/mo", Purges: "142/day", WAF: true},
-			{ID: newID(), Name: "api-edge-eu", Region: "eu", Status: "active", POPs: 28, Rules: 8, CacheSize: "480 GB", HitRate: "68.5%", Bandwidth: "4.2 TB/mo", Purges: "86/day", WAF: true},
-			{ID: newID(), Name: "static-edge-us", Region: "us", Status: "active", POPs: 32, Rules: 4, CacheSize: "920 GB", HitRate: "99.1%", Bandwidth: "6.8 TB/mo", Purges: "12/day", WAF: false},
-			{ID: newID(), Name: "staging-edge", Region: "eu-central-1", Status: "active", POPs: 2, Rules: 2, CacheSize: "10 GB", HitRate: "42.0%", Bandwidth: "80 GB/mo", Purges: "240/day", WAF: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-edge", Region: "global", Status: "active", POPs: 62, Rules: 10, CacheSize: "1.8 TB", HitRate: "92.8%", Bandwidth: "8.4 TB/mo", Purges: "98/day", WAF: true},
-			{ID: newID(), Name: "apac-edge", Region: "apac", Status: "active", POPs: 18, Rules: 6, CacheSize: "640 GB", HitRate: "95.4%", Bandwidth: "3.2 TB/mo", Purges: "24/day", WAF: true},
-			{ID: newID(), Name: "images-edge", Region: "global", Status: "active", POPs: 84, Rules: 3, CacheSize: "3.6 TB", HitRate: "99.4%", Bandwidth: "12 TB/mo", Purges: "8/day", WAF: false},
-		},
-	},
+	edges: map[string][]CDNEdge{},
 }
 
 func (s *cdnEdgeStoreType) list(slug string) []CDNEdge {

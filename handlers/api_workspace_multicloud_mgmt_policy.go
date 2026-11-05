@@ -33,23 +33,7 @@ type governancePolicyStoreType struct {
 }
 
 var governancePolicyStore = &governancePolicyStoreType{
-	items: map[string][]GovernancePolicy{
-		"buyvm": {
-			{ID: newID(), Name: "enforce-encryption-at-rest", Category: "Security", Scope: "All accounts", Enforcement: "Deny", Compliant: 142, NonCompliant: 3, Exemptions: 1, Severity: "High", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "require-tagging-standards", Category: "Cost Management", Scope: "Production", Enforcement: "Audit", Compliant: 890, NonCompliant: 45, Exemptions: 12, Severity: "Medium", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "restrict-public-endpoints", Category: "Networking", Scope: "All accounts", Enforcement: "Deny", Compliant: 78, NonCompliant: 0, Exemptions: 2, Severity: "Critical", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "allowed-vm-sizes", Category: "Compute", Scope: "Dev / Staging", Enforcement: "Deny", Compliant: 56, NonCompliant: 2, Exemptions: 0, Severity: "Low", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "data-residency-eu", Category: "Compliance", Scope: "EU workloads", Enforcement: "Deny", Compliant: 210, NonCompliant: 0, Exemptions: 0, Severity: "Critical", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "deprecated-api-versions", Category: "Governance", Scope: "All accounts", Enforcement: "Audit", Compliant: 320, NonCompliant: 18, Exemptions: 5, Severity: "Medium", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-12"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "multi-cloud-rbac-sync", Category: "Identity", Scope: "All providers", Enforcement: "Deny", Compliant: 500, NonCompliant: 8, Exemptions: 3, Severity: "High", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "budget-guardrails", Category: "Cost Management", Scope: "All accounts", Enforcement: "Deny", Compliant: 42, NonCompliant: 1, Exemptions: 0, Severity: "High", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "require-mfa-admin", Category: "Security", Scope: "Admin roles", Enforcement: "Deny", Compliant: 28, NonCompliant: 0, Exemptions: 0, Severity: "Critical", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "network-segmentation", Category: "Networking", Scope: "Production", Enforcement: "Audit", Compliant: 115, NonCompliant: 7, Exemptions: 2, Severity: "Medium", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "container-image-signing", Category: "Security", Scope: "Kubernetes", Enforcement: "Deny", Compliant: 65, NonCompliant: 0, Exemptions: 1, Severity: "High", LastEval: "2026-04-17 09:00", Status: "active", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]GovernancePolicy{},
 }
 
 func (s *governancePolicyStoreType) list(slug string) []GovernancePolicy {

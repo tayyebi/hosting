@@ -36,22 +36,7 @@ type refundComplaintStoreType struct {
 }
 
 var refundComplaintStore = &refundComplaintStoreType{
-	complaints: map[string][]RefundComplaint{
-		"buyvm": {
-			{ID: newID(), Client: "james@acme.io", Amount: "49.99", Currency: "USD", Reason: "Service downtime exceeded SLA", Status: "approved", InvoiceID: "INV-4021", Created: "2026-04-14T10:00:00Z", Updated: "2026-04-15T16:00:00Z"},
-			{ID: newID(), Client: "sara@techblue.com", Amount: "120.00", Currency: "USD", Reason: "Duplicate charge on monthly billing", Status: "pending", InvoiceID: "INV-4035", Created: "2026-04-16T09:30:00Z", Updated: "2026-04-16T09:30:00Z"},
-			{ID: newID(), Client: "omar@khalid.dev", Amount: "25.00", Currency: "USD", Reason: "Charged after account suspension", Status: "escalated", InvoiceID: "INV-3998", Created: "2026-04-12T14:00:00Z", Updated: "2026-04-15T11:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Client: "priya@infranow.in", Amount: "85.50", Currency: "EUR", Reason: "Prorated refund for cancelled service", Status: "pending", InvoiceID: "INV-2201", Created: "2026-04-16T12:00:00Z", Updated: "2026-04-16T12:00:00Z"},
-			{ID: newID(), Client: "tom@fischer.eu", Amount: "200.00", Currency: "EUR", Reason: "Data loss incident compensation", Status: "escalated", InvoiceID: "INV-2180", Created: "2026-04-10T08:00:00Z", Updated: "2026-04-14T17:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Client: "alice@monroe.io", Amount: "75.00", Currency: "USD", Reason: "Migration downtime not communicated", Status: "approved", InvoiceID: "INV-8810", Created: "2026-04-11T15:00:00Z", Updated: "2026-04-13T10:00:00Z"},
-			{ID: newID(), Client: "diego@vega.ar", Amount: "310.00", Currency: "USD", Reason: "Overcharged for bandwidth overage", Status: "denied", InvoiceID: "INV-8795", Created: "2026-04-08T09:00:00Z", Updated: "2026-04-10T14:00:00Z"},
-			{ID: newID(), Client: "elena@popov.ru", Amount: "15.99", Currency: "USD", Reason: "Add-on feature not delivered", Status: "pending", InvoiceID: "INV-8842", Created: "2026-04-17T07:00:00Z", Updated: "2026-04-17T07:00:00Z"},
-		},
-	},
+	complaints: map[string][]RefundComplaint{},
 }
 
 func (s *refundComplaintStoreType) list(slug string) []RefundComplaint {

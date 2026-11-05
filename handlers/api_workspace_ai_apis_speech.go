@@ -34,18 +34,7 @@ type speechAPIStoreType struct {
 }
 
 var speechAPIStore = &speechAPIStoreType{
-	apis: map[string][]SpeechAPI{
-		"buyvm": {
-			{ID: newID(), Name: "speech-to-text-v3", Status: "active", Model: "whisper-large-v3", Capability: "stt", Version: "v3.0.0", Requests: "1.8M/mo", Latency: "320ms p99", Languages: "99 languages", SampleRate: "16kHz", Region: "eu-central-1", Endpoint: "stt.api.eu-central-1.example.com", APIKey: "vk_prod_****7b3e"},
-			{ID: newID(), Name: "text-to-speech-pro", Status: "active", Model: "xtts-v2", Capability: "tts", Version: "v2.0.0", Requests: "960K/mo", Latency: "180ms p99", Languages: "en,es,fr,de,ja,zh", SampleRate: "24kHz", Region: "eu-central-1", Endpoint: "tts.api.eu-central-1.example.com", APIKey: "vk_prod_****d1a4"},
-			{ID: newID(), Name: "speaker-verification", Status: "active", Model: "ecapa-tdnn", Capability: "speaker-id", Version: "v1.1.0", Requests: "240K/mo", Latency: "45ms p99", Languages: "language-agnostic", SampleRate: "16kHz", Region: "us-east-1", Endpoint: "speaker-id.api.us-east-1.example.com", APIKey: "vk_prod_****e5c9"},
-			{ID: newID(), Name: "voice-cloning-beta", Status: "beta", Model: "yourtts", Capability: "voice-clone", Version: "v0.8.0", Requests: "8K/mo", Latency: "2.4s p99", Languages: "en,es,fr", SampleRate: "22.05kHz", Region: "eu-central-1", Endpoint: "voice-clone.api.eu-central-1.example.com", APIKey: "vk_beta_****9f2b"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "call-transcription", Status: "active", Model: "whisper-medium", Capability: "stt", Version: "v2.0.0", Requests: "520K/mo", Latency: "280ms p99", Languages: "en,hi,ta,te", SampleRate: "16kHz", Region: "ap-south-1", Endpoint: "transcription.api.ap-south-1.example.com", APIKey: "vk_prod_****a4f7"},
-			{ID: newID(), Name: "ivr-tts", Status: "active", Model: "vits-indic", Capability: "tts", Version: "v1.0.0", Requests: "340K/mo", Latency: "120ms p99", Languages: "en,hi,bn,mr,ta", SampleRate: "22.05kHz", Region: "ap-south-1", Endpoint: "ivr-tts.api.ap-south-1.example.com", APIKey: "vk_prod_****c8d2"},
-		},
-	},
+	apis: map[string][]SpeechAPI{},
 }
 
 func (s *speechAPIStoreType) list(slug string) []SpeechAPI {
@@ -190,7 +179,7 @@ func apiWSAIAPIsSpeechCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Latency: "—", Languages: "en",
 		SampleRate: "16kHz", Region: region,
 		Endpoint: "speech-" + strings.ReplaceAll(strings.ToLower(name), " ", "-") + ".api." + region + ".example.com",
-		APIKey: "vk_new_****" + newID()[:4],
+		APIKey:   "vk_new_****" + newID()[:4],
 	}
 	speechAPIStore.add(slug, api)
 	apiCreated(w, toAPISpeechAPI(api))

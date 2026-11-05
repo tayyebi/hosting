@@ -34,21 +34,7 @@ type appMigrationStoreType struct {
 }
 
 var appMigrationStore = &appMigrationStoreType{
-	items: map[string][]AppMigration{
-		"buyvm": {
-			{ID: newID(), Name: "ecommerce-platform", AppType: "Web application", SourcePlatform: "On-prem VMs", TargetPlatform: "AWS ECS", Strategy: "Replatform", Services: 14, Dependencies: 32, MigratedPct: "85%", Rollback: "Available", StartedAt: "2026-04-01", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "inventory-api", AppType: "REST API", SourcePlatform: "Azure App Service", TargetPlatform: "AWS Lambda", Strategy: "Refactor", Services: 6, Dependencies: 12, MigratedPct: "100%", Rollback: "Decommissioned", StartedAt: "2026-03-15", Status: "completed", Updated: "2026-04-14"},
-			{ID: newID(), Name: "reporting-suite", AppType: "Batch processing", SourcePlatform: "On-prem bare metal", TargetPlatform: "GCP Cloud Run", Strategy: "Replatform", Services: 8, Dependencies: 18, MigratedPct: "42%", Rollback: "Available", StartedAt: "2026-04-10", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "legacy-crm", AppType: "Monolith", SourcePlatform: "On-prem Windows Server", TargetPlatform: "Azure VMs", Strategy: "Rehost", Services: 1, Dependencies: 45, MigratedPct: "0%", Rollback: "N/A", StartedAt: "—", Status: "pending", Updated: "2026-04-17"},
-			{ID: newID(), Name: "mobile-backend", AppType: "Microservices", SourcePlatform: "GCP GKE", TargetPlatform: "AWS EKS", Strategy: "Replatform", Services: 22, Dependencies: 15, MigratedPct: "65%", Rollback: "Available", StartedAt: "2026-04-05", Status: "active", Updated: "2026-04-16"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "saas-core-platform", AppType: "Microservices", SourcePlatform: "AWS ECS", TargetPlatform: "Multi-cloud K8s", Strategy: "Refactor", Services: 48, Dependencies: 85, MigratedPct: "35%", Rollback: "Available", StartedAt: "2026-03-01", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "data-pipeline-v2", AppType: "Stream processing", SourcePlatform: "GCP Dataflow", TargetPlatform: "AWS Kinesis + Lambda", Strategy: "Rebuild", Services: 12, Dependencies: 20, MigratedPct: "90%", Rollback: "Available", StartedAt: "2026-03-20", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "customer-portal", AppType: "Web application", SourcePlatform: "Azure App Service", TargetPlatform: "AWS Amplify", Strategy: "Replatform", Services: 5, Dependencies: 10, MigratedPct: "100%", Rollback: "Decommissioned", StartedAt: "2026-02-15", Status: "completed", Updated: "2026-04-10"},
-			{ID: newID(), Name: "iot-gateway-fleet", AppType: "Edge application", SourcePlatform: "Self-hosted", TargetPlatform: "AWS Greengrass", Strategy: "Replatform", Services: 3, Dependencies: 8, MigratedPct: "0%", Rollback: "N/A", StartedAt: "—", Status: "pending", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]AppMigration{},
 }
 
 func (s *appMigrationStoreType) list(slug string) []AppMigration {

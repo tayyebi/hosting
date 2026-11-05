@@ -31,22 +31,7 @@ type encodingJobStoreType struct {
 }
 
 var encodingJobStore = &encodingJobStoreType{
-	jobs: map[string][]EncodingJob{
-		"buyvm": {
-			{ID: newID(), Name: "promo-video-2026", InputFile: "promo_raw.mov", OutputFmt: "H.264 / MP4", Resolution: "1920x1080", Bitrate: "8 Mbps", Progress: "100%", Duration: "4m 22s", Status: "completed", Updated: "2026-04-17"},
-			{ID: newID(), Name: "product-demo-4k", InputFile: "demo_4k.mkv", OutputFmt: "H.265 / MP4", Resolution: "3840x2160", Bitrate: "20 Mbps", Progress: "67%", Duration: "—", Status: "encoding", Updated: "2026-04-17"},
-			{ID: newID(), Name: "webinar-recording", InputFile: "webinar_2026-04.mp4", OutputFmt: "VP9 / WebM", Resolution: "1280x720", Bitrate: "3 Mbps", Progress: "100%", Duration: "1m 45s", Status: "completed", Updated: "2026-04-16"},
-			{ID: newID(), Name: "training-series-ep3", InputFile: "training_ep3.mov", OutputFmt: "H.264 / MP4", Resolution: "1920x1080", Bitrate: "6 Mbps", Progress: "100%", Duration: "3m 10s", Status: "completed", Updated: "2026-04-15"},
-			{ID: newID(), Name: "social-clip-reel", InputFile: "clips_raw.mp4", OutputFmt: "H.264 / MP4", Resolution: "1080x1920", Bitrate: "4 Mbps", Progress: "0%", Duration: "—", Status: "queued", Updated: "2026-04-17"},
-			{ID: newID(), Name: "archive-batch-q1", InputFile: "q1_footage.tar", OutputFmt: "AV1 / MP4", Resolution: "1920x1080", Bitrate: "4 Mbps", Progress: "100%", Duration: "22m 08s", Status: "completed", Updated: "2026-03-31"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "onboarding-video", InputFile: "onboard_raw.mov", OutputFmt: "H.264 / MP4", Resolution: "1920x1080", Bitrate: "6 Mbps", Progress: "100%", Duration: "2m 50s", Status: "completed", Updated: "2026-04-16"},
-			{ID: newID(), Name: "api-tutorial-series", InputFile: "api_tut_01.mkv", OutputFmt: "H.264 / MP4", Resolution: "1280x720", Bitrate: "3 Mbps", Progress: "45%", Duration: "—", Status: "encoding", Updated: "2026-04-17"},
-			{ID: newID(), Name: "customer-testimonials", InputFile: "testimonials.mov", OutputFmt: "VP9 / WebM", Resolution: "1920x1080", Bitrate: "5 Mbps", Progress: "100%", Duration: "1m 30s", Status: "completed", Updated: "2026-04-14"},
-			{ID: newID(), Name: "conference-keynote", InputFile: "keynote_2026.mp4", OutputFmt: "H.265 / MP4", Resolution: "3840x2160", Bitrate: "18 Mbps", Progress: "0%", Duration: "—", Status: "queued", Updated: "2026-04-17"},
-		},
-	},
+	jobs: map[string][]EncodingJob{},
 }
 
 func (s *encodingJobStoreType) list(slug string) []EncodingJob {

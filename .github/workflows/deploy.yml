@@ -1,0 +1,301 @@
+name: Deploy to Linux Host
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-linux-host
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Linux Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deployment secrets
+        id: check_secrets
+        env:
+          HOST_ADDRESS: ${{ secrets.HOST_ADDRESS }}
+          HOST_USERNAME: ${{ secrets.HOST_USERNAME }}
+          HOST_KEY_BASE64: ${{ secrets.HOST_KEY_BASE64 }}
+          HOST_PASSWORD: ${{ secrets.HOST_PASSWORD }}
+        run: |
+          if [ -z "${HOST_ADDRESS}" ] || [ -z "${HOST_USERNAME}" ]; then
+            echo "::notice::HOST_ADDRESS or HOST_USERNAME secret is not set. Skipping Linux deployment."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "${HOST_KEY_BASE64}" ] && [ -z "${HOST_PASSWORD}" ]; then
+            echo "::notice::Neither HOST_KEY_BASE64 nor HOST_PASSWORD secret is set. Skipping Linux deployment."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.check_secrets.outputs.deploy == 'true'
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        if: steps.check_secrets.outputs.deploy == 'true'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Configure SSH authentication & detect target Linux architecture
+        if: steps.check_secrets.outputs.deploy == 'true'
+        id: probe_host
+        env:
+          HOST_ADDRESS: ${{ secrets.HOST_ADDRESS }}
+          HOST_USERNAME: ${{ secrets.HOST_USERNAME }}
+          HOST_KEY_BASE64: ${{ secrets.HOST_KEY_BASE64 }}
+          HOST_PASSWORD: ${{ secrets.HOST_PASSWORD }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openssh-client sshpass
+
+          SSH_HOST="${HOST_ADDRESS}"
+          SSH_PORT="22"
+          if [[ "${HOST_ADDRESS}" =~ ^([^:]+):([0-9]+)$ ]]; then
+            SSH_HOST="${BASH_REMATCH[1]}"
+            SSH_PORT="${BASH_REMATCH[2]}"
+          fi
+
+          mkdir -p "${RUNNER_TEMP}/ssh"
+          chmod 700 "${RUNNER_TEMP}/ssh"
+          KNOWN_HOSTS="${RUNNER_TEMP}/ssh/known_hosts"
+          KEY_FILE="${RUNNER_TEMP}/ssh/deploy_key"
+
+          BASE_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS} -o ConnectTimeout=15"
+          AUTH_MODE=""
+
+          if [ -n "${HOST_KEY_BASE64}" ]; then
+            if printf '%s' "${HOST_KEY_BASE64}" | tr -d ' \t\r\n' | base64 -d > "${KEY_FILE}" 2>/dev/null && [ -s "${KEY_FILE}" ]; then
+              # Ensure trailing newline required by OpenSSH
+              printf '\n' >> "${KEY_FILE}"
+              chmod 600 "${KEY_FILE}"
+              if ssh ${BASE_OPTS} -p "${SSH_PORT}" -i "${KEY_FILE}" -o BatchMode=yes -o IdentitiesOnly=yes \
+                   "${HOST_USERNAME}@${SSH_HOST}" "uname -s" >/dev/null 2>&1; then
+                AUTH_MODE="key"
+              elif [ -n "${HOST_PASSWORD}" ]; then
+                echo "::warning::SSH key authentication failed; falling back to HOST_PASSWORD."
+              else
+                echo "::error::SSH key authentication failed and no HOST_PASSWORD fallback is configured."
+                exit 1
+              fi
+            elif [ -n "${HOST_PASSWORD}" ]; then
+              echo "::warning::HOST_KEY_BASE64 could not be decoded; falling back to HOST_PASSWORD."
+            else
+              echo "::error::Invalid HOST_KEY_BASE64 and no HOST_PASSWORD fallback is configured."
+              exit 1
+            fi
+          fi
+
+          if [ -z "${AUTH_MODE}" ]; then
+            export SSHPASS="${HOST_PASSWORD}"
+            sshpass -e ssh ${BASE_OPTS} -p "${SSH_PORT}" \
+              -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive \
+              "${HOST_USERNAME}@${SSH_HOST}" "uname -s" >/dev/null
+            AUTH_MODE="password"
+          fi
+
+          if [ "${AUTH_MODE}" = "key" ]; then
+            REMOTE_INFO="$(ssh ${BASE_OPTS} -p "${SSH_PORT}" -i "${KEY_FILE}" -o BatchMode=yes -o IdentitiesOnly=yes "${HOST_USERNAME}@${SSH_HOST}" 'printf "%s %s" "$(uname -s)" "$(uname -m)"')"
+          else
+            export SSHPASS="${HOST_PASSWORD}"
+            REMOTE_INFO="$(sshpass -e ssh ${BASE_OPTS} -p "${SSH_PORT}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "${HOST_USERNAME}@${SSH_HOST}" 'printf "%s %s" "$(uname -s)" "$(uname -m)"')"
+          fi
+
+          REMOTE_OS="${REMOTE_INFO%% *}"
+          REMOTE_MACH="${REMOTE_INFO##* }"
+          if [ "${REMOTE_OS}" != "Linux" ]; then
+            echo "::error::Target host OS is '${REMOTE_OS}', expected 'Linux'."
+            exit 1
+          fi
+
+          case "${REMOTE_MACH}" in
+            x86_64|amd64) GOARCH="amd64" ;;
+            aarch64|arm64) GOARCH="arm64" ;;
+            *)
+              echo "::error::Unsupported remote CPU architecture '${REMOTE_MACH}'."
+              exit 1
+              ;;
+          esac
+
+          echo "ssh_host=${SSH_HOST}" >> "$GITHUB_OUTPUT"
+          echo "ssh_port=${SSH_PORT}" >> "$GITHUB_OUTPUT"
+          echo "auth_mode=${AUTH_MODE}" >> "$GITHUB_OUTPUT"
+          echo "goarch=${GOARCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Build binary & package deployment bundle
+        if: steps.check_secrets.outputs.deploy == 'true'
+        run: |
+          set -euo pipefail
+          STAGE_DIR="$(mktemp -d)"
+          CGO_ENABLED=0 GOOS=linux GOARCH="${{ steps.probe_host.outputs.goarch }}" \
+            go build -trimpath -ldflags="-s -w" -o "${STAGE_DIR}/hosting" .
+          chmod +x "${STAGE_DIR}/hosting"
+          cp -r templates static scripts "${STAGE_DIR}/"
+          cp docker-compose.yml .env.example README.md "${STAGE_DIR}/"
+          tar -czf "${RUNNER_TEMP}/hosting-deploy.tar.gz" -C "${STAGE_DIR}" .
+          rm -rf "${STAGE_DIR}"
+
+      - name: Upload & deploy on Linux host
+        if: steps.check_secrets.outputs.deploy == 'true'
+        env:
+          HOST_USERNAME: ${{ secrets.HOST_USERNAME }}
+          HOST_PASSWORD: ${{ secrets.HOST_PASSWORD }}
+          SSH_HOST: ${{ steps.probe_host.outputs.ssh_host }}
+          SSH_PORT: ${{ steps.probe_host.outputs.ssh_port }}
+          AUTH_MODE: ${{ steps.probe_host.outputs.auth_mode }}
+        run: |
+          set -euo pipefail
+          KNOWN_HOSTS="${RUNNER_TEMP}/ssh/known_hosts"
+          KEY_FILE="${RUNNER_TEMP}/ssh/deploy_key"
+          BASE_OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS} -o ConnectTimeout=15"
+
+          run_ssh() {
+            if [ "${AUTH_MODE}" = "key" ]; then
+              ssh ${BASE_OPTS} -p "${SSH_PORT}" -i "${KEY_FILE}" -o BatchMode=yes -o IdentitiesOnly=yes "${HOST_USERNAME}@${SSH_HOST}" "$@"
+            else
+              SSHPASS="${HOST_PASSWORD}" sshpass -e ssh ${BASE_OPTS} -p "${SSH_PORT}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "${HOST_USERNAME}@${SSH_HOST}" "$@"
+            fi
+          }
+
+          run_scp() {
+            if [ "${AUTH_MODE}" = "key" ]; then
+              scp ${BASE_OPTS} -P "${SSH_PORT}" -i "${KEY_FILE}" -o BatchMode=yes -o IdentitiesOnly=yes "$1" "${HOST_USERNAME}@${SSH_HOST}:$2"
+            else
+              SSHPASS="${HOST_PASSWORD}" sshpass -e scp ${BASE_OPTS} -P "${SSH_PORT}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "$1" "${HOST_USERNAME}@${SSH_HOST}:$2"
+            fi
+          }
+
+          REMOTE_ARCHIVE="/tmp/hosting-deploy-${GITHUB_RUN_ID}.tar.gz"
+          run_scp "${RUNNER_TEMP}/hosting-deploy.tar.gz" "${REMOTE_ARCHIVE}"
+
+          run_ssh "REMOTE_ARCHIVE='${REMOTE_ARCHIVE}' bash -s" <<'EOF_REMOTE'
+          set -euo pipefail
+
+          SUDO=""
+          HAS_PRIV="false"
+          if [ "$(id -u)" -eq 0 ]; then
+            HAS_PRIV="true"
+          elif sudo -n true 2>/dev/null; then
+            SUDO="sudo -n"
+            HAS_PRIV="true"
+          fi
+
+          if [ "${HAS_PRIV}" = "true" ]; then
+            APP_DIR="/opt/hosting"
+            $SUDO mkdir -p "${APP_DIR}"
+            $SUDO tar -xzf "${REMOTE_ARCHIVE}" -C "${APP_DIR}"
+            rm -f "${REMOTE_ARCHIVE}"
+            $SUDO chmod +x "${APP_DIR}/hosting"
+
+            # Bootstrap local PostgreSQL & .env automatically if no .env exists yet
+            if [ ! -f "${APP_DIR}/.env" ]; then
+              if ! command -v psql >/dev/null 2>&1; then
+                if command -v apt-get >/dev/null 2>&1; then
+                  export DEBIAN_FRONTEND=noninteractive
+                  $SUDO apt-get update -qq
+                  $SUDO apt-get install -y -qq postgresql postgresql-client openssl
+                elif command -v dnf >/dev/null 2>&1; then
+                  $SUDO dnf install -y postgresql-server postgresql openssl
+                  $SUDO postgresql-setup --initdb || true
+                fi
+              fi
+
+              if command -v systemctl >/dev/null 2>&1; then
+                $SUDO systemctl enable --now postgresql 2>/dev/null || true
+              fi
+
+              if id postgres >/dev/null 2>&1 && $SUDO su - postgres -c "psql -tAc 'SELECT 1'" >/dev/null 2>&1; then
+                ADMIN_PW="$(openssl rand -hex 16)"
+                APP_PW="$(openssl rand -hex 16)"
+                RO_PW="$(openssl rand -hex 16)"
+
+                $SUDO su - postgres -c "psql -v ON_ERROR_STOP=1" <<EOSQL
+          DO \$\$
+          BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'platform_admin') THEN
+                  CREATE ROLE platform_admin LOGIN SUPERUSER PASSWORD '${ADMIN_PW}';
+              ELSE
+                  ALTER ROLE platform_admin WITH LOGIN SUPERUSER PASSWORD '${ADMIN_PW}';
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'platform_app') THEN
+                  CREATE ROLE platform_app LOGIN PASSWORD '${APP_PW}';
+              ELSE
+                  ALTER ROLE platform_app WITH LOGIN PASSWORD '${APP_PW}';
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'platform_readonly') THEN
+                  CREATE ROLE platform_readonly LOGIN PASSWORD '${RO_PW}';
+              ELSE
+                  ALTER ROLE platform_readonly WITH LOGIN PASSWORD '${RO_PW}';
+              END IF;
+          END
+          \$\$;
+          EOSQL
+                DB_EXISTS="$($SUDO su - postgres -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='platform'\"")"
+                if [ "${DB_EXISTS}" != "1" ]; then
+                  $SUDO su - postgres -c "createdb -O platform_admin platform"
+                fi
+                $SUDO su - postgres -c "psql -d platform -v ON_ERROR_STOP=1 -c 'GRANT CONNECT ON DATABASE platform TO platform_app, platform_readonly; GRANT USAGE ON SCHEMA public TO platform_app, platform_readonly;'"
+
+                cat <<ENVEOF | $SUDO tee "${APP_DIR}/.env" >/dev/null
+          DATABASE_URL=postgres://platform_app:${APP_PW}@127.0.0.1:5432/platform?sslmode=disable
+          DATABASE_URL_ADMIN=postgres://platform_admin:${ADMIN_PW}@127.0.0.1:5432/platform?sslmode=disable
+          DATABASE_URL_READONLY=postgres://platform_readonly:${RO_PW}@127.0.0.1:5432/platform?sslmode=disable
+          SYSADMIN_EMAIL=sysadmin@platform.io
+          SYSADMIN_NAME=System Administrator
+          SYSADMIN_PASSWORD=sysadmin123
+          ENVEOF
+              else
+                $SUDO cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
+              fi
+              $SUDO chmod 600 "${APP_DIR}/.env"
+            fi
+
+            if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+              cat <<UNIT | $SUDO tee /etc/systemd/system/hosting.service >/dev/null
+          [Unit]
+          Description=Hosting Platform Control Plane
+          After=network.target postgresql.service
+
+          [Service]
+          Type=simple
+          WorkingDirectory=${APP_DIR}
+          EnvironmentFile=${APP_DIR}/.env
+          ExecStart=${APP_DIR}/hosting
+          Restart=on-failure
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+              $SUDO systemctl daemon-reload
+              $SUDO systemctl enable hosting.service
+              $SUDO systemctl restart hosting.service
+              sleep 2
+              $SUDO systemctl is-active --quiet hosting.service
+              echo "hosting.service is active on $(hostname)"
+            fi
+          else
+            APP_DIR="${HOME}/hosting"
+            mkdir -p "${APP_DIR}"
+            tar -xzf "${REMOTE_ARCHIVE}" -C "${APP_DIR}"
+            rm -f "${REMOTE_ARCHIVE}"
+            chmod +x "${APP_DIR}/hosting"
+            [ -f "${APP_DIR}/.env" ] || cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
+            echo "Deployed bundle to ${APP_DIR} (non-root user without passwordless sudo)."
+          fi
+          EOF_REMOTE
+
+      - name: Clean up temporary SSH credentials
+        if: always()
+        run: rm -rf "${RUNNER_TEMP}/ssh" "${RUNNER_TEMP}/hosting-deploy.tar.gz"

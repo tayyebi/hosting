@@ -13,18 +13,18 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type CostProfile struct {
-	ID               string
-	Name             string
-	Provider         string
-	Account          string
-	MonthlyBudget    string
-	CurrentSpend     string
-	Forecast         string
-	SavingsFound     string
-	Alerts           int
-	OptimizationPct  string
-	Status           string
-	Updated          string
+	ID              string
+	Name            string
+	Provider        string
+	Account         string
+	MonthlyBudget   string
+	CurrentSpend    string
+	Forecast        string
+	SavingsFound    string
+	Alerts          int
+	OptimizationPct string
+	Status          string
+	Updated         string
 }
 
 type costProfileStoreType struct {
@@ -33,21 +33,7 @@ type costProfileStoreType struct {
 }
 
 var costProfileStore = &costProfileStoreType{
-	items: map[string][]CostProfile{
-		"buyvm": {
-			{ID: newID(), Name: "aws-production", Provider: "AWS", Account: "prod-112233", MonthlyBudget: "$45,000", CurrentSpend: "$38,420", Forecast: "$42,100", SavingsFound: "$3,200", Alerts: 2, OptimizationPct: "87%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "azure-staging", Provider: "Azure", Account: "staging-sub-01", MonthlyBudget: "$8,000", CurrentSpend: "$5,640", Forecast: "$6,800", SavingsFound: "$980", Alerts: 0, OptimizationPct: "92%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "gcp-analytics", Provider: "GCP", Account: "analytics-proj", MonthlyBudget: "$12,000", CurrentSpend: "$11,850", Forecast: "$14,200", SavingsFound: "$1,500", Alerts: 3, OptimizationPct: "78%", Status: "warning", Updated: "2026-04-17"},
-			{ID: newID(), Name: "aws-dev-sandbox", Provider: "AWS", Account: "dev-445566", MonthlyBudget: "$3,000", CurrentSpend: "$1,200", Forecast: "$1,800", SavingsFound: "$450", Alerts: 0, OptimizationPct: "95%", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "on-prem-dc", Provider: "On-premises", Account: "dc-nyc-01", MonthlyBudget: "$25,000", CurrentSpend: "$24,800", Forecast: "$25,000", SavingsFound: "$0", Alerts: 1, OptimizationPct: "60%", Status: "active", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "multi-cloud-prod", Provider: "AWS + Azure", Account: "consolidated", MonthlyBudget: "$120,000", CurrentSpend: "$98,500", Forecast: "$108,000", SavingsFound: "$12,400", Alerts: 1, OptimizationPct: "89%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "gcp-ml-workloads", Provider: "GCP", Account: "ml-project-01", MonthlyBudget: "$35,000", CurrentSpend: "$28,900", Forecast: "$32,000", SavingsFound: "$4,800", Alerts: 0, OptimizationPct: "91%", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "alibaba-apac", Provider: "Alibaba Cloud", Account: "apac-main", MonthlyBudget: "$15,000", CurrentSpend: "$12,300", Forecast: "$14,200", SavingsFound: "$1,900", Alerts: 0, OptimizationPct: "85%", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "aws-disaster-recovery", Provider: "AWS", Account: "dr-778899", MonthlyBudget: "$5,000", CurrentSpend: "$4,200", Forecast: "$4,500", SavingsFound: "$300", Alerts: 0, OptimizationPct: "93%", Status: "active", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]CostProfile{},
 }
 
 func (s *costProfileStoreType) list(slug string) []CostProfile {

@@ -29,22 +29,7 @@ type iacTemplateStoreType struct {
 }
 
 var iacTemplateStore = &iacTemplateStoreType{
-	templates: map[string][]IaCTemplate{
-		"buyvm": {
-			{ID: newID(), Name: "VPC Base Network", Engine: "Terraform", Provider: "AWS", Type: "networking", Status: "active", Version: "3.2.1", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Kubernetes Cluster", Engine: "Terraform", Provider: "AWS", Type: "compute", Status: "active", Version: "2.8.0", Updated: "2026-03-28"},
-			{ID: newID(), Name: "RDS PostgreSQL", Engine: "CloudFormation", Provider: "AWS", Type: "database", Status: "active", Version: "1.5.3", Updated: "2026-02-15"},
-			{ID: newID(), Name: "S3 Bucket + CDN", Engine: "Terraform", Provider: "AWS", Type: "storage", Status: "active", Version: "2.1.0", Updated: "2026-01-20"},
-			{ID: newID(), Name: "Monitoring Stack", Engine: "Helm", Provider: "Kubernetes", Type: "observability", Status: "active", Version: "4.0.2", Updated: "2026-04-05"},
-			{ID: newID(), Name: "Legacy VM Setup", Engine: "Ansible", Provider: "Bare Metal", Type: "compute", Status: "deprecated", Version: "1.0.0", Updated: "2025-06-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Multi-Region VPC", Engine: "Terraform", Provider: "GCP", Type: "networking", Status: "active", Version: "2.4.0", Updated: "2026-04-08"},
-			{ID: newID(), Name: "GKE Autopilot Cluster", Engine: "Terraform", Provider: "GCP", Type: "compute", Status: "active", Version: "1.9.1", Updated: "2026-03-15"},
-			{ID: newID(), Name: "Cloud SQL Instance", Engine: "Terraform", Provider: "GCP", Type: "database", Status: "active", Version: "1.3.0", Updated: "2026-02-20"},
-			{ID: newID(), Name: "Nginx Ingress", Engine: "Helm", Provider: "Kubernetes", Type: "networking", Status: "active", Version: "3.1.0", Updated: "2026-03-01"},
-		},
-	},
+	templates: map[string][]IaCTemplate{},
 }
 
 func (s *iacTemplateStoreType) list(slug string) []IaCTemplate {

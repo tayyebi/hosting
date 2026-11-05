@@ -13,18 +13,18 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type DRPlan struct {
-	ID             string
-	Name           string
-	Region         string
-	Status         string
-	SourceRegion   string
-	TargetRegion   string
-	RPO            string
-	RTO            string
+	ID              string
+	Name            string
+	Region          string
+	Status          string
+	SourceRegion    string
+	TargetRegion    string
+	RPO             string
+	RTO             string
 	ReplicationType string
-	LastTestedAt   string
-	Protected      int
-	Encrypted      bool
+	LastTestedAt    string
+	Protected       int
+	Encrypted       bool
 }
 
 type drPlanStoreType struct {
@@ -33,19 +33,7 @@ type drPlanStoreType struct {
 }
 
 var drPlanStore = &drPlanStoreType{
-	plans: map[string][]DRPlan{
-		"buyvm": {
-			{ID: newID(), Name: "primary-db-dr", Region: "eu-central-1", Status: "active", SourceRegion: "eu-central-1", TargetRegion: "us-west-2", RPO: "15 min", RTO: "1 hour", ReplicationType: "continuous", LastTestedAt: "2026-04-10T14:00:00Z", Protected: 4, Encrypted: true},
-			{ID: newID(), Name: "app-tier-dr", Region: "eu-central-1", Status: "active", SourceRegion: "eu-central-1", TargetRegion: "us-east-1", RPO: "1 hour", RTO: "4 hours", ReplicationType: "scheduled", LastTestedAt: "2026-04-05T09:00:00Z", Protected: 8, Encrypted: true},
-			{ID: newID(), Name: "media-storage-dr", Region: "us-east-1", Status: "degraded", SourceRegion: "us-east-1", TargetRegion: "eu-west-1", RPO: "6 hours", RTO: "12 hours", ReplicationType: "scheduled", LastTestedAt: "2026-03-28T16:00:00Z", Protected: 2, Encrypted: true},
-			{ID: newID(), Name: "staging-dr", Region: "eu-central-1", Status: "disabled", SourceRegion: "eu-central-1", TargetRegion: "us-east-1", RPO: "24 hours", RTO: "48 hours", ReplicationType: "manual", LastTestedAt: "2026-02-15T10:00:00Z", Protected: 1, Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "production-full-dr", Region: "ap-south-1", Status: "active", SourceRegion: "ap-south-1", TargetRegion: "ap-southeast-1", RPO: "5 min", RTO: "30 min", ReplicationType: "continuous", LastTestedAt: "2026-04-14T11:00:00Z", Protected: 12, Encrypted: true},
-			{ID: newID(), Name: "analytics-dr", Region: "ap-south-1", Status: "active", SourceRegion: "ap-south-1", TargetRegion: "us-west-2", RPO: "1 hour", RTO: "2 hours", ReplicationType: "scheduled", LastTestedAt: "2026-04-08T08:00:00Z", Protected: 3, Encrypted: true},
-			{ID: newID(), Name: "dev-env-dr", Region: "ap-south-1", Status: "paused", SourceRegion: "ap-south-1", TargetRegion: "ap-southeast-1", RPO: "12 hours", RTO: "24 hours", ReplicationType: "manual", LastTestedAt: "2026-03-01T12:00:00Z", Protected: 2, Encrypted: false},
-		},
-	},
+	plans: map[string][]DRPlan{},
 }
 
 func (s *drPlanStoreType) list(slug string) []DRPlan {
