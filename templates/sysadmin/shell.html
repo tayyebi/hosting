@@ -1,0 +1,231 @@
+{{define "shell"}}
+<script>
+(function(){
+  var t = localStorage.getItem('theme') ||
+    (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<div class="ds-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="ds-sidebar" id="sidebar">
+
+        <div class="ds-sidebar__header">
+            <a href="/s/" class="ds-logo">
+                <div class="ds-logo__mark">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path d="M4 11L8 7L12 11L16 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 15L8 11L12 15L16 11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+                    </svg>
+                </div>
+                <span class="ds-logo__name">Platform</span>
+            </a>
+        </div>
+
+        <div class="ds-sidebar__section-label">System</div>
+
+        <div class="ds-sidebar__scroll">
+        <nav class="ds-nav">
+            {{range .Nav}}
+            <a href="{{.Path}}"
+               class="ds-nav__item {{if eq $.ActiveNav .ID}}ds-nav__item--active{{end}}"
+               title="{{.Label}}">
+                <span class="ds-nav__icon">
+                    {{if eq .Icon "tenants"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M2 15V7l7-4.5L16 7v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="6.5" y="10" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                    </svg>
+                    {{else if eq .Icon "logs"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M5.5 6.5h7M5.5 9h7M5.5 11.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    {{else if eq .Icon "replicas"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                        <rect x="9.5" y="9.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M8.5 5H13a2 2 0 012 2v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    {{else if eq .Icon "database"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <ellipse cx="9" cy="5" rx="6" ry="2.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M3 5v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M3 9v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V9" stroke="currentColor" stroke-width="1.2"/>
+                    </svg>
+                    {{else if eq .Icon "current-replica"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9.5" y="9.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M8.5 5H13a2 2 0 012 2v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="4.5" cy="4.5" r="1.5" fill="currentColor"/></svg>
+                    {{else if eq .Icon "sso"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="6" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 6V4.5a4 4 0 018 0V6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10" r="1.2" fill="currentColor"/><path d="M7 11.2V13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M14 9h2M14 12h2M15 7v6" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                    {{else if eq .Icon "accounting"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h6M6 12h4M9 6h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    {{else if eq .Icon "jobs"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5 9h3M5 12h5M12 9.5l1.5 1.5L16 8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    {{end}}
+                </span>
+                <span class="ds-nav__label">{{.Label}}</span>
+            </a>
+            {{end}}
+        </nav>
+        </div>{{/* end ds-sidebar__scroll */}}
+
+    </aside>
+
+    <!-- ── Mobile drawer backdrop ── -->
+    <div class="ds-drawer-overlay" id="drawerOverlay" onclick="closeMobileDrawer()"></div>
+
+    <!-- ── Main area ── -->
+    <div class="ds-main">
+
+        <!-- Topbar -->
+        <header class="ds-topbar">
+            <div class="ds-topbar__left">
+                <button class="ds-topbar__menu-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 5h13M2.5 9h13M2.5 13h13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+                <div class="ds-breadcrumb">
+                    <span class="ds-breadcrumb__root">Sysadmin</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="ds-breadcrumb__current">{{.PageTitle}}</span>
+                </div>
+            </div>
+            <div class="ds-topbar__right">
+                <div class="topbar-profile" id="topbarProfile">
+                    <button class="topbar-profile__btn" onclick="toggleTopbarMenu()" title="Account">
+                        <div class="ds-topbar__avatar">{{slice .User.Name 0 1}}</div>
+                        <span class="topbar-profile__name">{{.User.Name}}</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="topbar-menu" id="topbarMenu" hidden>
+                        <div class="topbar-menu__header">
+                            <div class="topbar-menu__name">{{.User.Name}}</div>
+                            <div class="topbar-menu__role">Sysadmin</div>
+                        </div>
+                        <div class="topbar-menu__divider"></div>
+                        <a href="/u/settings/" class="topbar-menu__item">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1v1.2M7.5 12.8V14M1 7.5h1.2M12.8 7.5H14M3.1 3.1l.85.85M11.05 11.05l.85.85M3.1 11.9l.85-.85M11.05 3.95l.85-.85" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                            Settings
+                        </a>
+                        <div class="topbar-menu__appearance">
+                            <div class="tm-appearance__label">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.0"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                                Appearance
+                            </div>
+                            <div class="tm-appearance__seg" role="radiogroup" aria-label="Appearance">
+                                <button type="button" class="tm-seg__opt" data-theme-opt="light" role="radio" aria-checked="false" title="Light">
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.1"/><path d="M7 1.3v1.4M7 11.3V12.7M1.3 7h1.4M11.3 7h1.4M3.1 3.1l1 1M9.9 9.9l1 1M3.1 10.9l1-1M9.9 4.1l1-1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                                    <span>Light</span>
+                                </button>
+                                <button type="button" class="tm-seg__opt" data-theme-opt="dark" role="radio" aria-checked="false" title="Dark">
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M12 8.8A5.4 5.4 0 015 1.6a5.5 5.5 0 100 10.8A5.4 5.4 0 0112 8.8z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+                                    <span>Dark</span>
+                                </button>
+                                <button type="button" class="tm-seg__opt" data-theme-opt="system" role="radio" aria-checked="false" title="Match system">
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1.3" y="2" width="11.4" height="8" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M5 12.2h4M7 10.3v1.9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                                    <span>Auto</span>
+                                </button>
+                                <span class="tm-seg__glider" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                        <div class="topbar-menu__divider"></div>
+                        <a href="/logout" class="topbar-menu__item topbar-menu__item--danger">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M5 2H3a1 1 0 00-1 1v9a1 1 0 001 1h2M10 10l3-2.5L10 5M13 7.5H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Log out
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="ds-content">
+            <div class="ds-page-header">
+                <h1 class="ds-page-title">{{.PageTitle}}</h1>
+            </div>
+
+            {{if .Content}}
+            {{.Content}}
+            {{else}}
+            <div class="ds-placeholder">
+                <div class="ds-placeholder__inner">
+                    <span class="ds-placeholder__icon">
+                        {{if eq .ActiveNav "overall"}}
+                        <svg width="40" height="40" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                        {{else if eq .ActiveNav "logs"}}
+                        <svg width="40" height="40" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 6.5h7M5.5 9h7M5.5 11.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        {{else if eq .ActiveNav "replicas"}}
+                        <svg width="40" height="40" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9.5" y="9.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M8.5 5H13a2 2 0 012 2v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        {{else if eq .ActiveNav "database"}}
+                        <svg width="40" height="40" viewBox="0 0 18 18" fill="none"><ellipse cx="9" cy="5" rx="6" ry="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V5" stroke="currentColor" stroke-width="1.2"/><path d="M3 9v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V9" stroke="currentColor" stroke-width="1.2"/></svg>
+                        {{end}}
+                    </span>
+                    <p class="ds-placeholder__title">{{.PageTitle}}</p>
+                    <p class="ds-placeholder__sub">This section is under construction. Implementation coming next.</p>
+                </div>
+            </div>
+            {{end}}
+        </main>
+
+    </div>
+</div>
+
+<style>
+.topbar-menu__appearance { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.tm-appearance__label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--ds-text-muted); padding: 0 2px; }
+.tm-appearance__label svg { color: var(--ds-text-muted); }
+.tm-appearance__seg { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 3px; background: var(--ds-bg-soft, rgba(0,0,0,.04)); border: 1px solid var(--ds-border); border-radius: 9px; isolation: isolate; }
+[data-theme="dark"] .tm-appearance__seg { background: rgba(255,255,255,.04); }
+.tm-seg__opt { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 4px; border: none; background: transparent; color: var(--ds-text-muted); font: inherit; font-size: 12px; font-weight: 400; border-radius: 6px; cursor: pointer; transition: color 160ms ease; white-space: nowrap; }
+.tm-seg__opt svg { flex-shrink: 0; }
+.tm-seg__opt:hover:not(.is-active) { color: var(--ds-text); }
+.tm-seg__opt.is-active { color: var(--ds-text); font-weight: 500; }
+.tm-seg__opt:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+.tm-seg__glider { position: absolute; z-index: 1; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / 3); background: var(--ds-surface, #fff); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); transition: transform 240ms cubic-bezier(.2,.9,.25,1); will-change: transform; }
+[data-theme="dark"] .tm-seg__glider { background: rgba(255,255,255,.1); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.tm-appearance__seg[data-pos="1"] .tm-seg__glider { transform: translateX(100%); }
+.tm-appearance__seg[data-pos="2"] .tm-seg__glider { transform: translateX(200%); }
+@media (max-width: 420px) { .tm-seg__opt span { display: none; } .tm-seg__opt { padding: 8px 4px; } }
+</style>
+
+<script>
+(function () {
+  var KEY = 'platform_theme';
+  var mq  = window.matchMedia('(prefers-color-scheme: dark)');
+  function resolve(pref) { return pref === 'system' ? (mq.matches ? 'dark' : 'light') : pref; }
+  function applyTheme(pref) {
+    localStorage.setItem(KEY, pref);
+    document.documentElement.setAttribute('data-theme', resolve(pref));
+    updateUI(pref);
+  }
+  function updateUI(pref) {
+    var order = ['light', 'dark', 'system'];
+    var idx = order.indexOf(pref); if (idx < 0) idx = 0;
+    var seg = document.querySelector('.tm-appearance__seg');
+    if (seg) seg.setAttribute('data-pos', String(idx));
+    document.querySelectorAll('.tm-seg__opt').forEach(function (b) {
+      var on = b.dataset.themeOpt === pref;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('.tm-seg__opt');
+    if (!b) return;
+    applyTheme(b.dataset.themeOpt);
+  });
+  mq.addEventListener('change', function () {
+    if ((localStorage.getItem(KEY) || 'system') === 'system') {
+      document.documentElement.setAttribute('data-theme', resolve('system'));
+    }
+  });
+  window.toggleTheme = function () {
+    var cur = localStorage.getItem(KEY) || 'system';
+    var next = cur === 'light' ? 'dark' : cur === 'dark' ? 'system' : 'light';
+    applyTheme(next);
+  };
+  var saved = localStorage.getItem(KEY) || 'system';
+  applyTheme(saved);
+})();
+</script>
+{{end}}

@@ -1,0 +1,501 @@
+{{define "sysadmin-current-replica-content"}}
+
+<style>
+/* ── Replica page – consolidated styles ── */
+.replica-status-banner{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:13.5px;margin-bottom:20px}
+.replica-status-banner--healthy{background:rgba(34,197,94,.08);color:#15803d}
+.replica-status-banner__dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:repPulse 2s ease-in-out infinite}
+.replica-status-banner__lag{margin-left:auto;font-size:12px;opacity:.8}
+
+/* Resource grid */
+.replica-resource-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.replica-resource-card{border:1px solid var(--ds-border);border-radius:10px;padding:16px 18px;background:var(--ds-surface,transparent)}
+.replica-resource-card__label{font:500 11px/1 var(--ds-font,sans-serif);color:var(--ds-text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.replica-resource-card__value{font:600 20px/1.3 var(--ds-font,sans-serif);color:var(--ds-text)}
+.replica-resource-meter{height:5px;border-radius:3px;background:var(--ds-border);margin:10px 0 6px;overflow:hidden}
+.replica-resource-meter__fill{height:100%;border-radius:3px;background:var(--ds-accent,#1d1d1f);transition:width .6s ease}
+.replica-resource-meter__fill--low{background:#22c55e}
+.replica-resource-card__sub{font-size:12px;color:var(--ds-text-muted)}
+
+/* Sync stats */
+.replica-sync-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.replica-sync-stat{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--ds-border);border-radius:8px;background:var(--ds-surface,transparent)}
+.replica-sync-stat__label{font:500 11px/1 var(--ds-font,sans-serif);color:var(--ds-text-muted);text-transform:uppercase;letter-spacing:.04em}
+.replica-sync-stat__value{font:600 15px/1.2 var(--ds-font,mono);color:var(--ds-text)}
+.replica-sync-stat__value--good{color:#16a34a}
+
+/* Cert table */
+.rep-cert-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.rep-cert-table th{text-align:left;padding:8px 10px;font-weight:500;color:var(--ds-text-muted);border-bottom:1px solid var(--ds-border);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.rep-cert-table td{padding:10px 10px;border-bottom:1px solid var(--ds-border);color:var(--ds-text);vertical-align:middle}
+.rep-cert-table tr:last-child td{border-bottom:none}
+.rep-cert-cn{font-family:var(--ds-font-mono,monospace);font-size:12px}
+.rep-cert-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.rep-cert-badge--valid{background:rgba(34,197,94,.12);color:#16a34a}
+.rep-cert-badge--warning{background:rgba(245,158,11,.12);color:#d97706}
+.rep-cert-issuer{font-size:12px;color:var(--ds-text-muted)}
+.rep-cert-renew{font-size:12px;color:var(--ds-text-muted)}
+.rep-cert-expires{font-size:12px}
+
+/* Fade + slide animation for active sections */
+@keyframes repFadeIn{
+    from{opacity:0;transform:translateY(6px)}
+    to{opacity:1;transform:translateY(0)}
+}
+@keyframes repPulse{
+    0%,100%{opacity:1}
+    50%{opacity:.35}
+}
+.rep-anim{animation:repFadeIn .25s ease-out both}
+
+/* Responsive – resource grid */
+@media(max-width:1100px){
+    .replica-resource-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+    .replica-resource-grid{grid-template-columns:repeat(2,1fr)}
+    .replica-sync-stats{grid-template-columns:repeat(2,1fr)}
+    .rep-cert-table th:nth-child(4),
+    .rep-cert-table td:nth-child(4){display:none}
+}
+@media(max-width:480px){
+    .replica-resource-grid{grid-template-columns:1fr}
+    .replica-sync-stats{grid-template-columns:1fr}
+    .rep-cert-table th:nth-child(2),
+    .rep-cert-table td:nth-child(2),
+    .rep-cert-table th:nth-child(4),
+    .rep-cert-table td:nth-child(4){display:none}
+}
+</style>
+
+<p class="ds-page-subtitle" style="margin-bottom:20px;">Configuration and health of this platform's active replica node.</p>
+
+<!-- Status banner -->
+<div class="replica-status-banner replica-status-banner--healthy">
+    <div class="replica-status-banner__dot"></div>
+    <span>Replica is <strong>healthy</strong> — last heartbeat <strong>4 seconds ago</strong></span>
+    <span class="replica-status-banner__lag">Sync lag: <strong>11 ms</strong></span>
+</div>
+
+<div class="settings-layout">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">Replica</div>
+        <div role="tablist" aria-label="Replica sections">
+        <button class="settings-nav__item settings-nav__item--active" id="tab-rep-identity" role="tab" aria-selected="true" aria-controls="rep-identity" onclick="switchSection(this,'rep-identity')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.0"/><rect x="8.5" y="8.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.0"/><path d="M6.5 4H10a1.5 1.5 0 011.5 1.5V8" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Identity
+        </button>
+        <button class="settings-nav__item" id="tab-rep-network" role="tab" aria-selected="false" aria-controls="rep-network" onclick="switchSection(this,'rep-network')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 1.5c0 0-2.5 2.5-2.5 6s2.5 6 2.5 6M7.5 1.5c0 0 2.5 2.5 2.5 6s-2.5 6-2.5 6M1.5 7.5h12" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Network
+        </button>
+        <button class="settings-nav__item" id="tab-rep-resources" role="tab" aria-selected="false" aria-controls="rep-resources" onclick="switchSection(this,'rep-resources')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="4" width="12" height="7" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M4.5 4V3M7.5 4V3M10.5 4V3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><circle cx="4.5" cy="7.5" r="1" fill="currentColor"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor"/></svg>
+            Resources
+        </button>
+        <button class="settings-nav__item" id="tab-rep-sync" role="tab" aria-selected="false" aria-controls="rep-sync" onclick="switchSection(this,'rep-sync')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5a5.5 5.5 0 019.5-3.8M13 7.5a5.5 5.5 0 01-9.5 3.8" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><path d="M11 3.5l.5 2.2 2-1" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 11.5l-.5-2.2-2 1" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sync
+        </button>
+        <button class="settings-nav__item" id="tab-rep-certs" role="tab" aria-selected="false" aria-controls="rep-certs" onclick="switchSection(this,'rep-certs')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="3" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M5 7.5h5M5 9.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><circle cx="7.5" cy="2" r="1" fill="currentColor"/></svg>
+            Certificates
+        </button>
+        <button class="settings-nav__item" id="tab-rep-failover" role="tab" aria-selected="false" aria-controls="rep-failover" onclick="switchSection(this,'rep-failover')" onkeydown="repNavKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M9 4.5l3 3-3 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v9" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Failover
+        </button>
+        </div>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- Identity -->
+        <section class="settings-section settings-section--active rep-anim" id="rep-identity" role="tabpanel" aria-labelledby="tab-rep-identity">
+            <h2 class="settings-section__title">Identity</h2>
+            <p class="settings-section__sub">Basic identifiers for this replica node.</p>
+
+            <div class="st-group">
+                <label class="st-label">Hostname</label>
+                <input class="st-input" type="text" value="replica-01.platform.internal" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Replica ID</label>
+                <input class="st-input" type="text" value="rep_e3a7f2c910b4" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Region code</label>
+                <input class="st-input" type="text" value="fra1">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Region name</label>
+                <input class="st-input" type="text" value="Frankfurt, Germany">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Datacenter</label>
+                <input class="st-input" type="text" value="Equinix FR5">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Provider</label>
+                <input class="st-input" type="text" value="Platform Internal" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Assigned since</label>
+                <input class="st-input" type="text" value="2024-11-03 08:00 UTC" readonly>
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save</button>
+            </div>
+        </section>
+
+        <!-- Network -->
+        <section class="settings-section" id="rep-network" role="tabpanel" aria-labelledby="tab-rep-network">
+            <h2 class="settings-section__title">Network</h2>
+            <p class="settings-section__sub">IP addressing and connectivity configuration.</p>
+
+            <div class="st-group">
+                <label class="st-label">Primary IPv4</label>
+                <input class="st-input" type="text" value="10.16.4.22" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Public IPv4</label>
+                <input class="st-input" type="text" value="185.104.22.47">
+            </div>
+            <div class="st-group">
+                <label class="st-label">IPv6</label>
+                <input class="st-input" type="text" value="2a03:4000:4e::1">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Subnet</label>
+                <input class="st-input" type="text" value="10.16.4.0/24" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Gateway</label>
+                <input class="st-input" type="text" value="10.16.4.1" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">DNS resolver</label>
+                <input class="st-input" type="text" value="1.1.1.1, 8.8.8.8">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Connectivity</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Public network access</div>
+                    <div class="st-toggle-sub">Expose services on the public IP</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">IPv6 enabled</div>
+                    <div class="st-toggle-sub">Dual-stack networking</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save</button>
+            </div>
+        </section>
+
+        <!-- Resources -->
+        <section class="settings-section" id="rep-resources" role="tabpanel" aria-labelledby="tab-rep-resources">
+            <h2 class="settings-section__title">Resources</h2>
+            <p class="settings-section__sub">Allocated hardware resources for this replica.</p>
+
+            <div class="replica-resource-grid">
+                <div class="replica-resource-card">
+                    <div class="replica-resource-card__label">CPU</div>
+                    <div class="replica-resource-card__value">8 vCores</div>
+                    <div class="replica-resource-meter">
+                        <div class="replica-resource-meter__fill" style="width:34%"></div>
+                    </div>
+                    <div class="replica-resource-card__sub">34% used</div>
+                </div>
+                <div class="replica-resource-card">
+                    <div class="replica-resource-card__label">Memory</div>
+                    <div class="replica-resource-card__value">32 GB RAM</div>
+                    <div class="replica-resource-meter">
+                        <div class="replica-resource-meter__fill" style="width:61%"></div>
+                    </div>
+                    <div class="replica-resource-card__sub">61% used · 19.5 GB</div>
+                </div>
+                <div class="replica-resource-card">
+                    <div class="replica-resource-card__label">Storage</div>
+                    <div class="replica-resource-card__value">500 GB NVMe</div>
+                    <div class="replica-resource-meter">
+                        <div class="replica-resource-meter__fill" style="width:47%"></div>
+                    </div>
+                    <div class="replica-resource-card__sub">47% used · 235 GB</div>
+                </div>
+                <div class="replica-resource-card">
+                    <div class="replica-resource-card__label">Network I/O</div>
+                    <div class="replica-resource-card__value">10 Gbps</div>
+                    <div class="replica-resource-meter">
+                        <div class="replica-resource-meter__fill replica-resource-meter__fill--low" style="width:12%"></div>
+                    </div>
+                    <div class="replica-resource-card__sub">1.2 Gbps current</div>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Limits</h3>
+            <div class="st-group">
+                <label class="st-label">Max workspaces</label>
+                <input class="st-input" type="number" value="50">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Max connections</label>
+                <input class="st-input" type="number" value="500">
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save limits</button>
+            </div>
+        </section>
+
+        <!-- Sync -->
+        <section class="settings-section" id="rep-sync" role="tabpanel" aria-labelledby="tab-rep-sync">
+            <h2 class="settings-section__title">Sync</h2>
+            <p class="settings-section__sub">Replication and data synchronisation settings.</p>
+
+            <div class="st-group">
+                <label class="st-label">Primary replica</label>
+                <input class="st-input" type="text" value="replica-00.platform.internal" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Replication mode</label>
+                <select class="st-input st-select">
+                    <option selected>Streaming (synchronous)</option>
+                    <option>Streaming (asynchronous)</option>
+                    <option>Logical replication</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Sync interval</label>
+                <select class="st-input st-select">
+                    <option>Real-time</option>
+                    <option selected>Every 5 seconds</option>
+                    <option>Every 30 seconds</option>
+                    <option>Every minute</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Max sync lag (alert threshold)</label>
+                <input class="st-input" type="text" value="100ms">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Status</h3>
+            <div class="replica-sync-stats">
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">Current lag</span>
+                    <span class="replica-sync-stat__value replica-sync-stat__value--good">11 ms</span>
+                </div>
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">Last sync</span>
+                    <span class="replica-sync-stat__value">4 seconds ago</span>
+                </div>
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">WAL position</span>
+                    <span class="replica-sync-stat__value">0/3F2A110</span>
+                </div>
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">Sent offset</span>
+                    <span class="replica-sync-stat__value">0/3F2A110</span>
+                </div>
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">Write offset</span>
+                    <span class="replica-sync-stat__value">0/3F29F80</span>
+                </div>
+                <div class="replica-sync-stat">
+                    <span class="replica-sync-stat__label">Replay offset</span>
+                    <span class="replica-sync-stat__value">0/3F29F80</span>
+                </div>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save sync settings</button>
+            </div>
+        </section>
+
+        <!-- Certificates -->
+        <section class="settings-section" id="rep-certs" role="tabpanel" aria-labelledby="tab-rep-certs">
+            <h2 class="settings-section__title">Certificates</h2>
+            <p class="settings-section__sub">TLS certificate inventory and configuration for this replica.</p>
+
+            <table class="rep-cert-table">
+                <thead>
+                    <tr>
+                        <th>Common name</th>
+                        <th>Issuer</th>
+                        <th>Expires</th>
+                        <th>Renewal</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rep-cert-cn">*.platform.internal</td>
+                        <td class="rep-cert-issuer">Let's Encrypt</td>
+                        <td class="rep-cert-expires">Jul 14, 2026</td>
+                        <td class="rep-cert-renew">Auto-renew ON</td>
+                        <td><span class="rep-cert-badge rep-cert-badge--valid">Valid</span></td>
+                    </tr>
+                    <tr>
+                        <td class="rep-cert-cn">replica-01.platform.internal</td>
+                        <td class="rep-cert-issuer">Internal CA</td>
+                        <td class="rep-cert-expires">Nov 3, 2027</td>
+                        <td class="rep-cert-renew">Manual</td>
+                        <td><span class="rep-cert-badge rep-cert-badge--valid">Valid</span></td>
+                    </tr>
+                    <tr>
+                        <td class="rep-cert-cn">api.platform.internal</td>
+                        <td class="rep-cert-issuer">Let's Encrypt</td>
+                        <td class="rep-cert-expires">Apr 28, 2026</td>
+                        <td class="rep-cert-renew">Auto-renew ON</td>
+                        <td><span class="rep-cert-badge rep-cert-badge--warning">12 days remaining</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">TLS settings</h3>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Mutual TLS (mTLS)</div>
+                    <div class="st-toggle-sub">Require client certificates for all inbound connections</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Minimum TLS version</label>
+                <select class="st-input st-select">
+                    <option>TLS 1.2</option>
+                    <option selected>TLS 1.3</option>
+                </select>
+            </div>
+
+            <div class="st-btn-row" style="margin-top:18px;">
+                <button class="st-btn-primary">Request certificate</button>
+                <button class="st-btn-secondary">Save TLS settings</button>
+            </div>
+        </section>
+
+        <!-- Failover -->
+        <section class="settings-section" id="rep-failover" role="tabpanel" aria-labelledby="tab-rep-failover">
+            <h2 class="settings-section__title">Failover</h2>
+            <p class="settings-section__sub">Automatic failover policy and health-check configuration for this replica.</p>
+
+            <div class="st-group">
+                <label class="st-label">Failover mode</label>
+                <select class="st-input st-select">
+                    <option>Manual</option>
+                    <option selected>Automatic</option>
+                    <option>DNS-based</option>
+                </select>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Health check interval</label>
+                <select class="st-input st-select">
+                    <option selected>10s</option>
+                    <option>30s</option>
+                    <option>60s</option>
+                </select>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Unhealthy threshold</label>
+                <select class="st-input st-select">
+                    <option>2 consecutive failures</option>
+                    <option selected>3 consecutive failures</option>
+                    <option>5 consecutive failures</option>
+                </select>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Recovery grace period</label>
+                <select class="st-input st-select">
+                    <option>30s</option>
+                    <option selected>60s</option>
+                    <option>120s</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Failover target</h3>
+
+            <div class="st-group">
+                <label class="st-label">Current failover target</label>
+                <input class="st-input" type="text" value="replica-02.platform.internal (nyc1)" readonly>
+            </div>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Promote to primary on failover</div>
+                    <div class="st-toggle-sub">Automatically promote this replica to primary if the current primary becomes unreachable</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Last failover test</h3>
+            <p style="font-size:13px;color:var(--ds-text-muted);margin:0 0 18px;">3 days ago &mdash; <strong style="color:#16a34a;">Passed</strong> (failover completed in 4.2s)</p>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save failover settings</button>
+                <button class="st-btn-secondary">Run failover test</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    var tabs = document.querySelectorAll('[role="tablist"] [role="tab"]');
+    tabs.forEach(function(b) { b.classList.remove('settings-nav__item--active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-selected','true');
+
+    document.querySelectorAll('.settings-section').forEach(function(s) {
+        s.classList.remove('settings-section--active');
+        s.classList.remove('rep-anim');
+    });
+
+    setTimeout(function() {
+        var panel = document.getElementById(id);
+        panel.classList.add('settings-section--active');
+        panel.classList.add('rep-anim');
+    }, 30);
+}
+
+function repNavKey(e) {
+    var tabs = Array.from(document.querySelectorAll('[role="tablist"] [role="tab"]'));
+    var idx = tabs.indexOf(e.target);
+    var next = -1;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        next = (idx + 1) % tabs.length;
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        next = (idx - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        next = 0;
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        next = tabs.length - 1;
+    }
+
+    if (next >= 0) {
+        tabs[next].focus();
+        tabs[next].click();
+    }
+}
+</script>
+{{end}}

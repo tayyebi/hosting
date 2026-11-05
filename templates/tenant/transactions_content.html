@@ -1,0 +1,986 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Transactions page — scoped under .txn ── */
+.txn {
+  --txn-red:     #ef4444;
+  --txn-green:   #10b981;
+  --txn-amber:   #f59e0b;
+  --txn-blue:    #3b82f6;
+  --txn-indigo:  #6366f1;
+  --txn-violet:  #8b5cf6;
+  --txn-bg:       var(--c-surface, #fff);
+  --txn-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --txn-border:   var(--c-border, #e5e7eb);
+  --txn-border-s: var(--c-border-subtle, #eef0f3);
+  --txn-text:     var(--c-text, #111827);
+  --txn-text-2:   var(--c-text-dim, #6b7280);
+  --txn-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .txn {
+  --txn-bg:       #181a20;
+  --txn-bg-soft:  #13151b;
+  --txn-border:   #262932;
+  --txn-border-s: #1f2229;
+  --txn-text:     #e5e7eb;
+  --txn-text-2:   #9ca3af;
+  --txn-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes txnFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.txn-fade { animation: txnFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit span ── */
+.txn-kpi-unit {
+  font-size: 14px;
+  color: var(--txn-text-2);
+}
+
+/* ── Toolbar ── */
+.txn-toolbar {
+  margin-bottom: 16px;
+}
+
+/* ── Transaction type badges ── */
+.txn-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.txn-type--charge  { background: rgba(99,102,241,.08);  color: var(--txn-indigo); }
+.txn-type--metered { background: rgba(139,92,246,.08);  color: var(--txn-violet); }
+.txn-type--credit  { background: rgba(59,130,246,.08);  color: var(--txn-blue); }
+.txn-type--refund  { background: rgba(239,68,68,.08);   color: var(--txn-red); }
+[data-theme="dark"] .txn-type--charge  { background: rgba(99,102,241,.15); }
+[data-theme="dark"] .txn-type--metered { background: rgba(139,92,246,.15); }
+[data-theme="dark"] .txn-type--credit  { background: rgba(59,130,246,.15); }
+[data-theme="dark"] .txn-type--refund  { background: rgba(239,68,68,.15); }
+
+/* ── Amount styling ── */
+.txn-amount--pos    { color: var(--txn-green); font-weight: 500; }
+.txn-amount--neg    { color: var(--txn-red);   font-weight: 500; }
+.txn-amount--credit { color: var(--txn-blue);  font-weight: 500; }
+
+/* ── Status badges ── */
+.txn-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.txn-status--completed { background: rgba(16,185,129,.08);  color: var(--txn-green); }
+.txn-status--pending   { background: rgba(245,158,11,.08);  color: #d97706; }
+.txn-status--failed    { background: rgba(239,68,68,.08);   color: #dc2626; }
+[data-theme="dark"] .txn-status--completed { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .txn-status--pending   { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .txn-status--failed    { background: rgba(239,68,68,.15); }
+
+/* ── Two-column grid (Revenue + Dunning) ── */
+.txn-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+/* ── Panel (card) ── */
+.txn-panel {
+  margin-bottom: 0;
+}
+.txn-panel--spaced {
+  margin-bottom: 24px;
+}
+.txn-panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--txn-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.txn-panel__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txn-text);
+}
+.txn-panel__subtitle {
+  font-size: 11.5px;
+  color: var(--txn-text-2);
+  font-weight: 300;
+}
+.txn-panel__body {
+  padding: 16px 18px;
+}
+.txn-panel__body--flush {
+  padding: 0;
+}
+[data-theme="dark"] .txn-panel {
+  background: var(--txn-bg);
+  border-color: var(--txn-border);
+}
+[data-theme="dark"] .txn-panel__header {
+  border-color: var(--txn-border);
+}
+[data-theme="dark"] .txn-panel__title {
+  color: var(--txn-text);
+}
+[data-theme="dark"] .txn-panel__subtitle {
+  color: var(--txn-text-2);
+}
+
+/* ── Revenue breakdown bars ── */
+.txn-rev-item {
+  margin-bottom: 14px;
+}
+.txn-rev-item:last-child {
+  margin-bottom: 0;
+}
+.txn-rev-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.txn-rev-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--txn-text);
+}
+.txn-rev-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txn-text);
+}
+.txn-rev-pct {
+  color: var(--txn-text-2);
+  font-weight: 300;
+}
+.txn-rev-neg {
+  color: var(--txn-red);
+}
+.txn-bar-track {
+  height: 6px;
+  background: var(--txn-bg-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.txn-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.txn-bar-fill--indigo { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.txn-bar-fill--violet { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.txn-bar-fill--green  { background: linear-gradient(90deg, #10b981, #34d399); }
+.txn-bar-fill--red    { background: linear-gradient(90deg, #ef4444, #f87171); }
+[data-theme="dark"] .txn-bar-track {
+  background: var(--txn-border);
+}
+[data-theme="dark"] .txn-rev-label {
+  color: var(--txn-text);
+}
+[data-theme="dark"] .txn-rev-value {
+  color: var(--txn-text);
+}
+
+/* ── Dunning rows ── */
+.txn-dunning-item {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--txn-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.txn-dunning-item:last-child {
+  border-bottom: none;
+}
+.txn-dunning-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.txn-dunning-num--red    { background: rgba(239,68,68,.08);  color: #dc2626; }
+.txn-dunning-num--amber  { background: rgba(245,158,11,.08); color: #b45309; }
+[data-theme="dark"] .txn-dunning-num--red   { background: rgba(239,68,68,.15);  color: #fca5a5; }
+[data-theme="dark"] .txn-dunning-num--amber { background: rgba(245,158,11,.15); color: #fcd34d; }
+.txn-dunning-info {
+  flex: 1;
+  min-width: 0;
+}
+.txn-dunning-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--txn-text);
+}
+.txn-dunning-desc {
+  font-size: 11px;
+  color: var(--txn-text-2);
+  font-weight: 300;
+}
+[data-theme="dark"] .txn-dunning-name {
+  color: var(--txn-text);
+}
+[data-theme="dark"] .txn-dunning-desc {
+  color: var(--txn-text-2);
+}
+[data-theme="dark"] .txn-dunning-item {
+  border-color: var(--txn-border);
+}
+.txn-dunning-badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.txn-dunning-badge--failed  { background: rgba(239,68,68,.08);  color: #dc2626; }
+.txn-dunning-badge--pending { background: rgba(245,158,11,.08); color: #b45309; }
+[data-theme="dark"] .txn-dunning-badge--failed  { background: rgba(239,68,68,.15);  color: #fca5a5; }
+[data-theme="dark"] .txn-dunning-badge--pending { background: rgba(245,158,11,.15); color: #fcd34d; }
+
+/* ── Retry schedule pills ── */
+.txn-retry-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--txn-border);
+}
+.txn-retry-title {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--txn-text);
+}
+.txn-retry-pills {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.txn-retry-pill {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.txn-retry-pill--indigo { background: rgba(99,102,241,.08); color: var(--txn-indigo); }
+.txn-retry-pill--amber  { background: rgba(245,158,11,.08); color: #b45309; }
+.txn-retry-pill--red    { background: rgba(239,68,68,.08);  color: #dc2626; }
+[data-theme="dark"] .txn-retry-pill--indigo { background: rgba(99,102,241,.15); }
+[data-theme="dark"] .txn-retry-pill--amber  { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .txn-retry-pill--red    { background: rgba(239,68,68,.15); }
+.txn-retry-arrow {
+  color: var(--txn-text-3);
+  font-size: 11px;
+}
+[data-theme="dark"] .txn-retry-row {
+  border-color: var(--txn-border);
+}
+[data-theme="dark"] .txn-retry-title {
+  color: var(--txn-text);
+}
+
+/* ── Recovery rate footer ── */
+.txn-recovery {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.txn-recovery__label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--txn-text);
+}
+.txn-recovery__sub {
+  font-size: 11px;
+  color: var(--txn-text-2);
+  font-weight: 300;
+}
+.txn-recovery__value {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--txn-green);
+}
+[data-theme="dark"] .txn-recovery__label {
+  color: var(--txn-text);
+}
+
+/* ── Transaction detail panel ── */
+.txn .tx-detail { display:none; margin-top:18px; background:var(--txn-bg); border:1px solid var(--txn-border); border-radius:12px; overflow:hidden; }
+.txn .tx-detail.open { display:block; }
+.txn .tx-detail__head { padding:18px 22px; border-bottom:1px solid var(--txn-border); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.txn .tx-detail__hl { display:flex; align-items:baseline; gap:14px; }
+.txn .tx-detail__amt { font-size:28px; font-weight:500; letter-spacing:-.02em; color:var(--txn-green); }
+.txn .tx-detail__desc { font-size:14px; font-weight:500; color:var(--txn-text); }
+.txn .tx-detail__inv { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--txn-text-2); }
+.txn .tx-detail__actions { display:flex; gap:6px; }
+.txn .tx-detail__body { padding:22px; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.txn .tx-block { background:var(--txn-bg-soft); border-radius:10px; padding:14px 16px; }
+.txn .tx-block--full { grid-column:1/-1; }
+.txn .tx-block h4 { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--txn-text-3); font-weight:500; margin:0 0 10px; }
+.txn .tx-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:13px; color:var(--txn-text-2); font-weight:300; }
+.txn .tx-row b { color:var(--txn-text); font-weight:500; }
+.txn .tx-row__mono { font-family:'JetBrains Mono',monospace; font-size:12px; }
+.txn .tx-line { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--txn-border); font-size:13px; color:var(--txn-text-2); }
+.txn .tx-line:last-child { border-bottom:none; font-weight:500; font-size:14px; color:var(--txn-text); padding-top:10px; border-top:1px solid var(--txn-border); }
+.txn .tx-actions { padding:14px 22px; border-top:1px solid var(--txn-border); display:flex; justify-content:flex-end; gap:8px; background:var(--txn-bg-soft); }
+[data-theme="dark"] .txn .tx-detail { background:var(--txn-bg); border-color:var(--txn-border); }
+[data-theme="dark"] .txn .tx-block,
+[data-theme="dark"] .txn .tx-actions { background:rgba(255,255,255,.04); }
+[data-theme="dark"] .txn .tx-line { border-color:rgba(255,255,255,.06); }
+[data-theme="dark"] .txn .tx-row b { color:var(--txn-text); }
+[data-theme="dark"] .txn .tx-detail__desc { color:var(--txn-text); }
+
+/* ── Refund panel ── */
+.txn .tx-refund { display:none; margin:14px 22px 0; padding:16px; background:rgba(245,158,11,.05); border:1px solid rgba(245,158,11,.25); border-radius:10px; }
+.txn .tx-refund.on { display:block; }
+.txn .tx-refund__title { font-size:13px; font-weight:500; color:#92400e; }
+.txn .tx-refund__desc { font-size:12px; color:var(--txn-text-2); margin-top:4px; }
+.txn .tx-refund__opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+.txn .tx-refund__opt { padding:10px 14px; background:var(--txn-bg); border:1px solid var(--txn-border); border-radius:8px; cursor:pointer; font-size:13px; font-weight:400; text-align:left; }
+.txn .tx-refund__opt:hover { border-color:#7c5cff; }
+.txn .tx-refund__opt.sel { border-color:#7c5cff; background:rgba(124,92,255,.08); }
+.txn .tx-refund__actions { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }
+[data-theme="dark"] .txn .tx-refund { background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.3); }
+[data-theme="dark"] .txn .tx-refund__title { color:#fbbf24; }
+[data-theme="dark"] .txn .tx-refund__opt { background:var(--txn-bg); border-color:var(--txn-border); }
+[data-theme="dark"] .txn .tx-refund__opt.sel { background:rgba(124,92,255,.15); }
+
+/* ── Cost optimization section ── */
+.txn-forecast {
+  margin-top: 24px;
+}
+.txn-forecast__desc {
+  font-size: 13px;
+  color: var(--txn-text-2);
+  margin: 0 0 16px;
+}
+.txn-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.txn-stat-sub--amber  { color: var(--txn-amber); }
+.txn-stat-sub--green  { color: var(--txn-green); }
+.txn-stat-sub--red    { color: var(--txn-red); }
+.txn-rec-bold { font-weight: 500; }
+.txn-savings  { color: var(--txn-green); font-weight: 500; }
+
+/* ── Budget & anomaly two-column ── */
+.txn-budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.txn-budget-card {
+  border: 1px solid var(--txn-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.txn-budget-card__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--txn-text);
+}
+[data-theme="dark"] .txn-budget-card {
+  border-color: var(--txn-border);
+  background: var(--txn-bg);
+}
+[data-theme="dark"] .txn-budget-card__title {
+  color: var(--txn-text);
+}
+
+/* ── Budget threshold rows ── */
+.txn-threshold {
+  margin-bottom: 8px;
+}
+.txn-threshold:last-child {
+  margin-bottom: 0;
+}
+.txn-threshold__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: var(--txn-text);
+}
+.txn-threshold__status--green  { font-weight: 500; color: var(--txn-green); }
+.txn-threshold__status--blue   { font-weight: 500; color: var(--txn-blue); }
+.txn-threshold__status--dim    { font-weight: 500; color: var(--txn-text-2); }
+.txn-threshold__bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--c-bg-card, #f3f4f6);
+  overflow: hidden;
+}
+.txn-threshold__fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.txn-threshold__fill--green { background: var(--txn-green); }
+.txn-threshold__fill--blue  { background: var(--txn-blue); }
+.txn-threshold__fill--amber { background: var(--txn-amber); }
+[data-theme="dark"] .txn-threshold__bar {
+  background: var(--txn-border);
+}
+[data-theme="dark"] .txn-threshold__row {
+  color: var(--txn-text);
+}
+
+/* ── Anomaly items ── */
+.txn-anomaly {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.txn-anomaly:last-child {
+  margin-bottom: 0;
+}
+.txn-anomaly--red   { background: rgba(239,68,68,.06); }
+.txn-anomaly--amber { background: rgba(245,158,11,.06); }
+.txn-anomaly__title {
+  font-weight: 500;
+}
+.txn-anomaly__title--red   { color: var(--txn-red); }
+.txn-anomaly__title--amber { color: var(--txn-amber); }
+.txn-anomaly__sub {
+  font-size: 11px;
+  color: var(--txn-text-2);
+}
+[data-theme="dark"] .txn-anomaly--red   { background: rgba(239,68,68,.12); }
+[data-theme="dark"] .txn-anomaly--amber { background: rgba(245,158,11,.12); }
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .txn-two-col,
+  .txn-budget-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .txn .tx-detail__body {
+    grid-template-columns: 1fr;
+  }
+  .txn .tx-detail__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .txn .tx-refund__opts {
+    grid-template-columns: 1fr;
+  }
+  .txn-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .txn-stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 380px) {
+  .txn-retry-pills {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .txn-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .txn-dunning-item {
+    flex-wrap: wrap;
+  }
+}
+</style>
+
+<div class="txn" role="main" aria-label="Transactions management">
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Transactions</h1>
+    <p class="ds-page-subtitle">Financial ledger &mdash; compute charges, metered usage, SLA credits and refunds.</p>
+</div>
+
+<!-- KPI row -->
+<div class="ws-kpi-grid txn-fade" style="animation-delay:.05s" role="region" aria-label="Financial summary metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2v14M5 5.5h5.5a2.5 2.5 0 010 5H5M5 10.5h6a2.5 2.5 0 010 5H5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value"><span class="txn-kpi-unit">$</span>18,420</div>
+            <div class="ws-kpi-card__label">Compute revenue (Nov)</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value"><span class="txn-kpi-unit">$</span>2,160</div>
+            <div class="ws-kpi-card__label">Pending charges</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--rose">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2l7 13H2L9 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 7v4M9 13h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value"><span class="txn-kpi-unit">$</span>680</div>
+            <div class="ws-kpi-card__label">SLA credits issued</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value"><span class="txn-kpi-unit">$</span>17,740</div>
+            <div class="ws-kpi-card__label">Net collected</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="clients-toolbar txn-toolbar txn-fade" style="animation-delay:.1s">
+    <div class="clients-search">
+        <div class="clients-search__input-wrap">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/><path d="M10 10l3 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <input class="clients-search__input" type="text" placeholder="Search client or invoice..." aria-label="Search transactions">
+        </div>
+        <select class="clients-filter" aria-label="Filter by type">
+            <option>All types</option>
+            <option>Subscription</option>
+            <option>Metered usage</option>
+            <option>Add-on</option>
+            <option>SLA credit</option>
+            <option>Refund</option>
+        </select>
+        <select class="clients-filter" aria-label="Filter by status">
+            <option>All statuses</option>
+            <option>Completed</option>
+            <option>Pending</option>
+            <option>Failed</option>
+        </select>
+        <select class="clients-filter" aria-label="Filter by date range">
+            <option>This month</option>
+            <option>Last 30 days</option>
+            <option>Last 90 days</option>
+            <option>All time</option>
+        </select>
+    </div>
+    <button class="btn btn--ghost btn--sm" aria-label="Export transactions as CSV">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M2 3.5h9M4 6.5h5M6 9.5h1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+        Export CSV
+    </button>
+</div>
+
+<!-- Transaction table -->
+<div class="clients-table-wrap txn-fade" style="animation-delay:.15s">
+<table class="tenant-table tx-table" role="table" aria-label="Transaction ledger">
+    <thead>
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Invoice</th>
+            <th scope="col">Client</th>
+            <th scope="col">Description</th>
+            <th scope="col">Type</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Transactions}}
+        <tr>
+            <td class="tk-date">{{.DateLabel}}</td>
+            <td class="tx-inv">{{.Reference}}</td>
+            <td>
+                <div class="tk-client">{{.Client}}</div>
+                {{if .ClientCo}}<div class="tk-client-co">{{.ClientCo}}</div>{{end}}
+            </td>
+            <td class="tx-desc">{{.Description}}</td>
+            <td><span class="txn-type txn-type--{{.TxnType}}">{{.TxnType}}</span></td>
+            <td class="tx-amount {{.AmountClass}}">{{.Amount}}</td>
+            <td><span class="txn-status txn-status--{{.Status}}">{{.Status}}</span></td>
+            <td>
+                <button class="btn btn--ghost btn--sm" aria-label="View transaction {{.Reference}}">View</button>
+                {{if eq .Status "failed"}}
+                <form method="POST" action="/t/{{$.TenantSlug}}/transactions/{{.ID}}/status/" style="display:inline">
+                    <input type="hidden" name="status" value="pending">
+                    <button type="submit" class="btn btn--accent btn--sm">Retry</button>
+                </form>
+                {{end}}
+            </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">No transactions found</td></tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Revenue Analytics & Dunning ── -->
+<div class="txn-two-col txn-fade" style="animation-delay:.2s">
+
+    <!-- Revenue breakdown -->
+    <div class="clients-table-wrap txn-panel" role="region" aria-label="Revenue breakdown">
+        <div class="txn-panel__header">
+            <div>
+                <div class="txn-panel__title">Revenue Breakdown</div>
+                <div class="txn-panel__subtitle">Trailing 30-day revenue by category</div>
+            </div>
+        </div>
+        <div class="txn-panel__body">
+            <div class="txn-rev-item">
+                <div class="txn-rev-row">
+                    <span class="txn-rev-label">Compute subscriptions</span>
+                    <span class="txn-rev-value">$12,480 <span class="txn-rev-pct">&middot; 67.8%</span></span>
+                </div>
+                <div class="txn-bar-track">
+                    <div class="txn-bar-fill txn-bar-fill--indigo" style="width:67.8%"></div>
+                </div>
+            </div>
+            <div class="txn-rev-item">
+                <div class="txn-rev-row">
+                    <span class="txn-rev-label">Metered usage (egress + compute-hours)</span>
+                    <span class="txn-rev-value">$3,240 <span class="txn-rev-pct">&middot; 17.6%</span></span>
+                </div>
+                <div class="txn-bar-track">
+                    <div class="txn-bar-fill txn-bar-fill--violet" style="width:17.6%"></div>
+                </div>
+            </div>
+            <div class="txn-rev-item">
+                <div class="txn-rev-row">
+                    <span class="txn-rev-label">Add-ons (IPs, backups, SSL certs)</span>
+                    <span class="txn-rev-value">$1,900 <span class="txn-rev-pct">&middot; 10.3%</span></span>
+                </div>
+                <div class="txn-bar-track">
+                    <div class="txn-bar-fill txn-bar-fill--green" style="width:10.3%"></div>
+                </div>
+            </div>
+            <div class="txn-rev-item">
+                <div class="txn-rev-row">
+                    <span class="txn-rev-label">Credits &amp; refunds</span>
+                    <span class="txn-rev-value txn-rev-neg">&minus;$800 <span class="txn-rev-pct">&middot; 4.3%</span></span>
+                </div>
+                <div class="txn-bar-track">
+                    <div class="txn-bar-fill txn-bar-fill--red" style="width:4.3%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dunning & payment recovery -->
+    <div class="clients-table-wrap txn-panel" role="region" aria-label="Dunning and payment recovery">
+        <div class="txn-panel__header">
+            <div>
+                <div class="txn-panel__title">Dunning &amp; Payment Recovery</div>
+                <div class="txn-panel__subtitle">Automated retry pipeline for failed charges</div>
+            </div>
+            <button class="btn btn--ghost btn--sm" aria-label="Configure dunning settings">Configure</button>
+        </div>
+        <div class="txn-panel__body--flush">
+            <div class="txn-dunning-item">
+                <div class="txn-dunning-num txn-dunning-num--red" aria-hidden="true">1</div>
+                <div class="txn-dunning-info">
+                    <div class="txn-dunning-name">Chloe Martin &mdash; INV-1087 &middot; $40.00</div>
+                    <div class="txn-dunning-desc">Card declined &middot; retry 1 of 4 scheduled in 2 d</div>
+                </div>
+                <span class="txn-dunning-badge txn-dunning-badge--failed">Failed</span>
+            </div>
+            <div class="txn-dunning-item">
+                <div class="txn-dunning-num txn-dunning-num--amber" aria-hidden="true">2</div>
+                <div class="txn-dunning-info">
+                    <div class="txn-dunning-name">Faisal Al-Amin &mdash; INV-1089 &middot; $2,160.00</div>
+                    <div class="txn-dunning-desc">Awaiting payment &middot; annual renewal &middot; reminder email sent</div>
+                </div>
+                <span class="txn-dunning-badge txn-dunning-badge--pending">Pending</span>
+            </div>
+            <div class="txn-retry-row">
+                <div class="txn-retry-title">Retry schedule</div>
+                <div class="txn-retry-pills">
+                    <span class="txn-retry-pill txn-retry-pill--indigo">Day 1</span>
+                    <span class="txn-retry-arrow">&rarr;</span>
+                    <span class="txn-retry-pill txn-retry-pill--indigo">Day 3</span>
+                    <span class="txn-retry-arrow">&rarr;</span>
+                    <span class="txn-retry-pill txn-retry-pill--amber">Day 7</span>
+                    <span class="txn-retry-arrow">&rarr;</span>
+                    <span class="txn-retry-pill txn-retry-pill--red">Day 14 &middot; suspend</span>
+                </div>
+            </div>
+            <div class="txn-recovery">
+                <div>
+                    <div class="txn-recovery__label">Recovery rate (90 d)</div>
+                    <div class="txn-recovery__sub">$1,820 recovered of $2,100 attempted</div>
+                </div>
+                <div class="txn-recovery__value">86.7%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction detail panel -->
+<div class="tx-detail txn-fade" style="animation-delay:.25s" id="txDetail" role="dialog" aria-modal="false" aria-label="Transaction detail">
+    <div class="tx-detail__head">
+        <div class="tx-detail__hl">
+            <div class="tx-detail__amt" id="txD_amt">+$120.00</div>
+            <div>
+                <div class="tx-detail__desc" id="txD_desc">Monthly subscription &mdash; Pro plan</div>
+                <div class="tx-detail__inv" id="txD_inv">INV-1092</div>
+            </div>
+        </div>
+        <div class="tx-detail__actions">
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('txDetail').classList.remove('open')" aria-label="Close transaction detail">Close</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Download invoice PDF">Download PDF</button>
+            <button class="btn btn--accent btn--sm" onclick="document.getElementById('txRefund').classList.add('on')" aria-label="Issue refund" aria-haspopup="dialog">Issue refund</button>
+        </div>
+    </div>
+    <div class="tx-detail__body">
+        <div class="tx-block">
+            <h4>Customer</h4>
+            <div class="tx-row"><span>Name</span><b id="txD_cust">James Wright</b></div>
+            <div class="tx-row"><span>Company</span><b>Acme Inc.</b></div>
+            <div class="tx-row"><span>Email</span><b>james@acme.io</b></div>
+            <div class="tx-row"><span>Customer ID</span><b class="tx-row__mono">cus_4xY9aB12</b></div>
+        </div>
+        <div class="tx-block">
+            <h4>Payment method</h4>
+            <div class="tx-row"><span>Card</span><b>Visa &bull;&bull;&bull;&bull; 6411</b></div>
+            <div class="tx-row"><span>Expiry</span><b>03 / 2028</b></div>
+            <div class="tx-row"><span>Issuer</span><b>Chase Bank</b></div>
+            <div class="tx-row"><span>Country</span><b>US</b></div>
+        </div>
+        <div class="tx-block tx-block--full">
+            <h4>Line items</h4>
+            <div class="tx-line"><span>Pro compute plan &mdash; 8 vCPU, 32 GB monthly</span><span>$98.00</span></div>
+            <div class="tx-line"><span>Add-on: dedicated IPv4 block /28</span><span>$15.00</span></div>
+            <div class="tx-line"><span>Add-on: automated snapshot retention 90 days</span><span>$8.00</span></div>
+            <div class="tx-line"><span>Subtotal</span><span>$121.00</span></div>
+            <div class="tx-line"><span>Tax (US-CA, cloud services exempt)</span><span>$0.00</span></div>
+            <div class="tx-line"><span>Account credit applied</span><span>&minus;$1.00</span></div>
+            <div class="tx-line"><span>Total charged</span><span>$120.00</span></div>
+        </div>
+    </div>
+    <div class="tx-refund" id="txRefund" role="dialog" aria-modal="true" aria-label="Issue refund">
+        <div class="tx-refund__title">Issue a refund for INV-1092</div>
+        <div class="tx-refund__desc">Refunds typically post to the customer's card within 5&ndash;10 business days. Choose a refund type:</div>
+        <div class="tx-refund__opts">
+            <button class="tx-refund__opt sel" aria-label="Full refund of $120.00">Full &mdash; $120.00</button>
+            <button class="tx-refund__opt" aria-label="Partial refund with custom amount">Partial &mdash; custom amount</button>
+            <button class="tx-refund__opt" aria-label="Account credit of $120.00">Account credit &mdash; $120.00</button>
+            <button class="tx-refund__opt" aria-label="Pro-rated refund of $42.30">Pro-rated &mdash; $42.30</button>
+        </div>
+        <div class="tx-refund__actions">
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('txRefund').classList.remove('on')" aria-label="Cancel refund">Cancel</button>
+            <button class="btn btn--danger btn--sm" aria-label="Confirm and issue refund">Issue refund</button>
+        </div>
+    </div>
+    <div class="tx-actions">
+        <button class="btn btn--ghost btn--sm" aria-label="Send receipt email">Send receipt</button>
+        <button class="btn btn--ghost btn--sm" aria-label="Mark transaction as disputed">Mark as disputed</button>
+        <button class="btn btn--ghost btn--sm" aria-label="Add internal note to transaction">Add internal note</button>
+    </div>
+</div>
+
+<script>
+(function(){
+  document.querySelectorAll('.clients-table-wrap .btn').forEach(function(b){
+    if(b.textContent.trim()==='View'){
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var tr=b.closest('tr');
+        var inv=tr.querySelector('.tx-inv').textContent;
+        var amt=tr.querySelector('.tx-amount').textContent;
+        var desc=tr.querySelector('.tx-desc').textContent;
+        var cust=tr.querySelector('.tk-client').textContent;
+        document.getElementById('txD_inv').textContent=inv;
+        document.getElementById('txD_amt').textContent=amt;
+        document.getElementById('txD_desc').textContent=desc;
+        document.getElementById('txD_cust').textContent=cust;
+        document.getElementById('txRefund').classList.remove('on');
+        var d=document.getElementById('txDetail');
+        d.classList.add('open');
+        d.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    }
+  });
+  document.querySelectorAll('.tx-refund__opt').forEach(function(o){
+    o.addEventListener('click',function(){
+      o.parentElement.querySelectorAll('.tx-refund__opt').forEach(function(x){x.classList.remove('sel');});
+      o.classList.add('sel');
+    });
+  });
+})();
+</script>
+
+<!-- ── Usage Forecast & Cost Optimization ── -->
+<div class="ds-panel txn-forecast txn-fade" style="animation-delay:.3s" role="region" aria-label="Usage forecast and cost optimization">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">Usage Forecast &amp; Cost Optimization</h2>
+        <span class="badge badge--info">AI-driven</span>
+    </div>
+    <p class="txn-forecast__desc">Predictive cost modeling based on trailing 90-day usage trends. Identifies savings opportunities from right-sizing, commitment plans, and idle resource reclamation.</p>
+
+    <div class="txn-stat-grid">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Forecasted spend (next 30 d)</div>
+            <div class="ds-stat-card__value">$21,340</div>
+            <div class="ds-stat-card__sub txn-stat-sub--amber">+15.8% vs current month</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Identified savings</div>
+            <div class="ds-stat-card__value">$3,120</div>
+            <div class="ds-stat-card__sub txn-stat-sub--green">6 recommendations</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Budget utilization</div>
+            <div class="ds-stat-card__value">78.4%</div>
+            <div class="ds-stat-card__sub txn-stat-sub--green">$25,000 monthly cap</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Cost anomalies (7 d)</div>
+            <div class="ds-stat-card__value">2</div>
+            <div class="ds-stat-card__sub txn-stat-sub--red">1 requires attention</div>
+        </div>
+    </div>
+
+    <!-- Optimization recommendations -->
+    <div class="clients-table-wrap" role="region" aria-label="Cost optimization recommendations">
+        <table class="tenant-table" role="table" aria-label="Optimization recommendations">
+            <thead>
+                <tr>
+                    <th scope="col">Recommendation</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Affected resources</th>
+                    <th scope="col">Current cost</th>
+                    <th scope="col">Projected savings</th>
+                    <th scope="col">Effort</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="txn-rec-bold">Right-size over-provisioned VMs</td>
+                    <td>Compute</td>
+                    <td>7 instances (&lt; 15% avg CPU)</td>
+                    <td>$1,820 / mo</td>
+                    <td class="txn-savings">$910 / mo</td>
+                    <td><span class="badge badge--success">Low</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Apply right-sizing recommendation">Apply</button></td>
+                </tr>
+                <tr>
+                    <td class="txn-rec-bold">Convert on-demand to 1Y reserved</td>
+                    <td>Compute</td>
+                    <td>12 steady-state instances</td>
+                    <td>$4,200 / mo</td>
+                    <td class="txn-savings">$1,386 / mo</td>
+                    <td><span class="badge badge--warning">Medium</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Review reserved instance conversion">Review</button></td>
+                </tr>
+                <tr>
+                    <td class="txn-rec-bold">Delete orphaned snapshots</td>
+                    <td>Storage</td>
+                    <td>34 snapshots (1.8 TB)</td>
+                    <td>$162 / mo</td>
+                    <td class="txn-savings">$162 / mo</td>
+                    <td><span class="badge badge--success">Low</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Apply orphaned snapshot deletion">Apply</button></td>
+                </tr>
+                <tr>
+                    <td class="txn-rec-bold">Reclaim idle load balancers</td>
+                    <td>Network</td>
+                    <td>3 LBs with 0 backends</td>
+                    <td>$108 / mo</td>
+                    <td class="txn-savings">$108 / mo</td>
+                    <td><span class="badge badge--success">Low</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Apply idle load balancer reclamation">Apply</button></td>
+                </tr>
+                <tr>
+                    <td class="txn-rec-bold">Enable S3-compat lifecycle rules</td>
+                    <td>Storage</td>
+                    <td>2 buckets, 4.2 TB cold data</td>
+                    <td>$420 / mo</td>
+                    <td class="txn-savings">$294 / mo</td>
+                    <td><span class="badge badge--warning">Medium</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Review lifecycle rule configuration">Review</button></td>
+                </tr>
+                <tr>
+                    <td class="txn-rec-bold">Consolidate dev databases</td>
+                    <td>Database</td>
+                    <td>5 dev DBs &rarr; 1 shared cluster</td>
+                    <td>$650 / mo</td>
+                    <td class="txn-savings">$260 / mo</td>
+                    <td><span class="badge badge--danger">High</span></td>
+                    <td><button class="btn btn--ghost btn--sm" aria-label="Review database consolidation plan">Review</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Budget alerts & anomaly detection -->
+    <div class="txn-budget-grid" style="margin-top:16px;">
+        <div class="txn-budget-card" role="region" aria-label="Budget alert thresholds">
+            <div class="txn-budget-card__title">Budget Alert Thresholds</div>
+            <div class="txn-threshold">
+                <div class="txn-threshold__row">
+                    <span>50% of $25,000 &rarr; Email finance team</span>
+                    <span class="txn-threshold__status--green">Passed</span>
+                </div>
+                <div class="txn-threshold__bar">
+                    <div class="txn-threshold__fill txn-threshold__fill--green" style="width:50%"></div>
+                </div>
+            </div>
+            <div class="txn-threshold">
+                <div class="txn-threshold__row">
+                    <span>75% of $25,000 &rarr; Slack + email CTO</span>
+                    <span class="txn-threshold__status--blue">Current: 78.4%</span>
+                </div>
+                <div class="txn-threshold__bar">
+                    <div class="txn-threshold__fill txn-threshold__fill--blue" style="width:78.4%"></div>
+                </div>
+            </div>
+            <div class="txn-threshold">
+                <div class="txn-threshold__row">
+                    <span>90% of $25,000 &rarr; Hard alert + freeze non-prod</span>
+                    <span class="txn-threshold__status--dim">Pending</span>
+                </div>
+                <div class="txn-threshold__bar">
+                    <div class="txn-threshold__fill txn-threshold__fill--amber" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="txn-budget-card" role="region" aria-label="Cost anomaly detection">
+            <div class="txn-budget-card__title">Cost Anomaly Detection</div>
+            <div class="txn-anomaly txn-anomaly--red">
+                <div>
+                    <div class="txn-anomaly__title txn-anomaly__title--red">Egress spike: us-east-1</div>
+                    <div class="txn-anomaly__sub">320% above baseline &middot; Apr 14&ndash;15</div>
+                </div>
+                <button class="btn btn--ghost btn--sm" aria-label="Investigate egress spike anomaly">Investigate</button>
+            </div>
+            <div class="txn-anomaly txn-anomaly--amber">
+                <div>
+                    <div class="txn-anomaly__title txn-anomaly__title--amber">GPU hours: ml-training cluster</div>
+                    <div class="txn-anomaly__sub">180% above baseline &middot; Apr 12&ndash;16</div>
+                </div>
+                <button class="btn btn--ghost btn--sm" aria-label="Investigate GPU hours anomaly">Investigate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.txn -->
+{{end}}

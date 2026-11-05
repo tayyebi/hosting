@@ -1,0 +1,496 @@
+{{define "employees-content"}}
+<style>
+/* ── Employees page scoped styles (.em-*) ── */
+
+/* Panel wrapper (On-Call / Session Audit) */
+.em-panel            { margin-bottom: 20px; }
+.em-panel__header    { padding: 14px 18px; border-bottom: 1px solid var(--ds-border, rgba(0,0,0,.08)); display: flex; align-items: center; justify-content: space-between; }
+.em-panel__title     { font-size: 14px; font-weight: 500; color: var(--ds-text); }
+.em-panel__subtitle  { font-size: 11.5px; color: var(--ds-text-muted, #6e6e73); font-weight: 300; }
+.em-panel__table     { margin: 0; }
+
+/* KPI denominator / secondary value */
+.em-kpi-secondary    { font-size: 14px; color: var(--ds-text-muted, #6e6e73); }
+
+/* KPI grid spacing */
+.em-kpi-grid         { margin-bottom: 20px; }
+
+/* On-Call slot badges */
+.em-oncall-slot      { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+.em-oncall-slot--primary   { background: rgba(16,185,129,.08); color: #059669; }
+.em-oncall-slot--secondary { background: rgba(99,102,241,.08); color: #6366f1; }
+.em-oncall-slot--next      { background: rgba(107,114,128,.08); color: var(--ds-text-muted, #6b7280); }
+
+/* On-Call avatar color overrides */
+.em-avatar--primary   { background: rgba(16,185,129,.12); color: #059669; }
+.em-avatar--secondary { background: rgba(99,102,241,.12); color: #6366f1; }
+.em-avatar--muted     { background: rgba(107,114,128,.10); color: var(--ds-text-muted, #6b7280); }
+
+/* Next-rotation row (upcoming / dimmed) */
+.em-row--upcoming     { opacity: .6; }
+
+/* On-Call dot icon in employee table */
+.em-oncall-badge      { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: rgba(245,158,11,.08); color: #d97706; font-size: 11px; font-weight: 500; }
+.em-oncall-badge--none { font-size: 11px; color: var(--ds-text-muted, #6b7280); }
+
+/* Session Audit action badges */
+.em-audit__name       { font-size: 13px; }
+.em-audit__action     { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
+.em-audit__action--ssh     { background: rgba(99,102,241,.08);  color: #6366f1; }
+.em-audit__action--apikey  { background: rgba(245,158,11,.08);  color: #b45309; }
+.em-audit__action--login   { background: rgba(16,185,129,.08);  color: #059669; }
+.em-audit__ip         { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ds-text-muted, #6e6e73); }
+
+/* Infra scope tags */
+.em-scope-wrap        { display: flex; gap: 4px; flex-wrap: wrap; }
+.em-scope             { padding: 2px 7px; border-radius: 5px; font-size: 10.5px; font-weight: 500; }
+.em-scope--compute    { background: rgba(99,102,241,.08);  color: #6366f1; }
+.em-scope--network    { background: rgba(16,185,129,.08);  color: #10b981; }
+.em-scope--storage    { background: rgba(245,158,11,.08);  color: #d97706; }
+.em-scope--database   { background: rgba(168,85,247,.08);  color: #7c3aed; }
+.em-scope--billing    { background: rgba(239,68,68,.08);   color: #dc2626; }
+
+/* Checkbox labels in Add Employee modal */
+.em-scope-check-wrap  { display: flex; gap: 8px; flex-wrap: wrap; }
+.em-scope-check       { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--ds-text, #1d1d1f); font-weight: 300; cursor: pointer; }
+
+/* Active toggle label alignment */
+.em-toggle-label      { margin-bottom: 0; }
+</style>
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Employees</h1>
+    <p class="ds-page-subtitle">Team members, infrastructure access scopes and on-call rotations.</p>
+</div>
+
+{{if .ResetResult}}
+<div class="tenant-reset-result" role="alert">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Temporary password:&nbsp;<code class="reset-pw-code">{{.ResetResult}}</code>
+    <span class="reset-pw-hint">Share securely. Will not be shown again.</span>
+    <button class="reset-pw-copy" onclick="navigator.clipboard.writeText('{{.ResetResult}}');this.textContent='Copied!'">Copy</button>
+</div>
+{{end}}
+
+{{if .FormError}}
+<div class="tenant-error" role="alert">{{.FormError}}</div>
+{{end}}
+
+<div class="emp-toolbar">
+    <p class="emp-count">{{len .Employees}} employee{{if ne (len .Employees) 1}}s{{end}}</p>
+    <button class="btn btn--primary" onclick="openEmpModal('add')" aria-haspopup="dialog">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add Employee
+    </button>
+</div>
+
+<!-- ── Team KPIs ── -->
+<div class="ws-kpi-grid em-kpi-grid" aria-label="Team key metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 15c0-2.49 2.02-4.5 4.5-4.5s4.5 2.01 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M16.5 15c0-2.21-1.57-4-3.5-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">{{len .Employees}}</div>
+            <div class="ws-kpi-card__label">Total team members</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">4 <span class="em-kpi-secondary">/ 5</span></div>
+            <div class="ws-kpi-card__label">Infra scopes covered</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2</div>
+            <div class="ws-kpi-card__label">On-call rotation members</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2.5" y="5.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 5.5V4a2.5 2.5 0 015 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">12</div>
+            <div class="ws-kpi-card__label">SSH keys registered</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── On-Call Rotation ── -->
+<div class="clients-table-wrap em-panel">
+    <div class="em-panel__header">
+        <div>
+            <div class="em-panel__title">On-Call Rotation</div>
+            <div class="em-panel__subtitle">PagerDuty-synced rotation · escalation policy: 5 min → 15 min → manager</div>
+        </div>
+        <button class="btn btn--ghost btn--sm">Edit Schedule</button>
+    </div>
+    <table class="tenant-table em-panel__table" aria-label="On-call rotation schedule">
+        <caption class="sr-only">Current and upcoming on-call rotation assignments</caption>
+        <thead><tr><th scope="col">Slot</th><th scope="col">Engineer</th><th scope="col">Coverage</th><th scope="col">Escalation</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="em-oncall-slot em-oncall-slot--primary">Primary</span></td>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar em-avatar--primary">A</div>
+                        <span>Alice Smith</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">Apr 14 – Apr 21 · 24/7</td>
+                <td class="tenant-table__domain">Phone → SMS → Slack DM</td>
+                <td><span class="emp-status emp-status--active">On duty</span></td>
+            </tr>
+            <tr>
+                <td><span class="em-oncall-slot em-oncall-slot--secondary">Secondary</span></td>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar em-avatar--secondary">B</div>
+                        <span>Bob Carter</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">Apr 14 – Apr 21 · 24/7</td>
+                <td class="tenant-table__domain">SMS → Slack DM</td>
+                <td><span class="emp-status emp-status--active">Standby</span></td>
+            </tr>
+            <tr class="em-row--upcoming">
+                <td><span class="em-oncall-slot em-oncall-slot--next">Next</span></td>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar em-avatar--muted">C</div>
+                        <span>Carol White</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">Apr 21 – Apr 28 · 24/7</td>
+                <td class="tenant-table__domain">Phone → SMS → Slack DM</td>
+                <td><span class="emp-status emp-status--inactive">Upcoming</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ── Session Audit Trail ── -->
+<div class="clients-table-wrap em-panel">
+    <div class="em-panel__header">
+        <div>
+            <div class="em-panel__title">Recent Session Audit</div>
+            <div class="em-panel__subtitle">SSH, console, and API key activity across team members</div>
+        </div>
+        <button class="btn btn--ghost btn--sm">Export Logs</button>
+    </div>
+    <table class="tenant-table em-panel__table" aria-label="Recent session audit trail">
+        <caption class="sr-only">SSH, console, and API key activity log for team members</caption>
+        <thead><tr><th scope="col">Time</th><th scope="col">Employee</th><th scope="col">Action</th><th scope="col">Resource</th><th scope="col">Source IP</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="tk-date">Today, 11:42</td>
+                <td class="em-audit__name">Alice Smith</td>
+                <td><span class="em-audit__action em-audit__action--ssh">SSH session</span></td>
+                <td class="tenant-table__domain">pg-primary-fra1</td>
+                <td class="em-audit__ip">203.0.113.42</td>
+            </tr>
+            <tr>
+                <td class="tk-date">Today, 10:15</td>
+                <td class="em-audit__name">Bob Carter</td>
+                <td><span class="em-audit__action em-audit__action--apikey">API key rotated</span></td>
+                <td class="tenant-table__domain">api-gateway · key sk_live_*4f2b</td>
+                <td class="em-audit__ip">198.51.100.8</td>
+            </tr>
+            <tr>
+                <td class="tk-date">Yesterday, 22:08</td>
+                <td class="em-audit__name">Alice Smith</td>
+                <td><span class="em-audit__action em-audit__action--login">Console login</span></td>
+                <td class="tenant-table__domain">Dashboard · MFA verified</td>
+                <td class="em-audit__ip">203.0.113.42</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{{if .Employees}}
+<div class="tenant-table-wrap">
+    <table class="tenant-table emp-table" aria-label="Employee directory">
+        <caption class="sr-only">Team members with roles, access scopes, and on-call assignments</caption>
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Infra Scope</th>
+                <th scope="col">On-Call</th>
+                <th><span class="sr-only">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Employees}}
+            <tr>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar">{{slice .Name 0 1}}</div>
+                        <span>{{.Name}}</span>
+                    </div>
+                </td>
+                <td class="emp-email">{{.Email}}</td>
+                <td><span class="emp-role">{{.Role}}</span></td>
+                <td>
+                    {{if .Active}}
+                    <span class="emp-status emp-status--active">Active</span>
+                    {{else}}
+                    <span class="emp-status emp-status--inactive">Inactive</span>
+                    {{end}}
+                </td>
+                <td>
+                    <div class="em-scope-wrap">
+                        <span class="em-scope em-scope--compute">Compute</span>
+                        <span class="em-scope em-scope--network">Network</span>
+                    </div>
+                </td>
+                <td>
+                    {{if .Active}}
+                    <span class="em-oncall-badge">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1"/><path d="M5 3v2l1.5 1" stroke="currentColor" stroke-width="0.9" stroke-linecap="round"/></svg>
+                        Primary
+                    </span>
+                    {{else}}
+                    <span class="em-oncall-badge--none" aria-label="Not on call">—</span>
+                    {{end}}
+                </td>
+                <td class="tenant-table__actions">
+                    <a href="/t/{{$.TenantSlug}}/employees/{{.ID}}/permissions/" class="btn btn--accent btn--sm">Permissions</a>
+                    <a href="/t/{{$.TenantSlug}}/employees/{{.ID}}/edit/" class="btn btn--ghost btn--sm">Edit</a>
+                    <form method="POST" action="/t/{{$.TenantSlug}}/employees/{{.ID}}/reset-password/">
+                        <button type="submit" class="btn btn--ghost btn--sm"
+                                onclick="return confirm('Reset password for {{.Name}}?')">Reset Password</button>
+                    </form>
+                    <form method="POST" action="/t/{{$.TenantSlug}}/employees/{{.ID}}/delete/"
+                          onsubmit="return confirm('Remove {{.Name}} from the team?')">
+                        <button type="submit" class="btn btn--danger btn--sm">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<div id="em-pagination" class="tk-pagination" style="display:none;"></div>
+{{else}}
+<div class="tenant-empty">
+    <svg width="36" height="36" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 15c0-2.49 2.02-4.5 4.5-4.5s4.5 2.01 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M16.5 15c0-2.21-1.57-4-3.5-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <p>No employees yet. Add one to get started.</p>
+</div>
+{{end}}
+
+<!-- ── Add Employee modal ── -->
+<div class="modal-backdrop" id="addEmpBackdrop" hidden onclick="closeEmpModal('add')" role="dialog" aria-modal="true" aria-labelledby="addEmpTitle">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="addEmpTitle">Add Employee</h2>
+            <button class="modal__close" onclick="closeEmpModal('add')" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/t/{{.TenantSlug}}/employees/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Full name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" name="name" required placeholder="Jane Doe" autofocus maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" name="email" required placeholder="jane@example.com" maxlength="254">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Role <span class="form-opt">(optional)</span></label>
+                <input class="form-input" type="text" name="role" placeholder="e.g. SRE, NOC Engineer, DevOps Lead" maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Infrastructure scope</label>
+                <div class="em-scope-check-wrap">
+                    <label class="em-scope-check">
+                        <input type="checkbox" name="scope_compute" checked> Compute
+                    </label>
+                    <label class="em-scope-check">
+                        <input type="checkbox" name="scope_network"> Network
+                    </label>
+                    <label class="em-scope-check">
+                        <input type="checkbox" name="scope_storage"> Storage
+                    </label>
+                    <label class="em-scope-check">
+                        <input type="checkbox" name="scope_database"> Database
+                    </label>
+                    <label class="em-scope-check">
+                        <input type="checkbox" name="scope_billing"> Billing
+                    </label>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeEmpModal('add')">Cancel</button>
+                <button type="submit" class="btn btn--primary">Add Employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{/* ── Edit Employee modal ── */}}
+{{if .EditEmployee}}
+<div class="modal-backdrop" id="editEmpBackdrop" onclick="window.location='/t/{{.TenantSlug}}/employees/'" role="dialog" aria-modal="true" aria-labelledby="editEmpTitle">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="editEmpTitle">Edit Employee</h2>
+            <button class="modal__close" onclick="window.location='/t/{{.TenantSlug}}/employees/'" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/t/{{.TenantSlug}}/employees/{{.EditEmployee.ID}}/edit/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Full name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" name="name" required value="{{.EditEmployee.Name}}" autofocus maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" name="email" required value="{{.EditEmployee.Email}}" maxlength="254">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Role</label>
+                <input class="form-input" type="text" name="role" value="{{.EditEmployee.Role}}" maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="emp-toggle-row">
+                    <span class="form-label em-toggle-label">Active</span>
+                    <label class="st-toggle">
+                        <input type="checkbox" name="active" {{if .EditEmployee.Active}}checked{{end}}>
+                        <span class="st-toggle__track"></span>
+                    </label>
+                </label>
+            </div>
+            <div class="modal__footer">
+                <a href="/t/{{.TenantSlug}}/employees/" class="btn btn--ghost">Cancel</a>
+                <button type="submit" class="btn btn--primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}
+
+{{/* ── Permissions modal ── */}}
+{{if .PermEmployee}}
+<div class="modal-backdrop perm-backdrop" id="permEmpBackdrop" onclick="window.location='/t/{{.TenantSlug}}/employees/'" role="dialog" aria-modal="true" aria-labelledby="permEmpTitle">
+    <div class="modal modal--wide" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="permEmpTitle">
+                Permissions — {{.PermEmployee.Name}}
+            </h2>
+            <button class="modal__close" onclick="window.location='/t/{{.TenantSlug}}/employees/'" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/t/{{.TenantSlug}}/employees/{{.PermEmployee.ID}}/permissions/" class="modal__form">
+            <p class="perm-intro">Enable or disable access to each section of the tenant dashboard.</p>
+            <div class="perm-groups">
+                {{range .PermGroups}}
+                <div class="perm-group">
+                    <div class="perm-group__label">{{.Label}}</div>
+                    {{range .Items}}
+                    <label class="perm-item">
+                        <input type="checkbox" name="perm_{{.ID}}"
+                               {{if index $.PermEmployee.Permissions .ID}}checked{{end}}>
+                        <span class="perm-item__label">{{.Label}}</span>
+                    </label>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            <div class="modal__footer">
+                <a href="/t/{{.TenantSlug}}/employees/" class="btn btn--ghost">Cancel</a>
+                <button type="submit" class="btn btn--primary">Save Permissions</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}
+
+<script>
+function openEmpModal(name) {
+    document.getElementById(name + 'EmpBackdrop').hidden = false;
+}
+function closeEmpModal(name) {
+    document.getElementById(name + 'EmpBackdrop').hidden = true;
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeEmpModal('add');
+});
+{{if .FormError}}openEmpModal('add');{{end}}
+{{if .EditEmployee}}document.getElementById('editEmpBackdrop').hidden = false;{{end}}
+{{if .PermEmployee}}document.getElementById('permEmpBackdrop').hidden = false;{{end}}
+
+// Employee list pagination
+(function(){
+  var PAGE_SIZE = 15;
+  var currentPage = 1;
+  var rows;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var tbody = document.querySelector('.emp-table tbody');
+    if (!tbody) return;
+    rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length <= PAGE_SIZE) return;
+    renderPage(1);
+    document.getElementById('em-pagination').style.display = 'flex';
+  });
+
+  function renderPage(page) {
+    currentPage = page;
+    var total = rows.length;
+    var start = (page - 1) * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+    rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+    var pgEl = document.getElementById('em-pagination');
+    pgEl.innerHTML = '';
+
+    var info = document.createElement('span');
+    info.className = 'tk-page-info';
+    info.textContent = (start + 1) + '\u2013' + end + ' of ' + total;
+    pgEl.appendChild(info);
+
+    var nav = document.createElement('div');
+    nav.className = 'tk-page-nav';
+    var totalPages = Math.ceil(total / PAGE_SIZE);
+
+    var prev = document.createElement('button');
+    prev.className = 'btn btn--ghost btn--sm';
+    prev.textContent = '\u2190';
+    prev.disabled = page === 1;
+    prev.addEventListener('click', function() { renderPage(currentPage - 1); });
+    nav.appendChild(prev);
+
+    for (var p = 1; p <= totalPages; p++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--sm' + (pg === page ? ' btn--primary' : ' btn--ghost');
+        btn.textContent = pg;
+        btn.addEventListener('click', function() { renderPage(pg); });
+        nav.appendChild(btn);
+      })(p);
+    }
+
+    var next = document.createElement('button');
+    next.className = 'btn btn--ghost btn--sm';
+    next.textContent = '\u2192';
+    next.disabled = page === totalPages;
+    next.addEventListener('click', function() { renderPage(currentPage + 1); });
+    nav.appendChild(next);
+
+    pgEl.appendChild(nav);
+  }
+})();
+</script>
+{{end}}

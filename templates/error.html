@@ -1,0 +1,214 @@
+{{define "error-page"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{.Code}} {{.Title}} — Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+        (function(){
+            var t = localStorage.getItem('platform_theme') || 'light';
+            var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+            document.documentElement.setAttribute('data-theme', r);
+        })();
+    </script>
+    <style>
+        /* Minimal inline vars — override global theme for this standalone page */
+        :root {
+            --bg:       #0f1117;
+            --surface:  #16181f;
+            --border:   rgba(255,255,255,.07);
+            --text:     #e2e4ea;
+            --muted:    rgba(226,228,234,.4);
+            --accent:   #6366f1;
+            --code-bg:  rgba(255,255,255,.05);
+        }
+        [data-theme="light"] {
+            --bg:       #f4f5f8;
+            --surface:  #ffffff;
+            --border:   rgba(0,0,0,.08);
+            --text:     #1a1d27;
+            --muted:    rgba(26,29,39,.4);
+            --accent:   #6366f1;
+            --code-bg:  rgba(0,0,0,.05);
+        }
+        html, body {
+            height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/additions.css" />
+</head>
+<body>
+<div class="err-page">
+    {{if ge .Code 500}}
+    <div class="err-glow err-glow--5xx" aria-hidden="true"></div>
+    {{else}}
+    <div class="err-glow err-glow--4xx" aria-hidden="true"></div>
+    {{end}}
+
+    <div class="err-card" role="alert">
+        <!-- Error-specific icon -->
+        <div class="err-icon" aria-hidden="true">
+            {{if eq .Code 400}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r=".5" fill="currentColor"/>
+            </svg>
+            {{else if eq .Code 401}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            {{else if eq .Code 403}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/>
+            </svg>
+            {{else if eq .Code 404}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/>
+            </svg>
+            {{else if eq .Code 405}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M8 12h.01"/><path d="M16 12h.01"/>
+            </svg>
+            {{else if eq .Code 408}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            {{else if eq .Code 429}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/>
+            </svg>
+            {{else if eq .Code 500}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><circle cx="12" cy="17" r=".5" fill="currentColor"/>
+            </svg>
+            {{else if eq .Code 502}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M17 17l4 4"/><path d="M21 17l-4 4"/>
+            </svg>
+            {{else if eq .Code 503}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.2a2 2 0 0 1-2.83-2.83l6.83-6.83a6 6 0 0 1 7.94-7.94L14.7 6.3z"/>
+            </svg>
+            {{else}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r=".5" fill="currentColor"/>
+            </svg>
+            {{end}}
+        </div>
+
+        <div class="err-code">{{.Code}}</div>
+        <div class="err-divider"></div>
+        <h1 class="err-title">{{.Title}}</h1>
+        <p class="err-message">{{.Message}}</p>
+
+        <!-- Help suggestions -->
+        <div class="err-help">
+            <div class="err-help__title">What you can try</div>
+            <div class="err-help__text">
+                {{if eq .Code 400}}Check the URL or form data for typos and try again.
+                {{else if eq .Code 401}}Log in or verify your credentials, then retry.
+                {{else if eq .Code 403}}You may need different permissions. Contact an administrator.
+                {{else if eq .Code 404}}Double-check the address, or use the navigation to find your page.
+                {{else if eq .Code 405}}This action is not supported here. Go back and try a different route.
+                {{else if eq .Code 408}}Your connection may be slow. Refresh and try again.
+                {{else if eq .Code 429}}Wait a moment before making another request.
+                {{else if ge .Code 500}}This is on our side. The page will auto-retry shortly, or try again later.
+                {{else}}Go back to the previous page or return home.
+                {{end}}
+            </div>
+        </div>
+
+        <div class="err-actions">
+            <button class="err-btn err-btn--ghost" onclick="history.back()" aria-label="Go back to previous page">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Go back <kbd class="err-kbd">Bksp</kbd>
+            </button>
+            <a href="/" class="err-btn err-btn--primary" aria-label="Return to home page">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2 7.5V12a1 1 0 001 1h3V9h2v4h3a1 1 0 001-1V7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M1 7l6-5 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Home <kbd class="err-kbd">H</kbd>
+            </a>
+        </div>
+
+        {{if ge .Code 500}}
+        <div class="err-retry" id="errRetry">
+            <div class="err-retry__spinner"></div>
+            <span>Auto-retry in <span class="err-retry__seconds" id="errRetryCount">30</span>s</span>
+            <button class="err-retry__cancel" id="errRetryCancel" title="Cancel auto-retry">Cancel</button>
+        </div>
+        {{end}}
+
+        <div class="err-hash">
+            <div class="err-hash__label">Diagnostic reference</div>
+            <span class="err-hash__value" onclick="copyHash(this)" tabindex="0" role="button" aria-label="Copy diagnostic hash" title="Click to copy">{{.Hash}}</span>
+            <div class="err-hash__copied" id="hashCopied">Copied</div>
+        </div>
+
+    </div>
+
+    <div class="err-footer">
+        <div>&copy; {{.Year}} Platform</div>
+        <div class="err-footer__meta">
+            {{if .Path}}{{.Path}} &middot; {{end}}{{.Timestamp}}
+        </div>
+    </div>
+</div>
+<script>
+function copyHash(el) {
+    navigator.clipboard.writeText(el.textContent.trim()).then(function() {
+        var msg = document.getElementById('hashCopied');
+        msg.style.display = 'block';
+        setTimeout(function(){ msg.style.display = 'none'; }, 2000);
+    });
+}
+
+/* Auto-retry countdown for 5xx errors */
+(function() {
+    var countEl = document.getElementById('errRetryCount');
+    var cancelBtn = document.getElementById('errRetryCancel');
+    var retryBox = document.getElementById('errRetry');
+    if (!countEl || !cancelBtn || !retryBox) return;
+
+    var remaining = 30;
+    var timer = setInterval(function() {
+        remaining--;
+        countEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(timer);
+            window.location.reload();
+        }
+    }, 1000);
+
+    cancelBtn.addEventListener('click', function() {
+        clearInterval(timer);
+        retryBox.style.display = 'none';
+    });
+})();
+
+/* Keyboard shortcuts: Backspace = go back, H = go home */
+(function() {
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            history.back();
+        } else if (e.key === 'h' || e.key === 'H') {
+            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                window.location.href = '/';
+            }
+        }
+    });
+})();
+</script>
+</body>
+</html>
+{{end}}

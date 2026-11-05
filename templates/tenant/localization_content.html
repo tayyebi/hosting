@@ -1,0 +1,804 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Localization page — scoped under .loc ── */
+.loc {
+  --loc-indigo:  #6366f1;
+  --loc-emerald: #10b981;
+  --loc-amber:   #f59e0b;
+  --loc-red:     #ef4444;
+  --loc-violet:  #8b5cf6;
+  --loc-blue:    #3b82f6;
+  --loc-bg:       var(--c-surface, #fff);
+  --loc-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --loc-border:   var(--c-border, #e5e7eb);
+  --loc-text:     var(--c-text, #111827);
+  --loc-text-2:   var(--c-text-dim, #6b7280);
+  --loc-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .loc {
+  --loc-bg:       #181a20;
+  --loc-bg-soft:  #13151b;
+  --loc-border:   #262932;
+  --loc-text:     #e5e7eb;
+  --loc-text-2:   #9ca3af;
+  --loc-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes locFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.loc-fade { animation: locFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Inline code tag ── */
+.loc-code {
+  font-size: 12px;
+  background: rgba(99,102,241,.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.loc-code--sm {
+  font-size: 11px;
+}
+[data-theme="dark"] .loc-code {
+  background: rgba(99,102,241,.18);
+  color: #c4b5fd;
+}
+
+/* ── CDN panel ── */
+.loc-cdn {
+  margin-top: 24px;
+  background: var(--loc-bg);
+  border: 1px solid var(--loc-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.loc-cdn__header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--loc-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.loc-cdn__title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--loc-text);
+}
+.loc-cdn__desc {
+  font-size: 13px;
+  color: var(--loc-text-2);
+  margin: 0;
+  padding: 0 20px 16px;
+}
+.loc-cdn__body {
+  padding: 0 20px 20px;
+}
+[data-theme="dark"] .loc-cdn {
+  background: var(--loc-bg);
+  border-color: var(--loc-border);
+}
+[data-theme="dark"] .loc-cdn__header {
+  border-color: var(--loc-border);
+}
+[data-theme="dark"] .loc-cdn__title {
+  color: var(--loc-text);
+}
+[data-theme="dark"] .loc-cdn__desc {
+  color: var(--loc-text-2);
+}
+
+/* ── Stat cards grid ── */
+.loc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Stat card sub colour overrides ── */
+.loc-stat-sub--dim {
+  color: var(--loc-text-2);
+}
+.loc-stat-sub--ok {
+  color: #10b981;
+}
+[data-theme="dark"] .loc-stat-sub--dim {
+  color: var(--loc-text-2);
+}
+[data-theme="dark"] .loc-stat-sub--ok {
+  color: #6ee7b7;
+}
+
+/* ── CDN code badges in tables ── */
+.loc-cdn-code {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--loc-bg-soft);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+[data-theme="dark"] .loc-cdn-code {
+  background: rgba(255,255,255,.06);
+  color: var(--loc-text);
+}
+
+/* ── Edge config grid ── */
+.loc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.loc-grid__card {
+  border: 1px solid var(--loc-border);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--loc-bg);
+}
+.loc-grid__card-title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--loc-text);
+}
+.loc-grid__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.loc-grid__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--loc-border);
+  color: var(--loc-text);
+}
+.loc-grid__row:last-child {
+  border-bottom: none;
+}
+.loc-grid__val {
+  font-weight: 500;
+}
+.loc-grid__val--ok {
+  color: #10b981;
+  font-weight: 500;
+}
+[data-theme="dark"] .loc-grid__card {
+  background: var(--loc-bg);
+  border-color: var(--loc-border);
+}
+[data-theme="dark"] .loc-grid__card-title {
+  color: var(--loc-text);
+}
+[data-theme="dark"] .loc-grid__row {
+  border-color: var(--loc-border);
+  color: var(--loc-text);
+}
+[data-theme="dark"] .loc-grid__val--ok {
+  color: #6ee7b7;
+}
+
+/* ── CDN routing table wrap ── */
+.loc-cdn__table-wrap {
+  margin-bottom: 16px;
+}
+
+/* ── Translation string editor — dark mode additions ── */
+[data-theme="dark"] .tx-ed__head {
+  border-color: var(--loc-border);
+}
+[data-theme="dark"] .tx-ed__t {
+  color: var(--loc-text);
+}
+[data-theme="dark"] .tx-ed__t small {
+  color: var(--loc-text-2);
+}
+[data-theme="dark"] .tx-ed__k {
+  color: var(--loc-text-2);
+}
+[data-theme="dark"] .tx-ed__src {
+  color: var(--loc-text);
+}
+[data-theme="dark"] .tx-ed__pct {
+  color: var(--loc-text-2);
+}
+[data-theme="dark"] .tx-ed__lang button.on {
+  background: #7c5cff;
+  color: #fff;
+  border-color: transparent;
+}
+[data-theme="dark"] .tx-ed__st--ok {
+  background: rgba(16,185,129,.15);
+  color: #6ee7b7;
+}
+[data-theme="dark"] .tx-ed__st--mt {
+  background: rgba(245,158,11,.15);
+  color: #fcd34d;
+}
+[data-theme="dark"] .tx-ed__st--miss {
+  background: rgba(239,68,68,.15);
+  color: #fca5a5;
+}
+[data-theme="dark"] .tx-ed__pgbar {
+  background: var(--loc-border);
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .loc-grid {
+    grid-template-columns: 1fr;
+  }
+  .loc-stats {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .loc-cdn__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .tx-ed__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tx-ed__bar {
+    flex-direction: column;
+  }
+  .tx-ed__bar input {
+    min-width: 0;
+    width: 100%;
+  }
+  .tx-ed__foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .loc-grid__row {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+@media (max-width: 480px) {
+  .loc-stats {
+    grid-template-columns: 1fr;
+  }
+  .tx-ed__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .tx-ed__lang {
+    flex-wrap: wrap;
+  }
+}
+</style>
+
+<div class="loc" role="main" aria-label="Localization settings">
+
+<div class="ds-page-header loc-fade" style="animation-delay:.05s">
+    <h1 class="ds-page-title">Localization</h1>
+    <p class="ds-page-subtitle">Language, timezone, currency, regional formats and API locale headers.</p>
+</div>
+
+<div class="settings-layout loc-fade" style="animation-delay:.1s" role="region" aria-label="Localization configuration">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">Localization</div>
+        <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'loc-regional')" aria-label="Regional settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 1.5c0 0-2.5 2.5-2.5 6s2.5 6 2.5 6M7.5 1.5c0 0 2.5 2.5 2.5 6s-2.5 6-2.5 6M1.5 7.5h12" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Regional
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'loc-formats')" aria-label="Format settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="1.5" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M1.5 5.5h12M5 2v3.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Formats
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'loc-currency')" aria-label="Currency settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 4v1.2M7.5 9.8V11M5.5 6.5a2 2 0 0 1 4 0c0 1.5-2 2-2 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Currency
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'loc-api')" aria-label="API locale settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M4.5 4L1.5 7.5 4.5 11M10.5 4l3 3.5-3 3.5M8.5 2l-2 11" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            API Locale
+        </button>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- Regional -->
+        <section class="settings-section settings-section--active" id="loc-regional" role="region" aria-label="Regional settings">
+            <h2 class="settings-section__title">Regional</h2>
+            <p class="settings-section__sub">Set the primary language and timezone for this tenant.</p>
+
+            <div class="st-group">
+                <label class="st-label">Language</label>
+                <select class="st-input st-select" aria-label="Select primary language">
+                    <option>English (United States)</option>
+                    <option selected>English (United Kingdom)</option>
+                    <option>Deutsch</option>
+                    <option>Fran&#231;ais</option>
+                    <option>Espa&#241;ol</option>
+                    <option>&#1601;&#1575;&#1585;&#1587;&#1740;</option>
+                    <option>&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</option>
+                    <option>&#26085;&#26412;&#35486;</option>
+                    <option>&#20013;&#25991; (&#31616;&#20307;)</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Timezone</label>
+                <select class="st-input st-select" aria-label="Select timezone">
+                    <option>UTC+0 — London</option>
+                    <option>UTC+1 — Paris, Berlin</option>
+                    <option>UTC+2 — Cairo, Helsinki</option>
+                    <option selected>UTC+3:30 — Tehran</option>
+                    <option>UTC+4 — Dubai</option>
+                    <option>UTC+5:30 — Mumbai</option>
+                    <option>UTC+8 — Singapore, Beijing</option>
+                    <option>UTC+9 — Tokyo</option>
+                    <option>UTC-5 — New York</option>
+                    <option>UTC-8 — Los Angeles</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Text direction</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Right-to-left (RTL)</div>
+                    <div class="st-toggle-sub">Enable for Arabic, Hebrew, Farsi and similar languages</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle right-to-left text direction"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save regional settings">Save regional settings</button>
+            </div>
+        </section>
+
+        <!-- Formats -->
+        <section class="settings-section" id="loc-formats" role="region" aria-label="Format settings">
+            <h2 class="settings-section__title">Formats</h2>
+            <p class="settings-section__sub">Control how dates, times and numbers are displayed.</p>
+
+            <div class="st-group">
+                <label class="st-label">Date format</label>
+                <select class="st-input st-select" aria-label="Select date format">
+                    <option selected>DD/MM/YYYY — 24/04/2025</option>
+                    <option>MM/DD/YYYY — 04/24/2025</option>
+                    <option>YYYY-MM-DD — 2025-04-24</option>
+                    <option>D MMM YYYY — 24 Apr 2025</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Time format</label>
+                <select class="st-input st-select" aria-label="Select time format">
+                    <option selected>24-hour — 14:30</option>
+                    <option>12-hour — 2:30 PM</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Number format</label>
+                <select class="st-input st-select" aria-label="Select number format">
+                    <option selected>1,234,567.89 (comma thousands, dot decimal)</option>
+                    <option>1.234.567,89 (dot thousands, comma decimal)</option>
+                    <option>1 234 567.89 (space thousands, dot decimal)</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">First day of week</label>
+                <select class="st-input st-select" aria-label="Select first day of week">
+                    <option selected>Monday</option>
+                    <option>Sunday</option>
+                    <option>Saturday</option>
+                </select>
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save format settings">Save formats</button>
+            </div>
+        </section>
+
+        <!-- Currency -->
+        <section class="settings-section" id="loc-currency" role="region" aria-label="Currency settings">
+            <h2 class="settings-section__title">Currency</h2>
+            <p class="settings-section__sub">Default currency used for invoices and pricing.</p>
+
+            <div class="st-group">
+                <label class="st-label">Currency</label>
+                <select class="st-input st-select" aria-label="Select default currency">
+                    <option selected>USD — US Dollar ($)</option>
+                    <option>EUR — Euro (&euro;)</option>
+                    <option>GBP — British Pound (&pound;)</option>
+                    <option>AED — UAE Dirham (&#1583;.&#1573;)</option>
+                    <option>CAD — Canadian Dollar (CA$)</option>
+                    <option>AUD — Australian Dollar (A$)</option>
+                    <option>JPY — Japanese Yen (&yen;)</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Symbol position</label>
+                <select class="st-input st-select" aria-label="Select currency symbol position">
+                    <option selected>Before amount — $99.00</option>
+                    <option>After amount — 99.00$</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Tax display</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Show prices inclusive of tax</div>
+                    <div class="st-toggle-sub">Prices shown to customers will include applicable taxes</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle tax-inclusive pricing"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Display tax breakdown on invoices</div>
+                    <div class="st-toggle-sub">Show a line-by-line tax breakdown on every invoice</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle invoice tax breakdown"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save currency settings">Save currency settings</button>
+            </div>
+        </section>
+
+        <!-- API Locale -->
+        <section class="settings-section" id="loc-api" role="region" aria-label="API locale settings">
+            <h2 class="settings-section__title">API Locale</h2>
+            <p class="settings-section__sub">Control locale-related HTTP headers returned by the platform API.</p>
+
+            <div class="st-group">
+                <label class="st-label">Default <code class="loc-code">Accept-Language</code> fallback</label>
+                <input class="st-input" type="text" value="en-GB" placeholder="en-US" aria-label="Default Accept-Language fallback value">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Default <code class="loc-code">Content-Language</code> header</label>
+                <input class="st-input" type="text" value="en" placeholder="en" aria-label="Default Content-Language header value">
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Include <code class="loc-code loc-code--sm">X-Locale</code> header in responses</div>
+                    <div class="st-toggle-sub">Sends resolved locale (e.g. <code class="loc-code loc-code--sm">en-GB</code>) in every API response</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle X-Locale response header"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Honour per-request <code class="loc-code loc-code--sm">Accept-Language</code></div>
+                    <div class="st-toggle-sub">Let API consumers override the tenant default per request</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle per-request Accept-Language override"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Locale-aware formatting in API responses</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Format dates per locale in JSON</div>
+                    <div class="st-toggle-sub">Return locale-formatted date strings alongside ISO 8601 timestamps</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle locale-formatted dates in API responses"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Format currency per locale in JSON</div>
+                    <div class="st-toggle-sub">Return locale-formatted currency strings alongside raw amounts</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle locale-formatted currency in API responses"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save API locale settings">Save API locale</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('settings-section--active'));
+    btn.classList.add('settings-nav__item--active');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+</script>
+
+<!-- Translation string editor -->
+<style>
+.tx-ed{margin-top:24px;background:var(--c-surface,#fff);border:1px solid var(--c-border,#e5e7eb);border-radius:12px;overflow:hidden}
+.tx-ed__head{padding:14px 20px;border-bottom:1px solid var(--c-border,#e5e7eb);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.tx-ed__t{font-size:15px;font-weight:500}
+.tx-ed__t small{color:var(--c-text-dim,#6b7280);font-weight:400;margin-left:8px}
+.tx-ed__actions{display:flex;gap:6px}
+.tx-ed__bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 20px;border-bottom:1px solid var(--c-border,#e5e7eb);background:var(--c-bg-soft,#f7f8fa)}
+.tx-ed__bar input,.tx-ed__bar select{padding:7px 11px;border:1px solid var(--c-border,#e5e7eb);border-radius:7px;font:300 13px Inter,sans-serif;background:var(--c-surface,#fff);color:var(--c-text,#111);outline:none}
+.tx-ed__bar input{flex:1;min-width:200px}
+.tx-ed__bar input:focus,.tx-ed__bar select:focus{border-color:#7c5cff}
+.tx-ed__lang{display:flex;gap:5px}
+.tx-ed__lang button{padding:6px 11px;border-radius:6px;border:1px solid var(--c-border,#e5e7eb);background:var(--c-surface,#fff);color:var(--c-text-dim,#6b7280);font-size:12px;font-weight:400;cursor:pointer;font-family:inherit}
+.tx-ed__lang button.on{background:#7c5cff;color:#fff;border-color:transparent;font-weight:500}
+.tx-ed__rows{max-height:480px;overflow:auto}
+.tx-ed__row{display:grid;grid-template-columns:200px 1fr 1fr 80px;gap:14px;padding:12px 20px;border-bottom:1px solid var(--c-border,#e5e7eb);align-items:center}
+.tx-ed__row:last-child{border-bottom:none}
+.tx-ed__row:hover{background:var(--c-bg-soft,#f7f8fa)}
+.tx-ed__k{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--c-text-dim,#6b7280);font-weight:400}
+.tx-ed__src{font-size:13px;color:var(--c-text,#111);font-weight:300}
+.tx-ed__tgt{padding:7px 10px;border:1px solid var(--c-border,#e5e7eb);border-radius:7px;font:300 13px Inter,sans-serif;background:var(--c-surface,#fff);color:var(--c-text,#111);outline:none;width:100%}
+.tx-ed__tgt:focus{border-color:#7c5cff;box-shadow:0 0 0 2px rgba(124,92,255,.12)}
+.tx-ed__st{font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px;justify-self:end}
+.tx-ed__st--ok{background:rgba(16,185,129,.1);color:#10b981}
+.tx-ed__st--mt{background:rgba(245,158,11,.1);color:#d97706}
+.tx-ed__st--miss{background:rgba(239,68,68,.1);color:#dc2626}
+.tx-ed__foot{padding:12px 20px;border-top:1px solid var(--c-border,#e5e7eb);background:var(--c-bg-soft,#f7f8fa);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.tx-ed__foot-actions{display:flex;gap:6px}
+.tx-ed__pct{font-size:12.5px;color:var(--c-text-dim,#6b7280)}
+.tx-ed__pct b{color:#10b981;font-weight:500}
+.tx-ed__pgbar{display:inline-block;width:120px;height:6px;background:var(--c-border,#e5e7eb);border-radius:999px;margin-left:10px;vertical-align:middle;overflow:hidden}
+.tx-ed__pgbar i{display:block;height:100%;background:linear-gradient(90deg,#10b981,#34d399)}
+[data-theme="dark"] .tx-ed{background:#1a1e2e;border-color:rgba(255,255,255,.08)}
+[data-theme="dark"] .tx-ed__bar,[data-theme="dark"] .tx-ed__foot{background:rgba(255,255,255,.04)}
+[data-theme="dark"] .tx-ed__row:hover{background:rgba(255,255,255,.03)}
+[data-theme="dark"] .tx-ed__bar input,[data-theme="dark"] .tx-ed__bar select,[data-theme="dark"] .tx-ed__tgt,[data-theme="dark"] .tx-ed__lang button{background:#222739;border-color:rgba(255,255,255,.1);color:#eef0f6}
+@media(max-width:680px){.tx-ed__row{grid-template-columns:1fr;gap:6px}}
+</style>
+
+<div class="tx-ed loc-fade" style="animation-delay:.15s" role="region" aria-label="Translation string editor">
+    <div class="tx-ed__head">
+        <div class="tx-ed__t">String editor <small>258 keys &middot; 5 locales</small></div>
+        <div class="tx-ed__actions">
+            <button class="btn btn--ghost btn--sm" aria-label="Import translation file in PO format">Import .po</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Export translations as JSON">Export .json</button>
+            <button class="btn btn--accent btn--sm" aria-label="Auto-translate missing strings via DeepL">Auto-translate via DeepL</button>
+        </div>
+    </div>
+    <div class="tx-ed__bar" role="toolbar" aria-label="Translation filter controls">
+        <input type="text" placeholder="Search keys or English source…" id="txSearch" aria-label="Search translation keys">
+        <div class="tx-ed__lang" id="txLang" role="group" aria-label="Target language selector">
+            <button class="on" data-l="de" aria-label="German" aria-pressed="true">DE</button>
+            <button data-l="es" aria-label="Spanish" aria-pressed="false">ES</button>
+            <button data-l="fr" aria-label="French" aria-pressed="false">FR</button>
+            <button data-l="ja" aria-label="Japanese" aria-pressed="false">JA</button>
+            <button data-l="pt" aria-label="Portuguese" aria-pressed="false">PT</button>
+        </div>
+        <select aria-label="Filter by translation state">
+            <option>All states</option>
+            <option>Translated</option>
+            <option>Machine-translated</option>
+            <option>Missing</option>
+        </select>
+    </div>
+    <div class="tx-ed__rows" id="txRows" role="list" aria-label="Translation strings"></div>
+    <div class="tx-ed__foot">
+        <div class="tx-ed__pct">Coverage: <b>92.3%</b> translated &middot; <span class="tx-ed__pgbar" role="progressbar" aria-valuenow="92.3" aria-valuemin="0" aria-valuemax="100" aria-label="Translation coverage"><i style="width:92.3%"></i></span></div>
+        <div class="tx-ed__foot-actions">
+            <button class="btn btn--ghost btn--sm" aria-label="Discard unsaved translation changes">Discard changes</button>
+            <button class="btn btn--primary btn--sm" aria-label="Save all translations">Save translations</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+  var STRINGS=[
+    {k:'common.save',en:'Save',de:'Speichern',es:'Guardar',fr:'Enregistrer',ja:'\u4fdd\u5b58',pt:'Salvar',st:'ok'},
+    {k:'common.cancel',en:'Cancel',de:'Abbrechen',es:'Cancelar',fr:'Annuler',ja:'\u30ad\u30e3\u30f3\u30bb\u30eb',pt:'Cancelar',st:'ok'},
+    {k:'common.delete',en:'Delete',de:'L\u00f6schen',es:'Eliminar',fr:'Supprimer',ja:'\u524a\u9664',pt:'Excluir',st:'ok'},
+    {k:'auth.signin',en:'Sign in',de:'Anmelden',es:'Iniciar sesi\u00f3n',fr:'Se connecter',ja:'\u30b5\u30a4\u30f3\u30a4\u30f3',pt:'Entrar',st:'ok'},
+    {k:'auth.signin_subtitle',en:'Sign in to your account to continue',de:'Melden Sie sich an, um fortzufahren',es:'Inicia sesi\u00f3n para continuar',fr:'Connectez-vous pour continuer',ja:'\u7d9a\u3051\u308b\u306b\u306f\u30b5\u30a4\u30f3\u30a4\u30f3\u3057\u3066\u304f\u3060\u3055\u3044',pt:'Entre para continuar',st:'ok'},
+    {k:'auth.email',en:'Email address',de:'E-Mail-Adresse',es:'Correo electr\u00f3nico',fr:'Adresse e-mail',ja:'\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9',pt:'',st:'miss'},
+    {k:'auth.password',en:'Password',de:'Passwort',es:'Contrase\u00f1a',fr:'Mot de passe',ja:'\u30d1\u30b9\u30ef\u30fc\u30c9',pt:'Senha',st:'ok'},
+    {k:'auth.forgot',en:'Forgot password?',de:'Passwort vergessen?',es:'\u00bfOlvidaste tu contrase\u00f1a?',fr:'Mot de passe oubli\u00e9 ?',ja:'\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u304a\u5fd8\u308c\u3067\u3059\u304b\uff1f',pt:'',st:'miss'},
+    {k:'dashboard.welcome',en:'Welcome back',de:'Willkommen zur\u00fcck',es:'Bienvenido de nuevo',fr:'Bon retour',ja:'\u304a\u304b\u3048\u308a\u306a\u3055\u3044',pt:'Bem-vindo de volta',st:'ok'},
+    {k:'billing.invoice',en:'Invoice',de:'Rechnung',es:'Factura',fr:'Facture',ja:'\u8acb\u6c42\u66f8',pt:'Fatura',st:'mt'},
+    {k:'billing.due_date',en:'Due date',de:'F\u00e4lligkeitsdatum',es:'Fecha de vencimiento',fr:'Date d\'ech\u00e9ance',ja:'\u652f\u6255\u671f\u65e5',pt:'Data de vencimento',st:'mt'},
+    {k:'support.new_ticket',en:'New ticket',de:'Neues Ticket',es:'Nuevo ticket',fr:'Nouveau ticket',ja:'\u65b0\u898f\u30c1\u30b1\u30c3\u30c8',pt:'Novo chamado',st:'ok'},
+    {k:'support.priority.critical',en:'Critical',de:'Kritisch',es:'Cr\u00edtico',fr:'Critique',ja:'\u91cd\u5927',pt:'Cr\u00edtico',st:'ok'},
+    {k:'errors.404',en:'Page not found',de:'Seite nicht gefunden',es:'P\u00e1gina no encontrada',fr:'Page introuvable',ja:'\u30da\u30fc\u30b8\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093',pt:'',st:'miss'},
+    {k:'workspace.create',en:'Create workspace',de:'Arbeitsbereich erstellen',es:'Crear espacio de trabajo',fr:'Cr\u00e9er un espace',ja:'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u4f5c\u6210',pt:'Criar workspace',st:'mt'},
+    {k:'infra.instance',en:'Instance',de:'Instanz',es:'Instancia',fr:'Instance',ja:'\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9',pt:'Instancia',st:'ok'},
+    {k:'infra.snapshot',en:'Snapshot',de:'Schnappschuss',es:'Instant\u00e1nea',fr:'Instantan\u00e9',ja:'\u30b9\u30ca\u30c3\u30d7\u30b7\u30e7\u30c3\u30c8',pt:'Instant\u00e2neo',st:'mt'},
+    {k:'infra.deploy',en:'Deploy',de:'Bereitstellen',es:'Desplegar',fr:'D\u00e9ployer',ja:'\u30c7\u30d7\u30ed\u30a4',pt:'',st:'miss'},
+    {k:'infra.region',en:'Region',de:'Region',es:'Regi\u00f3n',fr:'R\u00e9gion',ja:'\u30ea\u30fc\u30b8\u30e7\u30f3',pt:'Regi\u00e3o',st:'ok'},
+    {k:'infra.load_balancer',en:'Load balancer',de:'Lastverteiler',es:'Balanceador de carga',fr:'R\u00e9partiteur de charge',ja:'\u30ed\u30fc\u30c9\u30d0\u30e9\u30f3\u30b5\u30fc',pt:'Balanceador de carga',st:'ok'},
+    {k:'infra.firewall_rule',en:'Firewall rule',de:'Firewall-Regel',es:'Regla de firewall',fr:'R\u00e8gle de pare-feu',ja:'\u30d5\u30a1\u30a4\u30a2\u30a6\u30a9\u30fc\u30eb\u30eb\u30fc\u30eb',pt:'',st:'miss'},
+    {k:'billing.compute_hours',en:'Compute hours',de:'Rechenstunden',es:'Horas de c\u00f3mputo',fr:'Heures de calcul',ja:'\u30b3\u30f3\u30d4\u30e5\u30fc\u30c6\u30a3\u30f3\u30b0\u6642\u9593',pt:'Horas de computa\u00e7\u00e3o',st:'mt'},
+    {k:'billing.bandwidth',en:'Bandwidth',de:'Bandbreite',es:'Ancho de banda',fr:'Bande passante',ja:'\u5e2f\u57df\u5e45',pt:'Largura de banda',st:'ok'},
+    {k:'status.operational',en:'Operational',de:'Betriebsbereit',es:'Operativo',fr:'Op\u00e9rationnel',ja:'\u7a3c\u50cd\u4e2d',pt:'Operacional',st:'ok'},
+    {k:'status.degraded',en:'Degraded performance',de:'Eingeschr\u00e4nkte Leistung',es:'Rendimiento degradado',fr:'Performance d\u00e9grad\u00e9e',ja:'\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9\u4f4e\u4e0b',pt:'',st:'miss'}
+  ];
+  var lang='de',q='';
+  function render(){
+    var rows=STRINGS.filter(s=>!q||s.k.toLowerCase().includes(q)||s.en.toLowerCase().includes(q));
+    var st=function(s){
+      if(!s[lang])return '<span class="tx-ed__st tx-ed__st--miss">Missing</span>';
+      if(s.st==='mt')return '<span class="tx-ed__st tx-ed__st--mt">Machine</span>';
+      return '<span class="tx-ed__st tx-ed__st--ok">Translated</span>';
+    };
+    document.getElementById('txRows').innerHTML=rows.map(s=>(
+      '<div class="tx-ed__row" role="listitem">'+
+        '<div class="tx-ed__k">'+s.k+'</div>'+
+        '<div class="tx-ed__src">'+s.en+'</div>'+
+        '<input class="tx-ed__tgt" value="'+(s[lang]||'').replace(/"/g,'&quot;')+'" placeholder="Translation\u2026" aria-label="Translation for '+s.k+'">'+
+        st(s)+
+      '</div>'
+    )).join('');
+  }
+  document.getElementById('txSearch').addEventListener('input',e=>{q=e.target.value.toLowerCase();render()});
+  document.querySelectorAll('#txLang button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#txLang button').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-pressed','false')});
+      b.classList.add('on');
+      b.setAttribute('aria-pressed','true');
+      lang=b.dataset.l;render();
+    });
+  });
+  render();
+})();
+</script>
+
+<!-- CDN Locale Routing & Geo-Aware Delivery -->
+<div class="loc-cdn loc-fade" style="animation-delay:.2s" role="region" aria-label="CDN locale routing and geo-aware delivery">
+    <div class="loc-cdn__header">
+        <h2 class="loc-cdn__title">CDN Locale Routing &amp; Geo-Aware Delivery</h2>
+        <span class="badge badge--info" aria-label="Edge configuration">Edge config</span>
+    </div>
+    <p class="loc-cdn__desc">Route requests to locale-specific origins at the CDN edge layer. Visitors receive region-appropriate content, currency, and legal copy without application-level redirects.</p>
+
+    <div class="loc-cdn__body">
+        <div class="loc-stats" role="group" aria-label="CDN locale statistics">
+            <div class="ds-stat-card">
+                <div class="ds-stat-card__label">Locale routes active</div>
+                <div class="ds-stat-card__value">8</div>
+                <div class="ds-stat-card__sub loc-stat-sub--dim">Across 14 PoPs</div>
+            </div>
+            <div class="ds-stat-card">
+                <div class="ds-stat-card__label">Geo-hit ratio (7 d)</div>
+                <div class="ds-stat-card__value">96.1%</div>
+                <div class="ds-stat-card__sub loc-stat-sub--ok">Edge-resolved, no origin</div>
+            </div>
+            <div class="ds-stat-card">
+                <div class="ds-stat-card__label">Fallback locale</div>
+                <div class="ds-stat-card__value">en-US</div>
+                <div class="ds-stat-card__sub loc-stat-sub--dim">When no match found</div>
+            </div>
+            <div class="ds-stat-card">
+                <div class="ds-stat-card__label">Content variants cached</div>
+                <div class="ds-stat-card__value">42</div>
+                <div class="ds-stat-card__sub loc-stat-sub--dim">Vary: Accept-Language</div>
+            </div>
+        </div>
+
+        <!-- Routing rules -->
+        <div class="clients-table-wrap loc-cdn__table-wrap" role="region" aria-label="CDN locale routing rules">
+            <table class="tenant-table" aria-label="Locale routing rules table">
+                <thead>
+                    <tr>
+                        <th scope="col">Geo region</th>
+                        <th scope="col">Accept-Language match</th>
+                        <th scope="col">Locale served</th>
+                        <th scope="col">Origin pool</th>
+                        <th scope="col">Currency</th>
+                        <th scope="col">Legal entity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>EU-West (DE, AT, CH)</td>
+                        <td><code class="loc-cdn-code">de*</code></td>
+                        <td>de-DE</td>
+                        <td>fra-1, ams-1</td>
+                        <td>EUR &euro;</td>
+                        <td>GmbH</td>
+                    </tr>
+                    <tr>
+                        <td>EU-South (ES, MX, AR)</td>
+                        <td><code class="loc-cdn-code">es*</code></td>
+                        <td>es-ES</td>
+                        <td>mad-1, mia-1</td>
+                        <td>EUR &euro; / USD $</td>
+                        <td>S.L.</td>
+                    </tr>
+                    <tr>
+                        <td>EU-West (FR, BE, CA-QC)</td>
+                        <td><code class="loc-cdn-code">fr*</code></td>
+                        <td>fr-FR</td>
+                        <td>par-1, mtl-1</td>
+                        <td>EUR &euro; / CAD $</td>
+                        <td>SAS</td>
+                    </tr>
+                    <tr>
+                        <td>APAC (JP)</td>
+                        <td><code class="loc-cdn-code">ja*</code></td>
+                        <td>ja-JP</td>
+                        <td>tyo-1, osa-1</td>
+                        <td>JPY &yen;</td>
+                        <td>K.K.</td>
+                    </tr>
+                    <tr>
+                        <td>LATAM (BR)</td>
+                        <td><code class="loc-cdn-code">pt-BR*</code></td>
+                        <td>pt-BR</td>
+                        <td>gru-1</td>
+                        <td>BRL R$</td>
+                        <td>Ltda.</td>
+                    </tr>
+                    <tr>
+                        <td>MENA (AE, SA, EG)</td>
+                        <td><code class="loc-cdn-code">ar*</code></td>
+                        <td>ar-AE</td>
+                        <td>auh-1, ruh-1</td>
+                        <td>AED &#1583;.&#1573;</td>
+                        <td>LLC (FZ)</td>
+                    </tr>
+                    <tr>
+                        <td>APAC (KR)</td>
+                        <td><code class="loc-cdn-code">ko*</code></td>
+                        <td>ko-KR</td>
+                        <td>icn-1</td>
+                        <td>KRW &#8361;</td>
+                        <td>&#50976;&#54620;&#54924;&#49324;</td>
+                    </tr>
+                    <tr>
+                        <td>Default (all others)</td>
+                        <td><code class="loc-cdn-code">*</code></td>
+                        <td>en-US</td>
+                        <td>iad-1, sjc-1</td>
+                        <td>USD $</td>
+                        <td>Inc.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Edge config options -->
+        <div class="loc-grid" role="group" aria-label="Edge configuration panels">
+            <div class="loc-grid__card" role="region" aria-label="Edge cache strategy">
+                <div class="loc-grid__card-title">Edge Cache Strategy</div>
+                <div class="loc-grid__list">
+                    <div class="loc-grid__row">
+                        <span>Cache key includes locale</span>
+                        <span class="loc-grid__val--ok">Yes</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>Vary header</span>
+                        <span class="loc-grid__val">Accept-Language, X-Locale</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>Stale-while-revalidate</span>
+                        <span class="loc-grid__val">60 s</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>Purge on translation publish</span>
+                        <span class="loc-grid__val--ok">Enabled</span>
+                    </div>
+                </div>
+            </div>
+            <div class="loc-grid__card" role="region" aria-label="Regional compliance flags">
+                <div class="loc-grid__card-title">Regional Compliance Flags</div>
+                <div class="loc-grid__list">
+                    <div class="loc-grid__row">
+                        <span>GDPR consent banner</span>
+                        <span class="loc-grid__val">EU-* locales</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>LGPD notice</span>
+                        <span class="loc-grid__val">pt-BR</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>CCPA opt-out link</span>
+                        <span class="loc-grid__val">en-US (CA geo)</span>
+                    </div>
+                    <div class="loc-grid__row">
+                        <span>Data residency label</span>
+                        <span class="loc-grid__val">All locales</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.loc -->
+{{end}}

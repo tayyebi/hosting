@@ -1,0 +1,1077 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Refund Complaints page — scoped under .rc-* ── */
+
+/* Two-column grid for Trends & Escalation panels */
+.rc-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+@media (max-width: 768px) {
+    .rc-panels-grid { grid-template-columns: 1fr; }
+}
+
+/* Panel (shared card wrapper) */
+.rc-panel {
+    margin-bottom: 0;
+}
+.rc-panel__header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.rc-panel__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-text, #111);
+}
+.rc-panel__subtitle {
+    font-size: 11.5px;
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 300;
+}
+.rc-panel__body {
+    padding: 16px 18px;
+}
+
+/* Trend bar rows */
+.rc-bar {
+    margin-bottom: 14px;
+}
+.rc-bar:last-child {
+    margin-bottom: 0;
+}
+.rc-bar__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.rc-bar__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.rc-bar__dot--red     { background: #ef4444; }
+.rc-bar__dot--amber   { background: #f59e0b; }
+.rc-bar__dot--indigo  { background: #6366f1; }
+.rc-bar__dot--muted   { background: #9ca3af; }
+.rc-bar__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rc-bar__label-text {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--c-text, #111);
+}
+.rc-bar__value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--c-text, #111);
+}
+.rc-bar__track {
+    height: 5px;
+    background: var(--c-bg-soft, #f7f8fa);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.rc-bar__fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.rc-bar__fill--red    { background: #ef4444; }
+.rc-bar__fill--amber  { background: #f59e0b; }
+.rc-bar__fill--indigo { background: #6366f1; }
+.rc-bar__fill--muted  { background: #9ca3af; }
+
+/* Trend footer */
+.rc-bar__footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+.rc-bar__footer-label {
+    color: var(--c-text-dim, #6b7280);
+}
+.rc-bar__footer-value {
+    font-weight: 500;
+    color: var(--c-text, #111);
+}
+
+/* Escalation workflow list */
+.rc-esc__list {
+    padding: 0;
+}
+.rc-esc__item {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.rc-esc__item:last-child {
+    border-bottom: none;
+}
+.rc-esc__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+.rc-esc__icon--emerald { background: rgba(16, 185, 129, .08); }
+.rc-esc__icon--indigo  { background: rgba(99, 102, 241, .08); }
+.rc-esc__icon--amber   { background: rgba(245, 158, 11, .08); }
+.rc-esc__icon--red     { background: rgba(239, 68, 68, .08); }
+.rc-esc__info {
+    flex: 1;
+    min-width: 0;
+}
+.rc-esc__info-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--c-text, #111);
+}
+.rc-esc__info-desc {
+    font-size: 11px;
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 300;
+}
+.rc-esc__threshold {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--c-text-dim, #6b7280);
+}
+
+/* Status badge: Rejected */
+.tk-status--rejected {
+    background: rgba(107, 114, 128, .1);
+    color: #6b7280;
+}
+
+/* KPI color helpers */
+.rc-kpi-val--emerald { color: #10b981; }
+.rc-kpi-val--muted   { color: #6b7280; }
+
+/* Modal textarea */
+.rc-textarea {
+    height: auto;
+    padding: 9px 12px;
+}
+
+/* SLA Breach Calculator */
+.rc-sla-description {
+    font-size: 13px;
+    color: var(--c-text-dim, #6b7280);
+    margin: 0 0 16px;
+}
+.rc-sla-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.rc-stat-sub--red    { color: #ef4444; }
+.rc-stat-sub--green  { color: #10b981; }
+.rc-stat-sub--amber  { color: #f59e0b; }
+
+/* Breach table cell helpers */
+.rc-cell--bold {
+    font-weight: 500;
+}
+.rc-cell--red {
+    color: #ef4444;
+    font-weight: 500;
+}
+.rc-cell--amber {
+    color: #f59e0b;
+    font-weight: 500;
+}
+.rc-cell--green {
+    color: #10b981;
+    font-weight: 500;
+}
+.rc-cell--dim {
+    color: var(--c-text-dim, #6b7280);
+}
+
+/* Credit schedule & automation rules bottom grid */
+.rc-rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+@media (max-width: 768px) {
+    .rc-rules-grid { grid-template-columns: 1fr; }
+}
+.rc-rules-card {
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px;
+}
+.rc-rules-card__title {
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: var(--c-text, #111);
+}
+.rc-rules-card__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+}
+.rc-rules-card__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    color: var(--c-text, #111);
+}
+.rc-rules-card__row:last-child {
+    border-bottom: none;
+}
+.rc-rules-card__row-val {
+    font-weight: 500;
+}
+.rc-rules-card__row-val--green {
+    color: #10b981;
+    font-weight: 500;
+}
+
+/* Case detail / resolution panel */
+.rc-detail {
+    display: none;
+    margin-top: 18px;
+    background: var(--c-surface, #fff);
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.rc-detail.open { display: block; }
+.rc-detail__head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.rc-detail__t {
+    font-size: 16px;
+    font-weight: 500;
+}
+.rc-detail__t small {
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 400;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 8px;
+}
+.rc-detail__meta {
+    font-size: 12px;
+    color: var(--c-text-dim, #6b7280);
+    margin-top: 4px;
+}
+.rc-detail__meta b {
+    color: var(--c-text, #111);
+}
+.rc-detail__meta-refund {
+    color: #dc2626;
+}
+.rc-detail__head-actions {
+    display: flex;
+    gap: 6px;
+}
+.rc-detail__body {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 780px) {
+    .rc-detail__body { grid-template-columns: 1fr; }
+}
+
+/* Event timeline items */
+.rc-evt {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--c-border, #e5e7eb);
+}
+.rc-evt:last-child { border-bottom: none; }
+.rc-evt__d {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7c5cff;
+    margin-top: 6px;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+}
+.rc-evt__d--green {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, .15);
+}
+.rc-evt__d--amber {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, .15);
+}
+.rc-evt__b { flex: 1; }
+.rc-evt__t {
+    font-size: 13px;
+    color: var(--c-text, #111);
+    font-weight: 400;
+    line-height: 1.45;
+}
+.rc-evt__m {
+    font-size: 11px;
+    color: var(--c-text-faint, #9ca3af);
+    margin-top: 2px;
+    font-weight: 400;
+}
+
+/* Detail info blocks */
+.rc-block {
+    background: var(--c-bg-soft, #f7f8fa);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+.rc-block h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--c-text-faint, #9ca3af);
+    font-weight: 500;
+    margin: 0 0 8px;
+}
+.rc-block__statement {
+    font-size: 13.5px;
+    color: var(--c-text, #111);
+    line-height: 1.55;
+    font-weight: 300;
+}
+.rc-block__suggestion {
+    font-size: 12.5px;
+    color: var(--c-text-dim, #6b7280);
+    line-height: 1.5;
+    font-weight: 300;
+}
+.rc-block__suggestion b {
+    color: var(--c-text, #111);
+}
+.rc-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--c-text-dim, #6b7280);
+}
+.rc-row b {
+    color: var(--c-text, #111);
+    font-weight: 500;
+}
+.rc-row b.rc-row--danger {
+    color: #dc2626;
+}
+
+/* Resolution bar */
+.rc-resolve {
+    padding: 16px 22px;
+    border-top: 1px solid var(--c-border, #e5e7eb);
+    background: var(--c-bg-soft, #f7f8fa);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.rc-resolve__row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.rc-resolve__label {
+    font-size: 13px;
+    font-weight: 500;
+}
+.rc-resolve__opts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.rc-resolve__opt {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border, #e5e7eb);
+    background: var(--c-surface, #fff);
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text, #111);
+}
+.rc-resolve__opt.sel {
+    background: #7c5cff;
+    color: #fff;
+    border-color: transparent;
+}
+.rc-resolve__actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* ── Dark-mode adjustments ── */
+[data-theme="dark"] .rc-bar__track {
+    background: rgba(255, 255, 255, .06);
+}
+[data-theme="dark"] .rc-rules-card {
+    border-color: rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, .02);
+}
+[data-theme="dark"] .rc-rules-card__row {
+    border-color: rgba(255, 255, 255, .06);
+}
+[data-theme="dark"] .rc-detail {
+    background: #1a1e2e;
+    border-color: rgba(255, 255, 255, .08);
+}
+[data-theme="dark"] .rc-block,
+[data-theme="dark"] .rc-resolve {
+    background: rgba(255, 255, 255, .04);
+}
+[data-theme="dark"] .rc-resolve__opt {
+    background: #222739;
+    border-color: rgba(255, 255, 255, .1);
+    color: #eef0f6;
+}
+[data-theme="dark"] .rc-esc__icon--emerald { background: rgba(16, 185, 129, .12); }
+[data-theme="dark"] .rc-esc__icon--indigo  { background: rgba(99, 102, 241, .12); }
+[data-theme="dark"] .rc-esc__icon--amber   { background: rgba(245, 158, 11, .12); }
+[data-theme="dark"] .rc-esc__icon--red     { background: rgba(239, 68, 68, .12); }
+</style>
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Refund Complaints</h1>
+    <p class="ds-page-subtitle">SLA credit claims, service refund requests and infrastructure dispute resolution.</p>
+</div>
+
+<!-- ── KPI Summary ── -->
+<div class="ws-kpi-grid" style="margin-bottom:20px;">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">4</div>
+            <div class="ws-kpi-card__label">Pending review</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a7 7 0 110 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M9 2a7 7 0 100 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="3 3"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2</div>
+            <div class="ws-kpi-card__label">Under review</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M6 6h3.5a2 2 0 110 4H8a2 2 0 100 4h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">$1,240</div>
+            <div class="ws-kpi-card__label">SLA credits issued</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">$320</div>
+            <div class="ws-kpi-card__label">Claims declined</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="clients-toolbar" style="margin-bottom:16px;">
+    <div class="clients-search">
+        <div class="clients-search__input-wrap">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/><path d="M10 10l3 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <input id="rcSearch" class="clients-search__input" type="text" placeholder="Search by client or reason…">
+        </div>
+        <select id="rcStatusFilter" class="clients-filter">
+            <option>All statuses</option>
+            <option>Pending</option>
+            <option>Under Review</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+        </select>
+        <select class="clients-filter">
+            <option>All time</option>
+            <option>This month</option>
+            <option>Last 30 days</option>
+            <option>Last 90 days</option>
+        </select>
+    </div>
+    <button class="btn btn--primary" onclick="document.getElementById('newRefundModal').hidden=false">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Log Complaint
+    </button>
+</div>
+
+<div class="clients-table-wrap">
+<table class="tenant-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Reason</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Complaints}}
+        <tr>
+            <td class="tk-id">#RC-{{.ID}}</td>
+            <td><div class="tk-client">{{.Client}}</div><div class="tk-client-co">{{.Currency}} · {{.InvoiceID}}</div></td>
+            <td class="rf-amount">{{.Currency}} {{.Amount}}</td>
+            <td class="rf-reason">{{.Reason}}</td>
+            <td class="tk-date">{{.Created}}</td>
+            <td>
+                {{if eq .Status "pending"}}<span class="tk-status tk-status--open">Pending</span>
+                {{else if eq .Status "escalated"}}<span class="tk-status tk-status--progress">Escalated</span>
+                {{else if eq .Status "approved"}}<span class="tk-status tk-status--resolved">Approved</span>
+                {{else}}<span class="tk-status tk-status--rejected">Denied</span>
+                {{end}}
+            </td>
+            <td class="tk-actions">
+                {{if eq .Status "pending"}}
+                <form method="POST" action="/t/{{$.TenantSlug}}/refund-complaints/{{.ID}}/status/" style="display:inline">
+                    <input type="hidden" name="status" value="approved">
+                    <button class="btn btn--accent btn--sm" type="submit">Approve</button>
+                </form>
+                <form method="POST" action="/t/{{$.TenantSlug}}/refund-complaints/{{.ID}}/status/" style="display:inline">
+                    <input type="hidden" name="status" value="denied">
+                    <button class="btn btn--danger btn--sm" type="submit">Deny</button>
+                </form>
+                {{else if eq .Status "escalated"}}
+                <form method="POST" action="/t/{{$.TenantSlug}}/refund-complaints/{{.ID}}/status/" style="display:inline">
+                    <input type="hidden" name="status" value="approved">
+                    <button class="btn btn--accent btn--sm" type="submit">Approve</button>
+                </form>
+                {{else}}
+                <form method="POST" action="/t/{{$.TenantSlug}}/refund-complaints/{{.ID}}/delete/" style="display:inline">
+                    <button class="btn btn--ghost btn--sm" type="submit" onclick="return confirm('Delete this complaint?')">Delete</button>
+                </form>
+                {{end}}
+            </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--c-text-dim,#6b7280);">No refund complaints found.</td></tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+<div id="rc-pagination" class="tk-pagination" style="display:none;"></div>
+
+<script>
+(function(){
+  var PAGE_SIZE = 15;
+  var currentPage = 1;
+  var allRows = [];
+  var visibleRows = [];
+
+  function getRows() {
+    var tbody = document.querySelector('.clients-table-wrap .tenant-table tbody');
+    if (!tbody) return [];
+    return Array.from(tbody.querySelectorAll('tr')).filter(function(r){
+      return r.querySelector('td[colspan]') === null;
+    });
+  }
+
+  function applyFilter() {
+    var q = (document.getElementById('rcSearch').value || '').toLowerCase();
+    var statusVal = document.getElementById('rcStatusFilter').value;
+    visibleRows = allRows.filter(function(r) {
+      var text = r.textContent.toLowerCase();
+      if (q && text.indexOf(q) === -1) return false;
+      if (statusVal !== 'All statuses') {
+        var statusEl = r.querySelector('.tk-status');
+        if (!statusEl || statusEl.textContent.trim().toLowerCase() !== statusVal.toLowerCase()) return false;
+      }
+      return true;
+    });
+    renderPage(1);
+  }
+
+  function renderPage(page) {
+    currentPage = page;
+    var total = visibleRows.length;
+    var pages = Math.ceil(total / PAGE_SIZE) || 1;
+    var start = (page - 1) * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+
+    allRows.forEach(function(r) { r.style.display = 'none'; });
+    visibleRows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+    var noResults = document.querySelector('.clients-table-wrap .tenant-table tbody tr td[colspan]');
+    if (noResults) noResults.closest('tr').style.display = total === 0 ? '' : 'none';
+
+    var pgEl = document.getElementById('rc-pagination');
+    if (total <= PAGE_SIZE) { pgEl.style.display = 'none'; pgEl.innerHTML = ''; return; }
+    pgEl.style.display = 'flex';
+    pgEl.innerHTML = '';
+
+    var info = document.createElement('span');
+    info.className = 'tk-page-info';
+    info.textContent = (total === 0 ? '0' : (start + 1)) + '\u2013' + end + ' of ' + total;
+    pgEl.appendChild(info);
+
+    var nav = document.createElement('div');
+    nav.className = 'tk-page-nav';
+
+    var prev = document.createElement('button');
+    prev.className = 'btn btn--ghost btn--sm';
+    prev.textContent = '\u2190 Prev';
+    prev.disabled = page <= 1;
+    prev.onclick = function() { renderPage(page - 1); };
+    nav.appendChild(prev);
+
+    for (var p = 1; p <= pages; p++) {
+      (function(p) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--sm' + (p === page ? ' btn--accent' : ' btn--ghost');
+        btn.textContent = p;
+        btn.onclick = function() { renderPage(p); };
+        nav.appendChild(btn);
+      })(p);
+    }
+
+    var next = document.createElement('button');
+    next.className = 'btn btn--ghost btn--sm';
+    next.textContent = 'Next \u2192';
+    next.disabled = page >= pages;
+    next.onclick = function() { renderPage(page + 1); };
+    nav.appendChild(next);
+
+    pgEl.appendChild(nav);
+  }
+
+  allRows = getRows();
+  visibleRows = allRows.slice();
+  document.getElementById('rcSearch').addEventListener('input', applyFilter);
+  document.getElementById('rcStatusFilter').addEventListener('change', applyFilter);
+  if (allRows.length > PAGE_SIZE) renderPage(1);
+})();
+</script>
+
+<!-- Log complaint modal -->
+<div class="modal-backdrop" id="newRefundModal" hidden onclick="this.hidden=true">
+    <div class="modal" style="max-width:480px;" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Log Refund Complaint</h2>
+            <button class="modal__close" onclick="document.getElementById('newRefundModal').hidden=true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Client <span class="form-req">*</span></label>
+                <select class="form-input">
+                    <option>Select a client…</option>
+                    <option>James Wright — Acme Inc.</option>
+                    <option>Sara Nguyen — TechBlue</option>
+                    <option>Alice Monroe — Monroe LLC</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Refund amount <span class="form-req">*</span></label>
+                <input class="form-input" type="number" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Reason <span class="form-req">*</span></label>
+                <textarea class="form-input rc-textarea" rows="3" placeholder="Describe the infrastructure issue, affected resources and SLA impact…"></textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Related invoice / ticket ID</label>
+                <input class="form-input" type="text" placeholder="INV-0042 or #1038">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Affected resource</label>
+                <input class="form-input" type="text" placeholder="e.g. i-0a1b2c3d, db-pg-prod-01">
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newRefundModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Trend Analytics & Escalation Workflow ── -->
+<div class="rc-panels-grid">
+
+    <!-- Complaint trend -->
+    <div class="clients-table-wrap rc-panel">
+        <div class="rc-panel__header">
+            <div>
+                <div class="rc-panel__title">Complaint Trends</div>
+                <div class="rc-panel__subtitle">Root cause distribution over the trailing 90 days</div>
+            </div>
+            <select class="clients-filter" style="font-size:11px;">
+                <option>Last 90 days</option>
+                <option>Last 30 days</option>
+                <option>This quarter</option>
+            </select>
+        </div>
+        <div class="rc-panel__body">
+            <div class="rc-bar">
+                <div class="rc-bar__row">
+                    <div class="rc-bar__label">
+                        <span class="rc-bar__dot rc-bar__dot--red"></span>
+                        <span class="rc-bar__label-text">Compute outage / SLA breach</span>
+                    </div>
+                    <span class="rc-bar__value">6 cases · $1,840</span>
+                </div>
+                <div class="rc-bar__track">
+                    <div class="rc-bar__fill rc-bar__fill--red" style="width:42%;"></div>
+                </div>
+            </div>
+            <div class="rc-bar">
+                <div class="rc-bar__row">
+                    <div class="rc-bar__label">
+                        <span class="rc-bar__dot rc-bar__dot--amber"></span>
+                        <span class="rc-bar__label-text">Billing discrepancy</span>
+                    </div>
+                    <span class="rc-bar__value">4 cases · $520</span>
+                </div>
+                <div class="rc-bar__track">
+                    <div class="rc-bar__fill rc-bar__fill--amber" style="width:28%;"></div>
+                </div>
+            </div>
+            <div class="rc-bar">
+                <div class="rc-bar__row">
+                    <div class="rc-bar__label">
+                        <span class="rc-bar__dot rc-bar__dot--indigo"></span>
+                        <span class="rc-bar__label-text">Plan change / pro-rated credit</span>
+                    </div>
+                    <span class="rc-bar__value">3 cases · $680</span>
+                </div>
+                <div class="rc-bar__track">
+                    <div class="rc-bar__fill rc-bar__fill--indigo" style="width:21%;"></div>
+                </div>
+            </div>
+            <div class="rc-bar">
+                <div class="rc-bar__row">
+                    <div class="rc-bar__label">
+                        <span class="rc-bar__dot rc-bar__dot--muted"></span>
+                        <span class="rc-bar__label-text">Cancelled resource / unused time</span>
+                    </div>
+                    <span class="rc-bar__value">1 case · $80</span>
+                </div>
+                <div class="rc-bar__track">
+                    <div class="rc-bar__fill rc-bar__fill--muted" style="width:7%;"></div>
+                </div>
+            </div>
+            <div class="rc-bar__footer">
+                <span class="rc-bar__footer-label">Avg resolution time</span>
+                <span class="rc-bar__footer-value">1.8 days</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Escalation workflow -->
+    <div class="clients-table-wrap rc-panel">
+        <div class="rc-panel__header">
+            <div>
+                <div class="rc-panel__title">Escalation Workflow</div>
+                <div class="rc-panel__subtitle">Automated routing based on claim amount and SLA breach status</div>
+            </div>
+            <button class="btn btn--ghost btn--sm">Edit Rules</button>
+        </div>
+        <div class="rc-esc__list">
+            <div class="rc-esc__item">
+                <div class="rc-esc__icon rc-esc__icon--emerald">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 6.5l2.5 2.5 4.5-5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="rc-esc__info">
+                    <div class="rc-esc__info-title">Tier 1 — Auto-approve</div>
+                    <div class="rc-esc__info-desc">Claims ≤ $50 with confirmed SLA breach → instant account credit</div>
+                </div>
+                <span class="rc-esc__threshold">≤ $50</span>
+            </div>
+            <div class="rc-esc__item">
+                <div class="rc-esc__icon rc-esc__icon--indigo">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="#6366f1" stroke-width="1.1"/><path d="M6.5 4v2.5l2 1" stroke="#6366f1" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="rc-esc__info">
+                    <div class="rc-esc__info-title">Tier 2 — Support review</div>
+                    <div class="rc-esc__info-desc">Claims $50–$500 → assigned to support team · 24 h SLA</div>
+                </div>
+                <span class="rc-esc__threshold">$50–$500</span>
+            </div>
+            <div class="rc-esc__item">
+                <div class="rc-esc__icon rc-esc__icon--amber">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2l5 9H1.5l5-9z" stroke="#f59e0b" stroke-width="1.1" stroke-linejoin="round"/><path d="M6.5 5.5v2.5M6.5 9.5h.01" stroke="#f59e0b" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="rc-esc__info">
+                    <div class="rc-esc__info-title">Tier 3 — Manager escalation</div>
+                    <div class="rc-esc__info-desc">Claims &gt; $500 or customer LTV &gt; $5K → manager sign-off required</div>
+                </div>
+                <span class="rc-esc__threshold">&gt; $500</span>
+            </div>
+            <div class="rc-esc__item">
+                <div class="rc-esc__icon rc-esc__icon--red">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v4M6.5 8v4M1 6.5h4M8 6.5h4" stroke="#ef4444" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="rc-esc__info">
+                    <div class="rc-esc__info-title">Tier 4 — Executive override</div>
+                    <div class="rc-esc__info-desc">Disputed rejections or repeat claims from Enterprise clients → VP review</div>
+                </div>
+                <span class="rc-esc__threshold">Manual</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Case detail / resolution panel -->
+<div class="rc-detail" id="rcDetail">
+    <div class="rc-detail__head">
+        <div>
+            <div class="rc-detail__t"><small>RC-1042</small>Service outage caused missed deadline</div>
+            <div class="rc-detail__meta">Filed by <b>Sara Nguyen</b> · 2 hours ago · <span class="rc-detail__meta-refund">Refund requested: $98.00</span></div>
+        </div>
+        <div class="rc-detail__head-actions">
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('rcDetail').classList.remove('open')">Close</button>
+            <button class="btn btn--accent btn--sm">Assign to me</button>
+        </div>
+    </div>
+    <div class="rc-detail__body">
+        <div>
+            <div class="rc-block">
+                <h4>Customer statement</h4>
+                <p class="rc-block__statement">Our production cluster on eu-central-1 was unreachable during the compute-node failover on Nov 12 (16:42–17:09 UTC). Three Kubernetes deployments failed health checks and auto-scaled onto degraded nodes. Per our 99.95% SLA, the 27-minute breach qualifies for a service credit. We request a refund of one month's Pro compute subscription ($98) as compensation.</p>
+            </div>
+            <div class="rc-block">
+                <h4>Activity timeline</h4>
+                <div class="rc-evt"><div class="rc-evt__d"></div><div class="rc-evt__b"><div class="rc-evt__t">Sara Nguyen filed the complaint</div><div class="rc-evt__m">Nov 13 · 09:14 UTC</div></div></div>
+                <div class="rc-evt"><div class="rc-evt__d rc-evt__d--green"></div><div class="rc-evt__b"><div class="rc-evt__t">System auto-attached SLA report — Nov 12 outage matched</div><div class="rc-evt__m">Nov 13 · 09:14 UTC</div></div></div>
+                <div class="rc-evt"><div class="rc-evt__d rc-evt__d--amber"></div><div class="rc-evt__b"><div class="rc-evt__t">Ali R. acknowledged and asked for impact details</div><div class="rc-evt__m">Nov 13 · 10:22 UTC</div></div></div>
+                <div class="rc-evt"><div class="rc-evt__d"></div><div class="rc-evt__b"><div class="rc-evt__t">Customer replied with deployment logs and timeline</div><div class="rc-evt__m">Nov 13 · 11:08 UTC</div></div></div>
+            </div>
+        </div>
+        <aside>
+            <div class="rc-block">
+                <h4>Customer</h4>
+                <div class="rc-row"><span>Plan</span><b>Pro · $98/mo</b></div>
+                <div class="rc-row"><span>Tenure</span><b>1 yr 4 mo</b></div>
+                <div class="rc-row"><span>Lifetime value</span><b>$1,470</b></div>
+                <div class="rc-row"><span>Past refunds</span><b>0</b></div>
+            </div>
+            <div class="rc-block">
+                <h4>Linked records</h4>
+                <div class="rc-row"><span>Invoice</span><b>INV-1087</b></div>
+                <div class="rc-row"><span>Incident</span><b>INC-0421</b></div>
+                <div class="rc-row"><span>SLA breach</span><b class="rc-row--danger">Yes (27 min)</b></div>
+                <div class="rc-row"><span>Credit available</span><b>$32.40</b></div>
+            </div>
+            <div class="rc-block">
+                <h4>Suggested resolution</h4>
+                <div class="rc-block__suggestion">Per SLA breach (27m beyond 99.95% threshold), policy recommends <b>15% credit ($14.70)</b> on the next invoice. Customer requested $98.00 — escalate to manager for amounts over $50.</div>
+            </div>
+        </aside>
+    </div>
+    <div class="rc-resolve">
+        <div class="rc-resolve__row">
+            <div class="rc-resolve__label">Resolve as:</div>
+            <div class="rc-resolve__opts" id="rcOpts">
+                <button class="rc-resolve__opt sel">Account credit · $14.70</button>
+                <button class="rc-resolve__opt">Refund · $14.70</button>
+                <button class="rc-resolve__opt">Refund · $98.00 (override)</button>
+                <button class="rc-resolve__opt">Decline</button>
+            </div>
+        </div>
+        <div class="rc-resolve__actions">
+            <button class="btn btn--ghost btn--sm">Save & continue</button>
+            <button class="btn btn--primary btn--sm">Apply resolution</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+  document.querySelectorAll('.clients-table-wrap .btn').forEach(function(b){
+    if(b.textContent.trim()==='View'||b.textContent.trim()==='Open'){
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var d=document.getElementById('rcDetail');
+        d.classList.add('open');
+        d.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    }
+  });
+  document.querySelectorAll('.rc-resolve__opt').forEach(function(o){
+    o.addEventListener('click',function(){
+      o.parentElement.querySelectorAll('.rc-resolve__opt').forEach(x=>x.classList.remove('sel'));
+      o.classList.add('sel');
+    });
+  });
+})();
+</script>
+
+<!-- ── SLA Breach Calculator & Credit Estimator ── -->
+<div class="ds-panel" style="margin-top:24px;">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">SLA Breach Calculator &amp; Credit Estimator</h2>
+        <span class="badge badge--warning" style="font-size:11px;">Finance tool</span>
+    </div>
+    <p class="rc-sla-description">Automatically correlates downtime events from the monitoring pipeline with SLA tier commitments to pre-calculate credit exposure before claims are filed.</p>
+
+    <div class="rc-sla-stats">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Projected credit exposure</div>
+            <div class="ds-stat-card__value">$2,840</div>
+            <div class="ds-stat-card__sub rc-stat-sub--red">Based on current breaches</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Auto-approved (≤ $50)</div>
+            <div class="ds-stat-card__value">$320</div>
+            <div class="ds-stat-card__sub rc-stat-sub--green">8 claims processed</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Pending human review</div>
+            <div class="ds-stat-card__value">$1,680</div>
+            <div class="ds-stat-card__sub rc-stat-sub--amber">3 claims queued</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Dispute win rate</div>
+            <div class="ds-stat-card__value">91.2%</div>
+            <div class="ds-stat-card__sub rc-stat-sub--green">Resolved in tenant's favor</div>
+        </div>
+    </div>
+
+    <!-- Active breach impact table -->
+    <div class="clients-table-wrap" style="margin-bottom:16px;">
+        <table class="tenant-table">
+            <thead>
+                <tr>
+                    <th>Incident</th>
+                    <th>Service affected</th>
+                    <th>Downtime</th>
+                    <th>SLA tier</th>
+                    <th>Guaranteed uptime</th>
+                    <th>Actual uptime</th>
+                    <th>Estimated credit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rc-cell--bold">INC-2026-041</td>
+                    <td>Compute · us-east-1</td>
+                    <td>47 min</td>
+                    <td>Business (99.9%)</td>
+                    <td>99.9%</td>
+                    <td class="rc-cell--red">99.84%</td>
+                    <td class="rc-cell--bold">$1,240</td>
+                </tr>
+                <tr>
+                    <td class="rc-cell--bold">INC-2026-038</td>
+                    <td>Database · pg-cluster-02</td>
+                    <td>12 min</td>
+                    <td>Enterprise (99.99%)</td>
+                    <td>99.99%</td>
+                    <td class="rc-cell--amber">99.97%</td>
+                    <td class="rc-cell--bold">$890</td>
+                </tr>
+                <tr>
+                    <td class="rc-cell--bold">INC-2026-035</td>
+                    <td>CDN · eu-west edge</td>
+                    <td>8 min</td>
+                    <td>Pro (99.5%)</td>
+                    <td>99.5%</td>
+                    <td class="rc-cell--green">99.62%</td>
+                    <td class="rc-cell--dim">$0 (within SLA)</td>
+                </tr>
+                <tr>
+                    <td class="rc-cell--bold">INC-2026-033</td>
+                    <td>Object storage · s3-compat</td>
+                    <td>22 min</td>
+                    <td>Business (99.9%)</td>
+                    <td>99.9%</td>
+                    <td class="rc-cell--red">99.85%</td>
+                    <td class="rc-cell--bold">$710</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Credit schedule & policies -->
+    <div class="rc-rules-grid">
+        <div class="rc-rules-card">
+            <div class="rc-rules-card__title">Credit Schedule by Breach Severity</div>
+            <div class="rc-rules-card__list">
+                <div class="rc-rules-card__row">
+                    <span>Uptime 99.0% – 99.9% (missed by &lt; 0.9%)</span>
+                    <span class="rc-rules-card__row-val">10% monthly credit</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Uptime 95.0% – 99.0% (major breach)</span>
+                    <span class="rc-rules-card__row-val">25% monthly credit</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Uptime &lt; 95.0% (critical outage)</span>
+                    <span class="rc-rules-card__row-val">50% monthly credit</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Extended outage (&gt; 24 h cumulative)</span>
+                    <span class="rc-rules-card__row-val">100% monthly credit</span>
+                </div>
+            </div>
+        </div>
+        <div class="rc-rules-card">
+            <div class="rc-rules-card__title">Automation Rules</div>
+            <div class="rc-rules-card__list">
+                <div class="rc-rules-card__row">
+                    <span>Auto-approve credits ≤ $50</span>
+                    <span class="rc-rules-card__row-val--green">Enabled</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Proactive credit (no claim needed)</span>
+                    <span class="rc-rules-card__row-val--green">Enabled</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Link incident to monitoring event</span>
+                    <span class="rc-rules-card__row-val--green">Enabled</span>
+                </div>
+                <div class="rc-rules-card__row">
+                    <span>Notify finance on projected exposure &gt; $500</span>
+                    <span class="rc-rules-card__row-val--green">Enabled</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

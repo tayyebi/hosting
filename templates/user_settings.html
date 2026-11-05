@@ -1,0 +1,822 @@
+{{define "user-settings"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <style>
+    /* ── Connected Services ── */
+    .st-channel {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, rgba(0,0,0,.08));
+        border-radius: 10px;
+        margin-bottom: 8px;
+    }
+    .st-channel__icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-secondary, rgba(0,0,0,.03));
+        border-radius: 8px;
+        flex-shrink: 0;
+        color: var(--text-secondary, #555);
+    }
+    .st-channel__info {
+        flex: 1;
+        min-width: 0;
+    }
+    .st-channel__info .st-card__sub {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .st-channel__right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .st-btn--xs {
+        font-size: 11.5px !important;
+        padding: 3px 10px !important;
+        min-height: unset !important;
+    }
+    .st-btn--muted { opacity: .65; }
+    .st-btn--muted:hover { opacity: 1; }
+
+    /* ── Section transition ── */
+    .settings-section--active {
+        animation: st-fadeIn 250ms ease both;
+    }
+    @keyframes st-fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Focus-visible outlines ── */
+    .settings-nav__item:focus-visible,
+    .st-btn-primary:focus-visible,
+    .st-btn-secondary:focus-visible,
+    .st-btn-danger:focus-visible,
+    .st-theme-opt:focus-visible,
+    .st-apikey__revoke:focus-visible,
+    .st-toggle input:focus-visible + .st-toggle__track {
+        outline: 2px solid #0071e3;
+        outline-offset: 2px;
+    }
+    .st-input:focus-visible {
+        border-color: #0071e3;
+        box-shadow: 0 0 0 3px rgba(0,113,227,.15);
+    }
+    .settings-nav__item--danger:focus-visible {
+        outline-color: #ff3b30;
+    }
+
+    /* ── Responsive: narrow viewports ── */
+    @media (max-width: 768px) {
+        .settings-sidebar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .settings-sidebar__title {
+            width: 100%;
+        }
+        .settings-sidebar > div[style] {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        .st-theme-picker {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .st-apikey {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .st-apikey > div:last-child {
+            align-self: flex-end;
+        }
+        .st-channel {
+            flex-wrap: wrap;
+        }
+        .st-channel__right {
+            width: 100%;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+        .st-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .st-avatar-row {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+    </style>
+    <script>
+        (function(){
+            var t = localStorage.getItem('platform_theme') || 'light';
+            var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+            document.documentElement.setAttribute('data-theme', r);
+        })();
+    </script>
+</head>
+<body class="dashboard-body">
+<div class="usr-settings-page">
+
+    <!-- Topbar -->
+    <header class="usr-topbar">
+        <div class="usr-topbar__left">
+            <a href="javascript:history.back()" class="usr-back-btn" title="Go back">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+            <div class="usr-breadcrumb">
+                <span class="usr-breadcrumb__root">{{.User.Name}}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="usr-breadcrumb__current">Settings</span>
+            </div>
+        </div>
+        <div class="usr-topbar__right">
+            <span class="usr-role-badge">{{.User.Role}}</span>
+            <div class="usr-topbar__avatar">{{slice .User.Name 0 1}}</div>
+        </div>
+    </header>
+
+    <!-- Body -->
+    <div class="settings-layout">
+
+        <!-- Settings sidebar nav -->
+        <aside class="settings-sidebar" role="tablist" aria-label="Settings sections">
+            <div class="settings-sidebar__title">Account</div>
+            <button class="settings-nav__item settings-nav__item--active" id="tab-sec-profile" role="tab" aria-selected="true" aria-controls="sec-profile" onclick="switchSection(this,'sec-profile')" onkeydown="navKeydown(event)">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.1"/><path d="M2 13c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                Profile
+            </button>
+            <button class="settings-nav__item" id="tab-sec-security" role="tab" aria-selected="false" aria-controls="sec-security" onclick="switchSection(this,'sec-security')" onkeydown="navKeydown(event)">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="6.5" width="9" height="7" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 6.5V4.5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                Security
+            </button>
+            <button class="settings-nav__item" id="tab-sec-prefs" role="tab" aria-selected="false" aria-controls="sec-prefs" onclick="switchSection(this,'sec-prefs')" onkeydown="navKeydown(event)">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1v1.2M7.5 12.8V14M1 7.5h1.2M12.8 7.5H14M3.1 3.1l.85.85M11.05 11.05l.85.85M3.1 11.9l.85-.85M11.05 3.95l.85-.85" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                Preferences
+            </button>
+            <button class="settings-nav__item" id="tab-sec-apikeys" role="tab" aria-selected="false" aria-controls="sec-apikeys" onclick="switchSection(this,'sec-apikeys')" onkeydown="navKeydown(event)">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="5.5" cy="8.5" r="3" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 6.5L13 1M11 3l1.5 1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                API Keys
+            </button>
+            <button class="settings-nav__item" id="tab-sec-connected" role="tab" aria-selected="false" aria-controls="sec-connected" onclick="switchSection(this,'sec-connected')" onkeydown="navKeydown(event)">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M5.5 9.5l4-4M4 11a2 2 0 01-2-2v0a2 2 0 012-2l1.5 0M11 4a2 2 0 012 2v0a2 2 0 01-2 2l-1.5 0" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Connected Services
+            </button>
+
+            <div style="margin-top:auto;padding-top:24px;">
+                <a href="/logout" class="settings-nav__item settings-nav__item--danger">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M5 2H3a1 1 0 00-1 1v9a1 1 0 001 1h2M10 10l3-2.5L10 5M13 7.5H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Sign out
+                </a>
+            </div>
+        </aside>
+
+        <!-- Settings content -->
+        <div class="settings-content">
+
+            <!-- Profile -->
+            <section class="settings-section settings-section--active" id="sec-profile" role="tabpanel" aria-labelledby="tab-sec-profile">
+                <h2 class="settings-section__title">Profile</h2>
+                <p class="settings-section__sub">Manage your name, email address and avatar.</p>
+
+                <div class="st-avatar-row">
+                    <div class="st-avatar">{{slice .User.Name 0 1}}</div>
+                    <div class="st-avatar-meta">
+                        <div class="st-avatar-name">{{.User.Name}}</div>
+                        <div class="st-avatar-hint">JPG, PNG or GIF · max 2 MB</div>
+                    </div>
+                    <button class="st-btn-secondary">Upload photo</button>
+                </div>
+
+                <div class="st-group">
+                    <label class="st-label">Display name</label>
+                    <input class="st-input" type="text" value="{{.User.Name}}" />
+                </div>
+                <div class="st-group">
+                    <label class="st-label">Email address</label>
+                    <input class="st-input" type="email" value="{{.User.Email}}" />
+                </div>
+                <div class="st-group">
+                    <label class="st-label">Role</label>
+                    <input class="st-input" type="text" value="{{.User.Role}}" readonly />
+                </div>
+                <div class="st-btn-row">
+                    <button class="st-btn-primary">Save changes</button>
+                </div>
+            </section>
+
+            <!-- Security -->
+            <section class="settings-section" id="sec-security" role="tabpanel" aria-labelledby="tab-sec-security">
+                <h2 class="settings-section__title">Security</h2>
+                <p class="settings-section__sub">Manage your password, two-factor authentication and active sessions.</p>
+
+                <div id="pw-error" class="alert alert--error" hidden></div>
+                <div id="pw-success" class="alert alert--success" hidden>Password updated successfully.</div>
+                <div class="st-group">
+                    <label class="st-label">Current password</label>
+                    <input class="st-input" id="pw-current" type="password" placeholder="••••••••" autocomplete="current-password" />
+                </div>
+                <div class="st-group">
+                    <label class="st-label">New password</label>
+                    <input class="st-input" id="pw-new" type="password" placeholder="Min. 8 characters" autocomplete="new-password" />
+                </div>
+                <div class="st-group">
+                    <label class="st-label">Confirm new password</label>
+                    <input class="st-input" id="pw-confirm" type="password" placeholder="••••••••" autocomplete="new-password" />
+                </div>
+                <div class="st-btn-row" style="margin-bottom:0;">
+                    <button class="st-btn-primary" onclick="changePassword(this)">Update password</button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Two-factor authentication</h3>
+                <div class="st-card">
+                    <div>
+                        <div class="st-card__label">Authenticator app</div>
+                        <div class="st-card__sub">Use an app like 1Password or Authy</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="st-status st-status--off">Not enabled</span>
+                        <button class="st-btn-secondary">Enable</button>
+                    </div>
+                </div>
+                <div class="st-card">
+                    <div>
+                        <div class="st-card__label">Passkeys</div>
+                        <div class="st-card__sub">0 keys registered</div>
+                    </div>
+                    <button class="st-btn-secondary">Add passkey</button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Active sessions</h3>
+                <div id="sessions-list">
+                    <div class="st-card"><div class="st-card__sub">Loading sessions…</div></div>
+                </div>
+                <div class="st-btn-row">
+                    <button class="st-btn-danger" onclick="revokeAllSessions(this)">Sign out all devices</button>
+                </div>
+            </section>
+
+            <!-- Preferences -->
+            <section class="settings-section" id="sec-prefs" role="tabpanel" aria-labelledby="tab-sec-prefs">
+                <h2 class="settings-section__title">Preferences</h2>
+                <p class="settings-section__sub">Customise the look and behaviour of the dashboard.</p>
+
+                <h3 class="st-subheading">Theme</h3>
+                <div class="st-theme-picker">
+                    <button class="st-theme-opt" data-theme="dark" onclick="setTheme('dark')">
+                        <span class="st-theme-opt__preview st-theme-opt__preview--dark"></span>
+                        <span class="st-theme-opt__label">Dark</span>
+                    </button>
+                    <button class="st-theme-opt" data-theme="light" onclick="setTheme('light')">
+                        <span class="st-theme-opt__preview st-theme-opt__preview--light"></span>
+                        <span class="st-theme-opt__label">Light</span>
+                    </button>
+                    <button class="st-theme-opt" data-theme="system" onclick="setTheme('system')">
+                        <span class="st-theme-opt__preview st-theme-opt__preview--system"></span>
+                        <span class="st-theme-opt__label">System</span>
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Appearance</h3>
+                <div class="st-toggle-row">
+                    <div>
+                        <div class="st-toggle-label">Compact density</div>
+                        <div class="st-toggle-sub">Reduce spacing in tables and lists</div>
+                    </div>
+                    <label class="st-toggle"><input type="checkbox" /><span class="st-toggle__track"></span></label>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Notifications</h3>
+                <div class="st-toggle-row">
+                    <div>
+                        <div class="st-toggle-label">Email alerts</div>
+                        <div class="st-toggle-sub">Critical platform events</div>
+                    </div>
+                    <label class="st-toggle"><input type="checkbox" {{if .Prefs.EmailNotifications}}checked{{end}} id="pref-email-notif" /><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="st-toggle-row">
+                    <div>
+                        <div class="st-toggle-label">Replica warnings</div>
+                        <div class="st-toggle-sub">When a replica falls behind</div>
+                    </div>
+                    <label class="st-toggle"><input type="checkbox" checked /><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="st-toggle-row">
+                    <div>
+                        <div class="st-toggle-label">New tenant sign-ups</div>
+                        <div class="st-toggle-sub">Notify on registration</div>
+                    </div>
+                    <label class="st-toggle"><input type="checkbox" /><span class="st-toggle__track"></span></label>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Timezone</h3>
+                <div class="st-group">
+                    <select class="st-input st-select" id="pref-timezone">
+                        <option value="UTC" {{if eq .Prefs.Timezone "UTC"}}selected{{end}}>UTC+0 — London</option>
+                        <option value="Asia/Tehran" {{if eq .Prefs.Timezone "Asia/Tehran"}}selected{{end}}>UTC+3:30 — Tehran</option>
+                        <option value="America/New_York" {{if eq .Prefs.Timezone "America/New_York"}}selected{{end}}>UTC-5 — New York</option>
+                        <option value="America/Los_Angeles" {{if eq .Prefs.Timezone "America/Los_Angeles"}}selected{{end}}>UTC-8 — Los Angeles</option>
+                        <option value="Asia/Singapore" {{if eq .Prefs.Timezone "Asia/Singapore"}}selected{{end}}>UTC+8 — Singapore</option>
+                    </select>
+                </div>
+                <div class="st-btn-row">
+                    <button class="st-btn-primary" onclick="savePrefs(this)">Save preferences</button>
+                </div>
+            </section>
+
+            <!-- API Keys -->
+            <section class="settings-section" id="sec-apikeys" role="tabpanel" aria-labelledby="tab-sec-apikeys">
+                <h2 class="settings-section__title">API Keys</h2>
+                <p class="settings-section__sub">Personal tokens for authenticating against the Platform API. Keys inherit your permissions — keep them secret.</p>
+
+                <div id="apikeys-list">
+                    <div class="st-card"><div class="st-card__sub">Loading…</div></div>
+                </div>
+
+                <!-- Inline create form (hidden until Generate is clicked) -->
+                <div id="apikey-create-form" style="display:none;margin-top:14px;">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input id="apikey-name-input" type="text" maxlength="100" placeholder="Key name (e.g. CI pipeline)" class="st-input" style="flex:1;min-width:180px;">
+                        <button class="st-btn-primary st-btn--xs" onclick="submitCreateKey()">Create</button>
+                        <button class="st-btn-secondary st-btn--xs" onclick="cancelCreateKey()">Cancel</button>
+                    </div>
+                    <div id="apikey-create-error" style="color:var(--color-danger,#e74c3c);font-size:12px;margin-top:6px;display:none;"></div>
+                </div>
+
+                <!-- New key reveal (shown once after creation) -->
+                <div id="apikey-reveal" style="display:none;margin-top:14px;padding:12px 14px;background:var(--bg-card,#1e2230);border-radius:8px;border:1px solid var(--color-warning,#f0ad4e);">
+                    <div style="font-size:12px;color:var(--color-warning,#f0ad4e);margin-bottom:6px;font-weight:600;">Copy this key now — it will not be shown again.</div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <code id="apikey-reveal-value" style="flex:1;font-size:12px;word-break:break-all;background:var(--bg-input,#131620);padding:6px 10px;border-radius:5px;"></code>
+                        <button class="st-btn-secondary st-btn--xs" onclick="copyRevealedKey(this)">Copy</button>
+                    </div>
+                </div>
+
+                <div class="st-btn-row" style="margin-top:8px;">
+                    <button id="apikey-generate-btn" class="st-btn-primary" onclick="showCreateKeyForm()">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        Generate new key
+                    </button>
+                </div>
+            </section>
+
+            <!-- Connected Services -->
+            <section class="settings-section" id="sec-connected" role="tabpanel" aria-labelledby="tab-sec-connected">
+                <h2 class="settings-section__title">Connected Services</h2>
+                <p class="settings-section__sub">Third-party integrations and notification channels linked to your account.</p>
+
+                <h3 class="st-subheading">Notification Channels</h3>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="3" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M1 4.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">Email</div>
+                        <div class="st-card__sub">admin@platform.io &middot; All alerts</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <span class="st-apikey__badge st-apikey__badge--active">Active</span>
+                        <button class="st-btn-secondary st-btn--xs">Edit</button>
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Remove</button>
+                    </div>
+                </div>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 3.5h11l-1.5 7H3.5L2 3.5zM5.5 12.5h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5v2M9.5 10.5v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">Slack</div>
+                        <div class="st-card__sub">#platform-ops &middot; Critical only</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <span class="st-apikey__badge st-apikey__badge--active">Active</span>
+                        <button class="st-btn-secondary st-btn--xs">Edit</button>
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Remove</button>
+                    </div>
+                </div>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5v4M7.5 9.5v4M1.5 7.5h4M9.5 7.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">PagerDuty</div>
+                        <div class="st-card__sub">Platform On-Call &middot; P1 incidents</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <span class="st-apikey__badge st-apikey__badge--active">Active</span>
+                        <button class="st-btn-secondary st-btn--xs">Edit</button>
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Remove</button>
+                    </div>
+                </div>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 2l5 5M8 8l5 5M13 2L8 7M7 8L2 13" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">Webhook</div>
+                        <div class="st-card__sub">https://hooks.internal/alerts &middot; All alerts</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <span class="st-apikey__badge st-apikey__badge--revoked">Paused</span>
+                        <button class="st-btn-secondary st-btn--xs">Edit</button>
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Remove</button>
+                    </div>
+                </div>
+
+                <div class="st-btn-row" style="margin-top:8px;">
+                    <button class="st-btn-primary">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        Add Channel
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <h3 class="st-subheading">Connected Apps</h3>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.18 1 1.5 3.68 1.5 7c0 2.65 1.72 4.9 4.1 5.7.3.05.41-.13.41-.29v-1.02c-1.67.36-2.02-.8-2.02-.8-.27-.7-.67-.88-.67-.88-.55-.37.04-.37.04-.37.6.04.92.62.92.62.54.92 1.41.66 1.76.5.05-.39.21-.66.38-.8-1.33-.15-2.73-.67-2.73-2.97 0-.66.23-1.19.62-1.61-.06-.15-.27-.76.06-1.59 0 0 .5-.16 1.65.62.48-.13.99-.2 1.5-.2s1.02.07 1.5.2c1.15-.78 1.65-.62 1.65-.62.33.83.12 1.44.06 1.59.39.42.62.95.62 1.61 0 2.31-1.4 2.82-2.74 2.97.22.19.41.56.41 1.12v1.67c0 .16.11.35.41.29A6.01 6.01 0 0013.5 7c0-3.32-2.68-6-6-6z" fill="currentColor"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">GitHub</div>
+                        <div class="st-card__sub">@platform-admin &middot; Connected Apr 1</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Disconnect</button>
+                    </div>
+                </div>
+
+                <div class="st-channel">
+                    <div class="st-channel__icon">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 2h10v11h-10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M5 5.5h5M5 8h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="st-channel__info">
+                        <div class="st-card__label">Terraform Cloud</div>
+                        <div class="st-card__sub">org/platform &middot; Connected Mar 15</div>
+                    </div>
+                    <div class="st-channel__right">
+                        <button class="st-btn-secondary st-btn--xs st-btn--muted">Disconnect</button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/dashboard.js"></script>
+<script>
+var navBtns = [];
+
+function switchSection(btn, id) {
+    document.querySelectorAll('[role="tab"]').forEach(function(b) {
+        b.classList.remove('settings-nav__item--active');
+        b.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.settings-section').forEach(function(s) {
+        s.classList.remove('settings-section--active');
+    });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-selected', 'true');
+    var sec = document.getElementById(id);
+    sec.classList.add('settings-section--active');
+    btn.focus();
+    if (id === 'sec-apikeys') loadAPIKeys();
+    if (id === 'sec-security') loadSessions();
+}
+
+function navKeydown(e) {
+    if (!navBtns.length) navBtns = Array.from(document.querySelectorAll('[role="tab"]'));
+    var idx = navBtns.indexOf(e.currentTarget);
+    var next = -1;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        next = (idx + 1) % navBtns.length;
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        next = (idx - 1 + navBtns.length) % navBtns.length;
+    } else if (e.key === 'Home') {
+        next = 0;
+    } else if (e.key === 'End') {
+        next = navBtns.length - 1;
+    }
+    if (next >= 0) {
+        e.preventDefault();
+        navBtns[next].click();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.activeElement && document.activeElement.blur();
+    }
+});
+
+// Mark active theme option on load
+document.addEventListener('DOMContentLoaded', function() {
+    var t = localStorage.getItem('platform_theme') || 'dark';
+    document.querySelectorAll('.st-theme-opt').forEach(function(b) {
+        b.classList.toggle('st-theme-opt--active', b.dataset.theme === t);
+    });
+});
+
+function savePrefs(btn) {
+    var payload = {
+        timezone: document.getElementById('pref-timezone').value,
+        notifications_enabled: document.getElementById('pref-email-notif').checked
+    };
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving\u2026';
+    fetch('/api/user/settings', {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        btn.disabled = false;
+        btn.textContent = d.error ? 'Error' : 'Saved';
+        setTimeout(function() { btn.textContent = orig; }, 2000);
+    }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Error';
+        setTimeout(function() { btn.textContent = orig; }, 2000);
+    });
+}
+
+function changePassword(btn) {
+    var cur = document.getElementById('pw-current').value;
+    var nw  = document.getElementById('pw-new').value;
+    var con = document.getElementById('pw-confirm').value;
+    var errEl = document.getElementById('pw-error');
+    var okEl  = document.getElementById('pw-success');
+    errEl.hidden = true; okEl.hidden = true;
+    if (!cur || !nw || !con) { errEl.textContent = 'All fields are required.'; errEl.hidden = false; return; }
+    var orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Saving\u2026';
+    fetch('/api/user/password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({current: cur, new: nw, confirm: con})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        btn.disabled = false; btn.textContent = orig;
+        if (d.error) { errEl.textContent = d.error; errEl.hidden = false; }
+        else {
+            okEl.hidden = false;
+            document.getElementById('pw-current').value = '';
+            document.getElementById('pw-new').value = '';
+            document.getElementById('pw-confirm').value = '';
+        }
+    }).catch(function() {
+        btn.disabled = false; btn.textContent = orig;
+        errEl.textContent = 'Network error. Please try again.'; errEl.hidden = false;
+    });
+}
+
+function revokeKey(btn) {
+    if (!confirm('Revoke this API key? This cannot be undone.')) return;
+    var id = btn.dataset.keyId;
+    btn.disabled = true;
+    fetch('/api/user/apikeys/' + id, {method: 'DELETE'})
+        .then(function(r) { if (r.ok) btn.closest('.st-apikey').remove(); else btn.disabled = false; })
+        .catch(function() { btn.disabled = false; });
+}
+
+// ── Active sessions ──────────────────────────────────────────
+function loadSessions() {
+    fetch('/api/user/sessions')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { renderSessions(d.sessions || []); })
+        .catch(function() {
+            document.getElementById('sessions-list').innerHTML =
+                '<div class="st-card"><div class="st-card__sub">Failed to load sessions.</div></div>';
+        });
+}
+
+function renderSessions(sessions) {
+    var el = document.getElementById('sessions-list');
+    if (!sessions.length) {
+        el.innerHTML = '<div class="st-card"><div class="st-card__sub">No active sessions found.</div></div>';
+        return;
+    }
+    el.innerHTML = sessions.map(function(s) {
+        var age = relativeTime(s.created_at);
+        var ua  = abbreviateUA(s.user_agent);
+        var ip  = s.ip || 'Unknown IP';
+        var badge = s.is_current
+            ? '<span class="st-status st-status--on">Current</span>'
+            : '<button class="st-btn-secondary" style="font-size:12px;padding:3px 10px;" onclick="revokeSession(' + s.id + ',this)">Revoke</button>';
+        return '<div class="st-card" style="gap:10px;">' +
+            '<div style="display:flex;align-items:center;gap:12px;">' +
+            '<span class="st-session-dot' + (s.is_current ? ' st-session-dot--active' : '') + '"></span>' +
+            '<div><div class="st-card__label">' + escHtml(ip) + '</div>' +
+            '<div class="st-card__sub">' + escHtml(ua) + ' &middot; ' + age + '</div></div>' +
+            '</div>' + badge + '</div>';
+    }).join('');
+}
+
+function revokeSession(id, btn) {
+    if (!confirm('Revoke this session?')) return;
+    btn.disabled = true;
+    fetch('/api/user/sessions/' + id, {method: 'DELETE'})
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.status === 'revoked') {
+                btn.closest('.st-card').remove();
+            } else {
+                btn.disabled = false;
+            }
+        })
+        .catch(function() { btn.disabled = false; });
+}
+
+function revokeAllSessions(btn) {
+    if (!confirm('Sign out of all devices? You will be redirected to the login page.')) return;
+    btn.disabled = true;
+    fetch('/api/user/sessions/revoke-all', {method: 'POST', headers: {'Content-Type': 'application/json'}})
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.status === 'all_revoked') {
+                window.location.href = '/login';
+            } else {
+                btn.disabled = false;
+            }
+        })
+        .catch(function() { btn.disabled = false; });
+}
+
+function relativeTime(iso) {
+    var ms = Date.now() - new Date(iso).getTime();
+    var m = Math.floor(ms / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return m + 'm ago';
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
+}
+
+function abbreviateUA(ua) {
+    if (!ua) return 'Unknown browser';
+    if (/Chrome/.test(ua) && !/Edg/.test(ua)) return 'Chrome';
+    if (/Edg/.test(ua)) return 'Edge';
+    if (/Firefox/.test(ua)) return 'Firefox';
+    if (/Safari/.test(ua) && !/Chrome/.test(ua)) return 'Safari';
+    if (/curl/.test(ua)) return 'curl';
+    return ua.substring(0, 40);
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Load sessions when Security tab is opened.
+var _sessionsLoaded = false;
+document.querySelectorAll('[aria-controls="sec-security"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (!_sessionsLoaded) { _sessionsLoaded = true; loadSessions(); }
+    });
+});
+
+// ── API Keys ──────────────────────────────────────────────────
+var _apiKeysLoaded = false;
+
+function loadAPIKeys() {
+    if (_apiKeysLoaded) return;
+    _apiKeysLoaded = true;
+    fetch('/api/user/api-keys')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { renderAPIKeys(d.keys || []); })
+        .catch(function() {
+            document.getElementById('apikeys-list').innerHTML =
+                '<div class="st-card"><div class="st-card__sub">Failed to load API keys.</div></div>';
+        });
+}
+
+function renderAPIKeys(keys) {
+    var el = document.getElementById('apikeys-list');
+    if (!keys.length) {
+        el.innerHTML = '<div class="st-card"><div class="st-card__sub">No API keys yet.</div></div>';
+        return;
+    }
+    el.innerHTML = keys.map(function(k) {
+        var lastUsed = k.last_used_at ? relativeTime(k.last_used_at) : 'never';
+        return '<div class="st-apikey">' +
+            '<div>' +
+            '<div class="st-apikey__name">' + escapeHtml(k.name) + '</div>' +
+            '<div class="st-apikey__meta">Created ' + relativeTime(k.created_at) + ' · Last used ' + lastUsed + '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<span class="st-apikey__badge st-apikey__badge--active">Active</span>' +
+            '<button class="st-apikey__revoke" data-key-id="' + k.id + '" onclick="revokeKey(this)">Revoke</button>' +
+            '</div></div>';
+    }).join('');
+}
+
+function revokeKey(btn) {
+    if (!confirm('Revoke this API key? Any integrations using it will stop working.')) return;
+    btn.disabled = true;
+    var id = btn.dataset.keyId;
+    fetch('/api/user/api-keys/' + id, {method: 'DELETE'})
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.status === 'revoked') {
+                btn.closest('.st-apikey').remove();
+                var el = document.getElementById('apikeys-list');
+                if (!el.querySelector('.st-apikey')) {
+                    el.innerHTML = '<div class="st-card"><div class="st-card__sub">No API keys yet.</div></div>';
+                }
+            } else { btn.disabled = false; }
+        })
+        .catch(function() { btn.disabled = false; });
+}
+
+function showCreateKeyForm() {
+    document.getElementById('apikey-create-form').style.display = '';
+    document.getElementById('apikey-generate-btn').style.display = 'none';
+    document.getElementById('apikey-reveal').style.display = 'none';
+    document.getElementById('apikey-name-input').focus();
+}
+
+function cancelCreateKey() {
+    document.getElementById('apikey-create-form').style.display = 'none';
+    document.getElementById('apikey-generate-btn').style.display = '';
+    document.getElementById('apikey-create-error').style.display = 'none';
+    document.getElementById('apikey-name-input').value = '';
+}
+
+function submitCreateKey() {
+    var name = document.getElementById('apikey-name-input').value.trim();
+    var errEl = document.getElementById('apikey-create-error');
+    if (!name) { errEl.textContent = 'Please enter a name for this key.'; errEl.style.display = ''; return; }
+    errEl.style.display = 'none';
+    fetch('/api/user/api-keys', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name})
+    })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.key) {
+                cancelCreateKey();
+                document.getElementById('apikey-reveal-value').textContent = d.key;
+                document.getElementById('apikey-reveal').style.display = '';
+                _apiKeysLoaded = false;
+                loadAPIKeys();
+            } else {
+                errEl.textContent = d.error || 'Failed to create key.';
+                errEl.style.display = '';
+            }
+        })
+        .catch(function() { errEl.textContent = 'Request failed.'; errEl.style.display = ''; });
+}
+
+function copyRevealedKey(btn) {
+    var val = document.getElementById('apikey-reveal-value').textContent;
+    navigator.clipboard.writeText(val).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+    });
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
+{{end}}

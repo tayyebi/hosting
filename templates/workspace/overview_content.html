@@ -1,0 +1,951 @@
+{{define "workspace-page-content"}}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Overview page — workspace dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+.ov {
+    --ov-accent: #6366f1;
+    --ov-accent-2: #8b5cf6;
+    --ov-accent-3: #06b6d4;
+    --ov-accent-4: #ec4899;
+    --ov-text: #0f172a;
+    --ov-text-dim: #64748b;
+    --ov-card: #ffffff;
+    --ov-card-border: rgba(15, 23, 42, 0.06);
+    --ov-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+    --ov-bg: transparent;
+    position: relative;
+    margin: -24px -32px 0;
+    padding: 0 32px 48px;
+    min-height: calc(100vh - 60px);
+    overflow: hidden;
+}
+[data-theme="dark"] .ov {
+    --ov-text: #f1f5f9;
+    --ov-text-dim: #94a3b8;
+    --ov-card: #161a29;
+    --ov-card-border: rgba(255,255,255,0.06);
+    --ov-card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.35);
+}
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.ov-hero {
+    position: relative;
+    padding: 88px 40px 72px;
+    margin: 0 -32px 40px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.ov-hero__inner { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
+
+.ov-greeting {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    border-radius: 100px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ov-accent);
+    letter-spacing: 0.3px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: ovFadeUp 0.7s cubic-bezier(.2,.9,.3,1) 0.15s forwards;
+}
+[data-theme="dark"] .ov-greeting { background: rgba(22, 26, 41, 0.6); color: #a5b4fc; border-color: rgba(165, 180, 252, 0.15); }
+.ov-greeting__dot { width: 7px; height: 7px; background: var(--ov-accent); border-radius: 50%; box-shadow: 0 0 0 4px rgba(99,102,241,.15); animation: ovPulse 2s ease-in-out infinite; }
+
+.ov-hero__title {
+    font-size: 56px;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin: 20px 0 16px;
+    color: var(--ov-text);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ovFadeUp 0.9s cubic-bezier(.2,.9,.3,1) 0.3s forwards;
+}
+.ov-hero__sub {
+    font-size: 17.5px;
+    line-height: 1.55;
+    color: var(--ov-text-dim);
+    max-width: 680px;
+    margin: 0 0 36px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ovFadeUp 0.9s cubic-bezier(.2,.9,.3,1) 0.45s forwards;
+}
+
+/* Quick stats row */
+.ov-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+}
+@media (max-width: 900px) { .ov-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.ov-stat {
+    position: relative;
+    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--ov-card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: ovFadeUp 0.8s cubic-bezier(.2,.9,.3,1) forwards;
+    transition: transform 0.25s cubic-bezier(.2,.9,.3,1), box-shadow 0.25s;
+}
+[data-theme="dark"] .ov-stat { background: rgba(22,26,41,0.6); }
+.ov-stat:nth-child(1) { animation-delay: 0.60s; }
+.ov-stat:nth-child(2) { animation-delay: 0.70s; }
+.ov-stat:nth-child(3) { animation-delay: 0.80s; }
+.ov-stat:nth-child(4) { animation-delay: 0.90s; }
+.ov-stat:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(99,102,241,0.15); }
+
+.ov-stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 60%; height: 2px;
+    background: linear-gradient(90deg, var(--ov-accent), transparent);
+    opacity: 0.8;
+}
+.ov-stat--green::before { background: linear-gradient(90deg, #10b981, transparent); }
+.ov-stat--orange::before { background: linear-gradient(90deg, #f59e0b, transparent); }
+.ov-stat--pink::before { background: linear-gradient(90deg, #ec4899, transparent); }
+
+.ov-stat__label { font-size: 11.5px; font-weight: 600; color: var(--ov-text-dim); text-transform: uppercase; letter-spacing: 0.6px; }
+.ov-stat__val { font-size: 28px; font-weight: 700; color: var(--ov-text); margin-top: 6px; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ov-stat__unit { font-size: 14px; font-weight: 500; color: var(--ov-text-dim); margin-left: 3px; }
+.ov-stat__delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; margin-top: 6px; padding: 2px 7px; border-radius: 20px; }
+.ov-stat__delta--up { color: #059669; background: rgba(16,185,129,0.08); }
+.ov-stat__delta--down { color: #dc2626; background: rgba(239,68,68,0.08); }
+[data-theme="dark"] .ov-stat__delta--up { color: #34d399; background: rgba(16,185,129,0.15); }
+[data-theme="dark"] .ov-stat__delta--down { color: #f87171; background: rgba(239,68,68,0.15); }
+
+/* ── Charts grid ────────────────────────────────────────────── */
+.ov-body {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+@media (max-width: 1080px) { .ov-body { grid-template-columns: 1fr; } }
+@media (min-width: 1081px) and (max-width: 1280px) { .ov-body { grid-template-columns: 1fr 1fr; } }
+
+.ov-card {
+    position: relative;
+    background: var(--ov-card);
+    border: 1px solid var(--ov-card-border);
+    border-radius: 18px;
+    box-shadow: var(--ov-card-shadow);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: ovFadeUp 0.9s cubic-bezier(.2,.9,.3,1) forwards;
+}
+.ov-card--usage  { animation-delay: 1.10s; }
+.ov-card--donut  { animation-delay: 1.20s; }
+.ov-card--spark  { animation-delay: 1.30s; }
+
+.ov-card__header { padding: 18px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--ov-card-border); }
+.ov-card__title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: var(--ov-text); letter-spacing: -0.2px; }
+.ov-card__title-icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; color: #fff; }
+.ov-card__title-icon--usage { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.ov-card__title-icon--donut { background: linear-gradient(135deg, #ec4899, #db2777); }
+.ov-card__title-icon--spark { background: linear-gradient(135deg, #10b981, #059669); }
+.ov-card__sub { font-size: 12.5px; color: var(--ov-text-dim); font-weight: 500; }
+
+.ov-card__body { padding: 20px 22px; }
+
+/* Usage area chart */
+.ov-usage { height: 160px; width: 100%; overflow: visible; display: block; }
+.ov-usage path { transition: d 0.4s; }
+.ov-usage-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1500;
+    stroke-dashoffset: 1500;
+    animation: ovDraw 2.2s cubic-bezier(.2,.9,.3,1) 1.2s forwards;
+}
+.ov-usage-area {
+    opacity: 0;
+    animation: ovFade 0.8s ease 2.5s forwards;
+}
+@keyframes ovDraw { to { stroke-dashoffset: 0; } }
+@keyframes ovFade { to { opacity: 1; } }
+
+.ov-usage-dot {
+    fill: #fff;
+    stroke-width: 2;
+    opacity: 0;
+    animation: ovDotPop 0.5s cubic-bezier(.2,.9,.3,1) forwards;
+}
+[data-theme="dark"] .ov-usage-dot { fill: #161a29; }
+
+.ov-usage-legend { display: flex; gap: 18px; margin-top: 12px; padding-left: 4px; flex-wrap: wrap; }
+.ov-usage-legend__item { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ov-text-dim); font-weight: 500; }
+.ov-usage-legend__dot { width: 9px; height: 9px; border-radius: 2px; }
+
+/* Donut chart */
+.ov-donut-wrap { display: flex; align-items: center; gap: 24px; }
+.ov-donut { width: 150px; height: 150px; flex-shrink: 0; transform: rotate(-90deg); }
+.ov-donut circle.ov-donut-seg {
+    fill: none;
+    stroke-width: 18;
+    stroke-linecap: round;
+    stroke-dasharray: 0 377;
+    transition: stroke-dasharray 1.4s cubic-bezier(.2,.9,.3,1);
+}
+.ov-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    pointer-events: none;
+}
+.ov-donut-stack { position: relative; width: 150px; height: 150px; }
+.ov-donut-center__val { font-size: 26px; font-weight: 700; color: var(--ov-text); line-height: 1; letter-spacing: -0.5px; }
+.ov-donut-center__lbl { font-size: 10.5px; font-weight: 600; color: var(--ov-text-dim); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 3px; }
+
+.ov-donut-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.ov-donut-leg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 500; opacity: 0; animation: ovFadeRight 0.5s ease forwards; }
+.ov-donut-leg-row:nth-child(1) { animation-delay: 1.5s; }
+.ov-donut-leg-row:nth-child(2) { animation-delay: 1.65s; }
+.ov-donut-leg-row:nth-child(3) { animation-delay: 1.8s; }
+.ov-donut-leg-row:nth-child(4) { animation-delay: 1.95s; }
+.ov-donut-leg-row__name { display: inline-flex; align-items: center; gap: 8px; color: var(--ov-text); }
+.ov-donut-leg-row__dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.ov-donut-leg-row__val { color: var(--ov-text-dim); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+/* Sparkbars */
+.ov-spark { display: flex; align-items: flex-end; gap: 5px; height: 110px; padding: 4px 2px 0; }
+.ov-spark__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ov-spark__bar-wrap { width: 100%; height: 100%; display: flex; align-items: flex-end; }
+.ov-spark__bar {
+    width: 100%;
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    border-radius: 4px 4px 0 0;
+    height: 0;
+    transition: height 1.2s cubic-bezier(.2,.9,.3,1);
+    min-height: 3px;
+    position: relative;
+    overflow: hidden;
+}
+.ov-spark__bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent 40%);
+}
+.ov-spark__bar--hi { background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%); }
+.ov-spark__lbl { font-size: 10px; color: var(--ov-text-dim); font-weight: 500; }
+
+/* Animation keyframes */
+@keyframes ovFadeUp  { to { opacity: 1; transform: translateY(0); } }
+@keyframes ovFadeRight { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes ovPulse   { 0%,100% { box-shadow: 0 0 0 4px rgba(99,102,241,.15); } 50% { box-shadow: 0 0 0 10px rgba(99,102,241,.04); } }
+@keyframes ovDotPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+/* Remove page-header from base (since we have hero) */
+.ov-hide-default-header { display: none !important; }
+
+/* ── Cloud-product cards row ───────────────────────────────── */
+.ov-cloud-row {
+    max-width: 1280px;
+    margin: 24px auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+@media (max-width: 1080px) { .ov-cloud-row { grid-template-columns: 1fr; } }
+@media (min-width: 1081px) and (max-width: 1280px) { .ov-cloud-row { grid-template-columns: 1fr 1fr; } }
+
+.ov-card--cost    { animation-delay: 1.40s; }
+.ov-card--security { animation-delay: 1.50s; }
+.ov-card--deploy  { animation-delay: 1.60s; }
+
+/* ── Cost Forecast ─────────────────────────────────────────── */
+.ov-card__title-icon--cost { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+.ov-cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.ov-cost-item {}
+.ov-cost-item__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ov-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.ov-cost-item__val {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ov-text);
+    letter-spacing: -0.3px;
+    font-variant-numeric: tabular-nums;
+}
+.ov-cost-item__val--sm {
+    font-size: 15px;
+    font-weight: 600;
+}
+.ov-cost-budget {
+    margin-bottom: 14px;
+}
+.ov-cost-budget__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.ov-cost-budget__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ov-text-dim);
+}
+.ov-cost-budget__pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f59e0b;
+}
+.ov-cost-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 100px;
+    overflow: hidden;
+}
+[data-theme="dark"] .ov-cost-bar-track { background: rgba(245, 158, 11, 0.15); }
+.ov-cost-bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    border-radius: 100px;
+    transition: width 1.4s cubic-bezier(.2,.9,.3,1);
+}
+.ov-cost-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #f59e0b;
+    text-decoration: none;
+    transition: color 0.2s;
+    cursor: pointer;
+}
+.ov-cost-link:hover { color: #d97706; }
+[data-theme="dark"] .ov-cost-link { color: #fbbf24; }
+[data-theme="dark"] .ov-cost-link:hover { color: #fde68a; }
+[data-theme="dark"] .ov-cost-budget__pct { color: #fbbf24; }
+
+/* ── Security Posture ──────────────────────────────────────── */
+.ov-card__title-icon--security { background: linear-gradient(135deg, #10b981, #059669); }
+
+.ov-security-top {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 18px;
+}
+.ov-security-ring {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+}
+.ov-security-ring svg {
+    width: 88px;
+    height: 88px;
+    transform: rotate(-90deg);
+}
+.ov-security-ring__bg {
+    fill: none;
+    stroke: currentColor;
+    stroke-opacity: 0.08;
+    stroke-width: 7;
+}
+.ov-security-ring__arc {
+    fill: none;
+    stroke: #10b981;
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 0 251.3;
+    transition: stroke-dasharray 1.6s cubic-bezier(.2,.9,.3,1);
+}
+[data-theme="dark"] .ov-security-ring__arc { stroke: #34d399; }
+.ov-security-ring__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    pointer-events: none;
+}
+.ov-security-ring__score {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ov-text);
+    line-height: 1;
+    letter-spacing: -0.3px;
+}
+.ov-security-ring__max {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ov-text-dim);
+    margin-top: 2px;
+}
+.ov-security-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ov-text);
+    margin-bottom: 2px;
+}
+.ov-security-sublabel {
+    font-size: 12px;
+    color: var(--ov-text-dim);
+}
+
+.ov-security-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.ov-security-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ov-text);
+}
+.ov-security-item__icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+}
+.ov-security-item__icon--ok { background: rgba(16,185,129,0.1); color: #10b981; }
+.ov-security-item__icon--warn { background: rgba(245,158,11,0.1); color: #f59e0b; }
+[data-theme="dark"] .ov-security-item__icon--ok { background: rgba(16,185,129,0.15); }
+[data-theme="dark"] .ov-security-item__icon--warn { background: rgba(245,158,11,0.15); }
+
+.ov-security-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 100px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #10b981;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.ov-security-btn:hover { background: rgba(16,185,129,0.15); transform: translateY(-1px); }
+[data-theme="dark"] .ov-security-btn { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); color: #34d399; }
+
+/* ── Deployment Pipeline ───────────────────────────────────── */
+.ov-card__title-icon--deploy { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.ov-deploy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.ov-deploy-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ov-card-border);
+    font-size: 13px;
+}
+.ov-deploy-row:last-child { border-bottom: none; }
+
+.ov-deploy-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ov-deploy-dot--success { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+.ov-deploy-dot--building { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); animation: ovPulse 2s ease-in-out infinite; }
+.ov-deploy-dot--failed { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+
+.ov-deploy-info { flex: 1; min-width: 0; }
+.ov-deploy-app {
+    font-weight: 600;
+    color: var(--ov-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ov-deploy-hash {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    color: var(--ov-text-dim);
+    margin-left: 8px;
+    background: rgba(99,102,241,0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+[data-theme="dark"] .ov-deploy-hash { background: rgba(165,180,252,0.1); }
+
+.ov-deploy-meta {
+    text-align: right;
+    flex-shrink: 0;
+}
+.ov-deploy-status {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.ov-deploy-status--success { color: #10b981; }
+.ov-deploy-status--building { color: #f59e0b; }
+.ov-deploy-status--failed { color: #ef4444; }
+[data-theme="dark"] .ov-deploy-status--success { color: #34d399; }
+[data-theme="dark"] .ov-deploy-status--building { color: #fbbf24; }
+[data-theme="dark"] .ov-deploy-status--failed { color: #f87171; }
+
+.ov-deploy-time {
+    font-size: 11px;
+    color: var(--ov-text-dim);
+    margin-top: 2px;
+}
+
+@media (max-width: 760px) {
+    .ov-hero { padding: 48px 24px 40px; margin: 0 -24px 24px; }
+    .ov-hero__title { font-size: 36px; }
+    .ov-hero__sub { font-size: 15px; }
+    .ov-stats { grid-template-columns: 1fr 1fr; }
+    .ov { margin: -24px -24px 0; padding: 0 24px 32px; }
+    .ov-cloud-row { grid-template-columns: 1fr; }
+    .ov-cost-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="ov" role="main">
+
+    <!-- ── Hero ───────────────────────────────────────────── -->
+    <section class="ov-hero" role="region" aria-label="Workspace overview hero">
+        <div class="ov-hero__inner">
+            <div class="ov-greeting">
+                <span class="ov-greeting__dot"></span>
+                <span id="ovGreetTime">Welcome back</span> &middot; {{.Workspace.Name}}
+            </div>
+
+            <h1 class="ov-hero__title">
+                Hi, {{.User.Name}}
+            </h1>
+
+            <p class="ov-hero__sub">
+                Your cloud, at a glance. Monitor workloads, track spend, and manage infrastructure.
+            </p>
+
+            <!-- Quick stats -->
+            <div class="ov-stats">
+                <div class="ov-stat" aria-label="Active Resources">
+                    <div class="ov-stat__label">Active Resources</div>
+                    <div class="ov-stat__val">{{if .ResourceCount}}{{.ActiveCount}}<span class="ov-stat__unit"> / {{.ResourceCount}}</span>{{else}}—{{end}}</div>
+                    <div class="ov-stat__delta ov-stat__delta--up">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {{if .MemberCount}}{{.MemberCount}} member{{if gt .MemberCount 1}}s{{end}}{{else}}no members yet{{end}}
+                    </div>
+                </div>
+                <div class="ov-stat ov-stat--green" aria-label="Uptime: 99.98%">
+                    <div class="ov-stat__label">Uptime</div>
+                    <div class="ov-stat__val">99.98<span class="ov-stat__unit">%</span></div>
+                    <div class="ov-stat__delta ov-stat__delta--up">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        30&#8209;day SLA
+                    </div>
+                </div>
+                <div class="ov-stat ov-stat--orange" aria-label="Month-to-date Spend: $2,847">
+                    <div class="ov-stat__label">Month&#8209;to&#8209;date Spend</div>
+                    <div class="ov-stat__val">$2,847</div>
+                    <div class="ov-stat__delta ov-stat__delta--down">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        &minus;12% vs last
+                    </div>
+                </div>
+                <div class="ov-stat ov-stat--pink" aria-label="Average Latency: 38ms">
+                    <div class="ov-stat__label">Avg Latency</div>
+                    <div class="ov-stat__val">38<span class="ov-stat__unit">ms</span></div>
+                    <div class="ov-stat__delta ov-stat__delta--up">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        &minus;4ms
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Charts ─────────────────────────────────────────── -->
+    <div class="ov-body" role="region" aria-label="Resource charts and metrics">
+
+            <!-- Usage over time -->
+            <div class="ov-card ov-card--usage">
+                <div class="ov-card__header">
+                    <div class="ov-card__title">
+                        <span class="ov-card__title-icon ov-card__title-icon--usage">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M1 11l4-4 3 3 5-5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        Resource usage &mdash; 7 days
+                    </div>
+                    <span class="ov-card__sub">CPU &middot; Memory</span>
+                </div>
+                <div class="ov-card__body">
+                    <svg class="ov-usage" viewBox="0 0 400 160" preserveAspectRatio="none" role="img" aria-label="Resource usage chart showing CPU and Memory trends over 7 days">
+                        <defs>
+                            <linearGradient id="ovGradCPU" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+                            </linearGradient>
+                            <linearGradient id="ovGradMem" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.28"/>
+                                <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- gridlines -->
+                        <g stroke="currentColor" stroke-opacity="0.06" stroke-dasharray="2,4">
+                            <line x1="0" y1="40" x2="400" y2="40"/>
+                            <line x1="0" y1="80" x2="400" y2="80"/>
+                            <line x1="0" y1="120" x2="400" y2="120"/>
+                        </g>
+                        <!-- Memory line (back) -->
+                        <path class="ov-usage-area" fill="url(#ovGradMem)"
+                            d="M0,110 L57,95 L114,105 L171,80 L228,85 L285,55 L342,62 L400,42 L400,160 L0,160 Z"/>
+                        <path class="ov-usage-line" stroke="#06b6d4"
+                            d="M0,110 L57,95 L114,105 L171,80 L228,85 L285,55 L342,62 L400,42"/>
+                        <!-- CPU line (front) -->
+                        <path class="ov-usage-area" fill="url(#ovGradCPU)"
+                            d="M0,130 L57,120 L114,125 L171,95 L228,105 L285,75 L342,88 L400,68 L400,160 L0,160 Z"
+                            style="animation-delay: 2.7s;"/>
+                        <path class="ov-usage-line" stroke="#6366f1"
+                            d="M0,130 L57,120 L114,125 L171,95 L228,105 L285,75 L342,88 L400,68"
+                            style="animation-delay: 1.4s;"/>
+                        <!-- data dots on CPU -->
+                        <circle class="ov-usage-dot" cx="57"  cy="120" r="4" stroke="#6366f1" style="animation-delay: 3.2s;"/>
+                        <circle class="ov-usage-dot" cx="171" cy="95"  r="4" stroke="#6366f1" style="animation-delay: 3.35s;"/>
+                        <circle class="ov-usage-dot" cx="285" cy="75"  r="4" stroke="#6366f1" style="animation-delay: 3.5s;"/>
+                        <circle class="ov-usage-dot" cx="400" cy="68"  r="4" stroke="#6366f1" style="animation-delay: 3.65s;"/>
+                    </svg>
+                    <div class="ov-usage-legend">
+                        <span class="ov-usage-legend__item"><span class="ov-usage-legend__dot" style="background:#6366f1"></span>CPU &mdash; avg 34%</span>
+                        <span class="ov-usage-legend__item"><span class="ov-usage-legend__dot" style="background:#06b6d4"></span>Memory &mdash; avg 52%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource breakdown + recent activity -->
+            <div class="ov-card ov-card--donut">
+                <div class="ov-card__header">
+                    <div class="ov-card__title">
+                        <span class="ov-card__title-icon ov-card__title-icon--donut">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 2v5.5h5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </span>
+                        Resource mix
+                    </div>
+                    <span class="ov-card__sub">47 total</span>
+                </div>
+                <div class="ov-card__body">
+                    <div class="ov-donut-wrap">
+                        <div class="ov-donut-stack">
+                            <svg class="ov-donut" viewBox="0 0 140 140" role="img" aria-label="Resource mix donut chart: 18 Compute, 12 Storage, 9 Databases, 8 Networking">
+                                <circle cx="70" cy="70" r="60" fill="none" stroke="currentColor" stroke-opacity="0.06" stroke-width="18"/>
+                                <circle class="ov-donut-seg" cx="70" cy="70" r="60" stroke="#6366f1" data-dash="150"/>
+                                <circle class="ov-donut-seg" cx="70" cy="70" r="60" stroke="#8b5cf6" data-dash="95"  data-offset="150"/>
+                                <circle class="ov-donut-seg" cx="70" cy="70" r="60" stroke="#06b6d4" data-dash="75"  data-offset="245"/>
+                                <circle class="ov-donut-seg" cx="70" cy="70" r="60" stroke="#ec4899" data-dash="57"  data-offset="320"/>
+                            </svg>
+                            <div class="ov-donut-center">
+                                <div class="ov-donut-center__val">47</div>
+                                <div class="ov-donut-center__lbl">Resources</div>
+                            </div>
+                        </div>
+                        <div class="ov-donut-legend">
+                            <div class="ov-donut-leg-row"><span class="ov-donut-leg-row__name"><span class="ov-donut-leg-row__dot" style="background:#6366f1"></span>Compute</span><span class="ov-donut-leg-row__val">18</span></div>
+                            <div class="ov-donut-leg-row"><span class="ov-donut-leg-row__name"><span class="ov-donut-leg-row__dot" style="background:#8b5cf6"></span>Storage</span><span class="ov-donut-leg-row__val">12</span></div>
+                            <div class="ov-donut-leg-row"><span class="ov-donut-leg-row__name"><span class="ov-donut-leg-row__dot" style="background:#06b6d4"></span>Databases</span><span class="ov-donut-leg-row__val">9</span></div>
+                            <div class="ov-donut-leg-row"><span class="ov-donut-leg-row__name"><span class="ov-donut-leg-row__dot" style="background:#ec4899"></span>Networking</span><span class="ov-donut-leg-row__val">8</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spark bars: requests per day -->
+            <div class="ov-card ov-card--spark">
+                <div class="ov-card__header">
+                    <div class="ov-card__title">
+                        <span class="ov-card__title-icon ov-card__title-icon--spark">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 13V7M5 13V3M8 13V9M11 13V5M13.5 13V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </span>
+                        API requests &mdash; 14 days
+                    </div>
+                    <span class="ov-card__sub">12.4M total</span>
+                </div>
+                <div class="ov-card__body">
+                    <div class="ov-spark" id="ovSparkBars">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+    </div>
+
+    <!-- ── Cloud-product cards: cost / security / deploys ──── -->
+    <div class="ov-cloud-row" role="region" aria-label="Cloud product insights">
+
+        <!-- Cost Forecast -->
+        <div class="ov-card ov-card--cost">
+            <div class="ov-card__header">
+                <div class="ov-card__title">
+                    <span class="ov-card__title-icon ov-card__title-icon--cost">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v13M4.5 4h4.5a2 2 0 010 4H5a2 2 0 000 4h5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Cost Forecast
+                </div>
+                <span class="ov-card__sub">This month</span>
+            </div>
+            <div class="ov-card__body">
+                <div class="ov-cost-grid">
+                    <div class="ov-cost-item">
+                        <div class="ov-cost-item__label">Current spend</div>
+                        <div class="ov-cost-item__val">$1,847<span class="ov-stat__unit">.32</span></div>
+                    </div>
+                    <div class="ov-cost-item">
+                        <div class="ov-cost-item__label">Projected EOM</div>
+                        <div class="ov-cost-item__val">$2,240<span class="ov-stat__unit">.00</span></div>
+                    </div>
+                </div>
+                <div class="ov-cost-budget">
+                    <div class="ov-cost-budget__header">
+                        <span class="ov-cost-budget__label">Budget remaining: $760.00 of $3,000</span>
+                        <span class="ov-cost-budget__pct">75%</span>
+                    </div>
+                    <div class="ov-cost-bar-track">
+                        <div class="ov-cost-bar-fill" id="ovCostBar"></div>
+                    </div>
+                </div>
+                <a class="ov-cost-link" href="javascript:void(0)" aria-label="Optimize costs">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2v8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Optimize costs
+                </a>
+            </div>
+        </div>
+
+        <!-- Security Posture -->
+        <div class="ov-card ov-card--security">
+            <div class="ov-card__header">
+                <div class="ov-card__title">
+                    <span class="ov-card__title-icon ov-card__title-icon--security">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5L2.5 4v3.5c0 3.5 2.1 5.8 5 6.5 2.9-.7 5-3 5-6.5V4L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Security Score
+                </div>
+                <span class="ov-card__sub">Real-time</span>
+            </div>
+            <div class="ov-card__body">
+                <div class="ov-security-top">
+                    <div class="ov-security-ring">
+                        <svg viewBox="0 0 88 88" role="img" aria-label="Security score: 87 out of 100">
+                            <circle class="ov-security-ring__bg" cx="44" cy="44" r="36"/>
+                            <circle class="ov-security-ring__arc" id="ovSecArc" cx="44" cy="44" r="36"/>
+                        </svg>
+                        <div class="ov-security-ring__center">
+                            <div class="ov-security-ring__score">87</div>
+                            <div class="ov-security-ring__max">/ 100</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="ov-security-label">Good standing</div>
+                        <div class="ov-security-sublabel">1 item needs attention</div>
+                    </div>
+                </div>
+                <div class="ov-security-items">
+                    <div class="ov-security-item">
+                        <span class="ov-security-item__icon ov-security-item__icon--ok">
+                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2.5 5.5l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        2FA enabled for all users
+                    </div>
+                    <div class="ov-security-item">
+                        <span class="ov-security-item__icon ov-security-item__icon--ok">
+                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2.5 5.5l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        API keys rotated 3d ago
+                    </div>
+                    <div class="ov-security-item">
+                        <span class="ov-security-item__icon ov-security-item__icon--warn">
+                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 3.5v2.5M5.5 7.5h.005" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        </span>
+                        1 unused role detected
+                    </div>
+                </div>
+                <a class="ov-security-btn" href="javascript:void(0)" aria-label="View full security audit">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M8 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    View full audit
+                </a>
+            </div>
+        </div>
+
+        <!-- Deployment Pipeline -->
+        <div class="ov-card ov-card--deploy">
+            <div class="ov-card__header">
+                <div class="ov-card__title">
+                    <span class="ov-card__title-icon ov-card__title-icon--deploy">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5v12M4 10l3.5 3.5L11 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    </span>
+                    Recent Deployments
+                </div>
+                <span class="ov-card__sub">Last 24h</span>
+            </div>
+            <div class="ov-card__body">
+                <div class="ov-deploy-list">
+                    <div class="ov-deploy-row">
+                        <span class="ov-deploy-dot ov-deploy-dot--success"></span>
+                        <div class="ov-deploy-info">
+                            <span class="ov-deploy-app">api-gateway</span>
+                            <span class="ov-deploy-hash">a3f8c21</span>
+                        </div>
+                        <div class="ov-deploy-meta">
+                            <div class="ov-deploy-status ov-deploy-status--success">Success</div>
+                            <div class="ov-deploy-time">12 min ago</div>
+                        </div>
+                    </div>
+                    <div class="ov-deploy-row">
+                        <span class="ov-deploy-dot ov-deploy-dot--building"></span>
+                        <div class="ov-deploy-info">
+                            <span class="ov-deploy-app">web-frontend</span>
+                            <span class="ov-deploy-hash">e7b2d44</span>
+                        </div>
+                        <div class="ov-deploy-meta">
+                            <div class="ov-deploy-status ov-deploy-status--building">Building</div>
+                            <div class="ov-deploy-time">3 min ago</div>
+                        </div>
+                    </div>
+                    <div class="ov-deploy-row">
+                        <span class="ov-deploy-dot ov-deploy-dot--success"></span>
+                        <div class="ov-deploy-info">
+                            <span class="ov-deploy-app">auth-service</span>
+                            <span class="ov-deploy-hash">91dc0f8</span>
+                        </div>
+                        <div class="ov-deploy-meta">
+                            <div class="ov-deploy-status ov-deploy-status--success">Success</div>
+                            <div class="ov-deploy-time">2h ago</div>
+                        </div>
+                    </div>
+                    <div class="ov-deploy-row">
+                        <span class="ov-deploy-dot ov-deploy-dot--failed"></span>
+                        <div class="ov-deploy-info">
+                            <span class="ov-deploy-app">billing-worker</span>
+                            <span class="ov-deploy-hash">5f3a1b7</span>
+                        </div>
+                        <div class="ov-deploy-meta">
+                            <div class="ov-deploy-status ov-deploy-status--failed">Failed</div>
+                            <div class="ov-deploy-time">5h ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    // Hide default page header since we have our own hero
+    var defaultHeader = document.querySelector('.ds-page-header');
+    if (defaultHeader) defaultHeader.classList.add('ov-hide-default-header');
+
+    // ── Time-based greeting ─────────────────────────────────────
+    var hour = new Date().getHours();
+    var greet = hour < 5 ? 'Working late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    var greetEl = document.getElementById('ovGreetTime');
+    if (greetEl) greetEl.textContent = greet;
+
+    // ── Donut segments animate in ───────────────────────────────
+    setTimeout(function() {
+        document.querySelectorAll('.ov-donut-seg').forEach(function(seg) {
+            var dash = parseFloat(seg.dataset.dash || 0);
+            var offset = parseFloat(seg.dataset.offset || 0);
+            seg.style.strokeDasharray = dash + ' ' + (377 - dash);
+            seg.style.strokeDashoffset = -offset;
+        });
+    }, 1100);
+
+    // ── Sparkbars ───────────────────────────────────────────────
+    var sparkData = [38, 52, 45, 61, 48, 72, 65, 58, 69, 73, 80, 68, 85, 92];
+    var sparkHost = document.getElementById('ovSparkBars');
+    var max = Math.max.apply(null, sparkData);
+    sparkData.forEach(function(v, i) {
+        var col = document.createElement('div');
+        col.className = 'ov-spark__col';
+        var wrap = document.createElement('div');
+        wrap.className = 'ov-spark__bar-wrap';
+        var bar = document.createElement('div');
+        bar.className = 'ov-spark__bar' + (i === sparkData.length - 1 ? ' ov-spark__bar--hi' : '');
+        bar.title = 'Day -' + (sparkData.length - 1 - i) + ': ' + v + '%';
+        wrap.appendChild(bar);
+        col.appendChild(wrap);
+        var lbl = document.createElement('div');
+        lbl.className = 'ov-spark__lbl';
+        lbl.textContent = (i % 3 === 0 || i === sparkData.length - 1) ? ('-' + (sparkData.length - 1 - i) + 'd') : '';
+        col.appendChild(lbl);
+        sparkHost.appendChild(col);
+        setTimeout(function() { bar.style.height = Math.max(4, (v / max) * 100) + '%'; }, 1500 + i * 45);
+    });
+
+    // ── Cost bar animation ─────────────────────────────────────
+    setTimeout(function() {
+        var costBar = document.getElementById('ovCostBar');
+        if (costBar) costBar.style.width = '75%';
+    }, 1800);
+
+    // ── Security arc animation ─────────────────────────────────
+    setTimeout(function() {
+        var arc = document.getElementById('ovSecArc');
+        if (arc) {
+            // circumference = 2 * PI * 36 = ~226.19
+            var circumference = 2 * Math.PI * 36;
+            var score = 87;
+            var filled = (score / 100) * circumference;
+            arc.style.strokeDasharray = filled + ' ' + (circumference - filled);
+        }
+    }, 2000);
+})();
+</script>
+{{end}}

@@ -1,0 +1,1176 @@
+{{define "workspace-page-content"}}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Marketplace — one-click apps
+   ═══════════════════════════════════════════════════════════════ */
+
+.mk {
+    --mk-accent:  #4f46e5;
+    --mk-accent2: #8b5cf6;
+    --mk-pink:    #ec4899;
+    --mk-orange:  #f97316;
+    --mk-green:   #10b981;
+    --mk-amber:   #f59e0b;
+    --mk-text:    #0f172a;
+    --mk-text-dim:#64748b;
+    --mk-card:    #ffffff;
+    --mk-border:  rgba(15,23,42,.06);
+    --mk-border-hover: rgba(79,70,229,.28);
+    --mk-shadow:  0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.04);
+    --mk-shadow-hover: 0 6px 12px rgba(15,23,42,.06), 0 20px 48px rgba(79,70,229,.12);
+    --mk-bg:      transparent;
+    --mk-chip-bg: rgba(15,23,42,.04);
+    margin: -24px -32px 0;
+    padding: 0 32px 48px;
+    min-height: calc(100vh - 60px);
+}
+[data-theme="dark"] .mk {
+    --mk-text:    #f1f5f9;
+    --mk-text-dim:#94a3b8;
+    --mk-card:    #161a29;
+    --mk-border:  rgba(255,255,255,.06);
+    --mk-border-hover: rgba(139,92,246,.42);
+    --mk-shadow:  0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+    --mk-shadow-hover: 0 6px 12px rgba(0,0,0,.35), 0 20px 48px rgba(139,92,246,.2);
+    --mk-chip-bg: rgba(255,255,255,.05);
+}
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.mk-hero {
+    position: relative;
+    margin: 0 -32px 28px;
+    padding: 64px 32px 56px;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(139,92,246,.18), transparent 60%),
+        radial-gradient(ellipse 70% 55% at 90% 100%, rgba(236,72,153,.14), transparent 55%),
+        linear-gradient(180deg, rgba(79,70,229,.06) 0%, transparent 100%);
+}
+[data-theme="dark"] .mk-hero {
+    background:
+        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(139,92,246,.28), transparent 60%),
+        radial-gradient(ellipse 70% 55% at 90% 100%, rgba(236,72,153,.22), transparent 55%),
+        linear-gradient(180deg, rgba(79,70,229,.12) 0%, transparent 100%);
+}
+.mk-hero::before {
+    content: '';
+    position: absolute; inset: 0; z-index: -1;
+    background-image:
+        linear-gradient(rgba(99,102,241,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, #000 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, #000 30%, transparent 80%);
+}
+.mk-hero__inner {
+    max-width: 880px;
+    margin: 0 auto;
+    text-align: center;
+}
+.mk-hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255,255,255,.7); backdrop-filter: blur(8px);
+    border: 1px solid var(--mk-border);
+    border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+    color: var(--mk-text-dim);
+    letter-spacing: .02em;
+    margin-bottom: 20px;
+}
+[data-theme="dark"] .mk-hero__eyebrow {
+    background: rgba(22,26,41,.6);
+}
+.mk-hero__eyebrow-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--mk-green);
+    box-shadow: 0 0 8px var(--mk-green);
+    animation: mkPulse 2s ease-in-out infinite;
+}
+@keyframes mkPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+.mk-hero__title {
+    font-size: 44px; font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -1.2px;
+    color: var(--mk-text);
+    margin: 0 0 14px;
+}
+.mk-hero__title-grad {
+    background: linear-gradient(135deg, var(--mk-accent) 0%, var(--mk-pink) 50%, var(--mk-orange) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.mk-hero__sub {
+    font-size: 17px;
+    color: var(--mk-text-dim);
+    line-height: 1.55;
+    max-width: 620px;
+    margin: 0 auto 28px;
+    font-weight: 300;
+}
+
+/* Search bar */
+.mk-search {
+    position: relative;
+    max-width: 560px;
+    margin: 0 auto;
+}
+.mk-search__icon {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    color: var(--mk-text-dim);
+    pointer-events: none;
+}
+.mk-search__input {
+    width: 100%;
+    height: 52px;
+    padding: 0 18px 0 48px;
+    border: 1px solid var(--mk-border);
+    border-radius: 14px;
+    background: var(--mk-card);
+    color: var(--mk-text);
+    font-size: 15px;
+    outline: none;
+    box-shadow: var(--mk-shadow);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.mk-search__input:focus {
+    border-color: var(--mk-accent);
+    box-shadow: 0 0 0 4px rgba(79,70,229,.12);
+}
+.mk-search__kbd {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    padding: 3px 8px;
+    background: var(--mk-chip-bg);
+    border: 1px solid var(--mk-border);
+    border-radius: 6px;
+    font-size: 11px; font-family: ui-monospace, SFMono-Regular, monospace;
+    color: var(--mk-text-dim);
+}
+
+/* Hero stat chips */
+.mk-hero__stats {
+    display: flex; justify-content: center; gap: 28px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+.mk-hero__stat {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--mk-text-dim);
+}
+.mk-hero__stat strong { color: var(--mk-text); font-weight: 500; }
+
+/* ── Featured rail ─────────────────────────────────────────── */
+.mk-section-head {
+    display: flex; align-items: end; justify-content: space-between;
+    margin: 40px 0 18px;
+}
+.mk-section-head__h {
+    font-size: 22px; font-weight: 500; color: var(--mk-text);
+    letter-spacing: -.4px; margin: 0;
+}
+.mk-section-head__sub {
+    font-size: 13px; color: var(--mk-text-dim); margin: 2px 0 0;
+}
+.mk-section-head__link {
+    font-size: 13px; color: var(--mk-accent); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+
+.mk-featured {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+.mk-featured__card {
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 22px;
+    border: 1px solid var(--mk-border);
+    border-radius: 16px;
+    background: var(--mk-card);
+    box-shadow: var(--mk-shadow);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    cursor: pointer;
+}
+.mk-featured__card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--mk-shadow-hover);
+    border-color: var(--mk-border-hover);
+}
+.mk-featured__card::before {
+    content: '';
+    position: absolute; inset: -1px -1px auto -1px; height: 72px;
+    background: linear-gradient(135deg, var(--fc1, var(--mk-accent)) 0%, var(--fc2, var(--mk-pink)) 100%);
+    opacity: .08;
+    z-index: 0;
+    transition: opacity .2s ease;
+}
+.mk-featured__card:hover::before { opacity: .16; }
+.mk-featured__card > * { position: relative; z-index: 1; }
+
+.mk-featured__top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.mk-featured__icon {
+    width: 44px; height: 44px; border-radius: 11px;
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+.mk-featured__name { font-size: 15px; font-weight: 500; color: var(--mk-text); }
+.mk-featured__tag { font-size: 11px; color: var(--mk-text-dim); text-transform: uppercase; letter-spacing: .08em; }
+.mk-featured__desc { font-size: 13px; color: var(--mk-text-dim); line-height: 1.55; flex: 1; margin-bottom: 14px; }
+.mk-featured__foot { display: flex; align-items: center; justify-content: space-between; }
+.mk-featured__meta { font-size: 12px; color: var(--mk-text-dim); display: flex; align-items: center; gap: 6px; }
+.mk-featured__btn {
+    padding: 7px 14px;
+    background: var(--mk-text); color: var(--mk-card);
+    border: none; border-radius: 8px;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: transform .1s ease;
+}
+.mk-featured__btn:hover { transform: translateY(-1px); }
+
+/* ── Category filter rail ──────────────────────────────────── */
+.mk-cats {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 16px 0;
+    position: sticky; top: 0;
+    background: var(--mk-bg, transparent);
+    z-index: 3;
+    border-bottom: 1px solid var(--mk-border);
+    margin: 8px 0 24px;
+}
+.mk-cat {
+    padding: 8px 14px;
+    background: var(--mk-chip-bg);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 400;
+    color: var(--mk-text-dim);
+    cursor: pointer;
+    transition: all .15s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.mk-cat:hover {
+    color: var(--mk-text);
+    border-color: var(--mk-border);
+}
+.mk-cat--active {
+    background: var(--mk-text);
+    color: var(--mk-card);
+    border-color: var(--mk-text);
+}
+.mk-cat__count {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.18);
+}
+.mk-cat:not(.mk-cat--active) .mk-cat__count {
+    background: var(--mk-card);
+    color: var(--mk-text-dim);
+    border: 1px solid var(--mk-border);
+}
+
+/* ── App grid ──────────────────────────────────────────────── */
+.mk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.mk-app {
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 18px;
+    border: 1px solid var(--mk-border);
+    border-radius: 14px;
+    background: var(--mk-card);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.mk-app:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mk-shadow);
+    border-color: var(--mk-border-hover);
+}
+
+.mk-app__head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.mk-app__icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 16px; font-weight: 600;
+    flex-shrink: 0;
+}
+.mk-app__title { flex: 1; min-width: 0; }
+.mk-app__name {
+    font-size: 14px; font-weight: 500;
+    color: var(--mk-text);
+    display: flex; align-items: center; gap: 5px;
+    letter-spacing: -.1px;
+}
+.mk-app__verified {
+    width: 13px; height: 13px;
+    color: var(--mk-accent);
+    flex-shrink: 0;
+}
+.mk-app__tag {
+    font-size: 11px; color: var(--mk-text-dim);
+    margin-top: 1px;
+}
+.mk-app__desc {
+    font-size: 12px; color: var(--mk-text-dim);
+    line-height: 1.5;
+    flex: 1;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mk-app__chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.mk-app__chip {
+    padding: 2px 8px;
+    background: var(--mk-chip-bg);
+    border-radius: 6px;
+    font-size: 10.5px; color: var(--mk-text-dim);
+    font-weight: 400;
+}
+
+.mk-app__foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--mk-border);
+}
+.mk-app__stats { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--mk-text-dim); }
+.mk-app__stat { display: inline-flex; align-items: center; gap: 3px; }
+.mk-app__star { color: var(--mk-amber); }
+.mk-app__install {
+    padding: 5px 12px;
+    background: var(--mk-accent);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .1s ease, transform .1s ease;
+}
+.mk-app__install:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+}
+
+/* Hidden state for filter */
+.mk-app[hidden] { display: none; }
+
+/* Empty state */
+.mk-empty {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--mk-text-dim);
+    font-size: 14px;
+}
+.mk-empty__icon {
+    width: 44px; height: 44px;
+    margin: 0 auto 14px;
+    border-radius: 12px;
+    background: var(--mk-chip-bg);
+    display: grid; place-items: center;
+    color: var(--mk-text-dim);
+}
+
+/* ── Modal (app detail / deploy) ───────────────────────────── */
+.mk-modal-backdrop {
+    /* Modal lives outside the .mk wrapper, so re-declare needed vars */
+    --mk-accent:       #4f46e5;
+    --mk-pink:         #ec4899;
+    --mk-text:         #0f172a;
+    --mk-text-dim:     #64748b;
+    --mk-card:         #ffffff;
+    --mk-border:       rgba(15,23,42,.08);
+    --mk-chip-bg:      rgba(15,23,42,.04);
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.55);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    animation: mkFade .18s ease;
+}
+[data-theme="dark"] .mk-modal-backdrop {
+    --mk-text:    #f1f5f9;
+    --mk-text-dim:#94a3b8;
+    --mk-card:    #161a29;
+    --mk-border:  rgba(255,255,255,.10);
+    --mk-chip-bg: rgba(255,255,255,.05);
+    background: rgba(0,0,0,.7);
+}
+.mk-modal-backdrop.is-open { display: flex; }
+@keyframes mkFade { from { opacity:0 } to { opacity:1 } }
+
+.mk-modal {
+    width: 100%; max-width: 640px;
+    max-height: 90vh;
+    background: var(--mk-card);
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    animation: mkPop .22s cubic-bezier(.22,1,.36,1);
+}
+@keyframes mkPop {
+    from { opacity: 0; transform: translateY(16px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mk-modal__banner {
+    padding: 24px;
+    display: flex; gap: 16px; align-items: flex-start;
+    background: linear-gradient(135deg, var(--mc1, var(--mk-accent)) 0%, var(--mc2, var(--mk-pink)) 100%);
+    color: #fff;
+    position: relative;
+}
+.mk-modal__icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.2);
+    backdrop-filter: blur(4px);
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 600;
+    flex-shrink: 0;
+}
+.mk-modal__title-wrap { flex: 1; }
+.mk-modal__name {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -.4px;
+    display: flex; align-items: center; gap: 8px;
+}
+.mk-modal__sub {
+    font-size: 14px; opacity: .85; margin-top: 3px; font-weight: 300;
+}
+.mk-modal__close {
+    position: absolute; top: 14px; right: 14px;
+    width: 30px; height: 30px;
+    border: none; border-radius: 8px;
+    background: rgba(255,255,255,.18);
+    color: #fff;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: background .12s ease;
+}
+.mk-modal__close:hover { background: rgba(255,255,255,.28); }
+
+.mk-modal__body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+.mk-modal__desc {
+    font-size: 14px; color: var(--mk-text);
+    line-height: 1.65;
+    margin-bottom: 20px;
+}
+.mk-modal__grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 22px;
+}
+.mk-modal__stat-cell {
+    padding: 12px;
+    border: 1px solid var(--mk-border);
+    border-radius: 10px;
+    background: var(--mk-chip-bg);
+}
+.mk-modal__stat-lbl { font-size: 11px; color: var(--mk-text-dim); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.mk-modal__stat-val { font-size: 14px; color: var(--mk-text); font-weight: 500; }
+
+.mk-modal__section-h {
+    font-size: 11px; font-weight: 500;
+    color: var(--mk-text-dim);
+    text-transform: uppercase; letter-spacing: .08em;
+    margin: 0 0 10px;
+}
+
+.mk-plan {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--mk-border);
+    border-radius: 10px;
+    background: var(--mk-chip-bg);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+}
+.mk-plan:hover { border-color: var(--mk-accent); }
+.mk-plan--active { border-color: var(--mk-accent); background: rgba(79,70,229,.08); }
+.mk-plan__radio {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--mk-border);
+    position: relative;
+    flex-shrink: 0;
+}
+.mk-plan--active .mk-plan__radio {
+    border-color: var(--mk-accent);
+}
+.mk-plan--active .mk-plan__radio::after {
+    content: '';
+    position: absolute; inset: 2px;
+    border-radius: 50%;
+    background: var(--mk-accent);
+}
+.mk-plan__info { flex: 1; }
+.mk-plan__name { font-size: 13px; font-weight: 500; color: var(--mk-text); }
+.mk-plan__spec { font-size: 11.5px; color: var(--mk-text-dim); margin-top: 2px; }
+.mk-plan__price { font-size: 14px; font-weight: 500; color: var(--mk-text); }
+.mk-plan__price span { font-size: 11px; color: var(--mk-text-dim); font-weight: 400; }
+
+.mk-modal__foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--mk-border);
+    display: flex; gap: 10px; align-items: center; justify-content: flex-end;
+    background: var(--mk-card);
+}
+.mk-modal__btn {
+    padding: 10px 16px;
+    border-radius: 9px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--mk-border);
+    background: transparent;
+    color: var(--mk-text);
+    transition: background .12s ease;
+}
+.mk-modal__btn:hover { background: var(--mk-chip-bg); }
+.mk-modal__btn--primary {
+    background: var(--mk-accent);
+    color: #fff;
+    border-color: var(--mk-accent);
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.mk-modal__btn--primary:hover { background: #4338ca; }
+
+/* ── Usage analytics strip ────────────────────────────────── */
+.mk-analytics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 0 0 8px;
+}
+.mk-analytics__card {
+    padding: 16px 18px;
+    border: 1px solid var(--mk-border);
+    border-radius: 12px;
+    background: var(--mk-card);
+    display: flex; align-items: center; gap: 12px;
+}
+.mk-analytics__icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+}
+.mk-analytics__icon--apps    { background: rgba(79,70,229,.10); color: var(--mk-accent);  }
+.mk-analytics__icon--cost    { background: rgba(16,185,129,.10); color: var(--mk-green);  }
+.mk-analytics__icon--api     { background: rgba(139,92,246,.10); color: var(--mk-accent2);}
+.mk-analytics__icon--avail   { background: rgba(249,115,22,.10); color: var(--mk-orange); }
+[data-theme="dark"] .mk-analytics__icon--apps  { background: rgba(79,70,229,.18); }
+[data-theme="dark"] .mk-analytics__icon--cost  { background: rgba(16,185,129,.18); }
+[data-theme="dark"] .mk-analytics__icon--api   { background: rgba(139,92,246,.18); }
+[data-theme="dark"] .mk-analytics__icon--avail { background: rgba(249,115,22,.18); }
+.mk-analytics__label {
+    font-size: 11px; color: var(--mk-text-dim);
+    text-transform: uppercase; letter-spacing: .04em;
+    margin-bottom: 2px;
+}
+.mk-analytics__value {
+    font-size: 18px; font-weight: 500; color: var(--mk-text);
+    letter-spacing: -.3px;
+}
+
+/* ── Deployed apps section ────────────────────────────────── */
+.mk-deployed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.mk-deployed__card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--mk-border);
+    border-radius: 12px;
+    background: var(--mk-card);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.mk-deployed__card:hover {
+    border-color: var(--mk-border-hover);
+    box-shadow: var(--mk-shadow);
+}
+.mk-deployed__icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 14px; font-weight: 600;
+    flex-shrink: 0;
+}
+.mk-deployed__info { flex: 1; min-width: 0; }
+.mk-deployed__name {
+    font-size: 13px; font-weight: 500; color: var(--mk-text);
+    display: flex; align-items: center; gap: 7px;
+}
+.mk-deployed__status {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 400;
+    padding: 1px 7px;
+    border-radius: 999px;
+}
+.mk-deployed__status--running {
+    background: rgba(16,185,129,.10); color: #059669;
+}
+[data-theme="dark"] .mk-deployed__status--running {
+    background: rgba(16,185,129,.16); color: #34d399;
+}
+.mk-deployed__status--updating {
+    background: rgba(245,158,11,.10); color: #d97706;
+}
+[data-theme="dark"] .mk-deployed__status--updating {
+    background: rgba(245,158,11,.16); color: #fbbf24;
+}
+.mk-deployed__status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+}
+.mk-deployed__status--running .mk-deployed__status-dot {
+    box-shadow: 0 0 6px rgba(16,185,129,.5);
+}
+.mk-deployed__status--updating .mk-deployed__status-dot {
+    animation: mkPulse 1.5s ease-in-out infinite;
+}
+.mk-deployed__meta {
+    font-size: 11px; color: var(--mk-text-dim);
+    margin-top: 3px;
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+}
+.mk-deployed__region {
+    padding: 1px 6px;
+    background: var(--mk-chip-bg);
+    border: 1px solid var(--mk-border);
+    border-radius: 4px;
+    font-size: 10px; font-family: ui-monospace, SFMono-Regular, monospace;
+    color: var(--mk-text-dim);
+}
+.mk-deployed__manage {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--mk-border);
+    border-radius: 7px;
+    font-size: 11.5px; font-weight: 500;
+    color: var(--mk-text);
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+    flex-shrink: 0;
+}
+.mk-deployed__manage:hover {
+    border-color: var(--mk-accent);
+    color: var(--mk-accent);
+    background: rgba(79,70,229,.05);
+}
+
+/* ── App card star ratings ────────────────────────────────── */
+.mk-app__rating {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--mk-text-dim);
+    margin-bottom: 12px;
+}
+.mk-app__rating-stars {
+    display: inline-flex; gap: 1px; color: var(--mk-amber);
+}
+.mk-app__rating-count {
+    color: var(--mk-text-dim);
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 720px) {
+    .mk { margin: -24px -20px 0; padding: 0 20px 40px; }
+    .mk-hero { margin: 0 -20px 24px; padding: 44px 20px 40px; }
+    .mk-hero__title { font-size: 32px; letter-spacing: -.8px; }
+    .mk-hero__sub { font-size: 15px; }
+    .mk-modal__grid { grid-template-columns: repeat(2, 1fr); }
+    .mk-analytics { grid-template-columns: repeat(2, 1fr); }
+    .mk-deployed { grid-template-columns: 1fr; }
+}
+@media (max-width: 380px) {
+    .mk-hero__title { font-size: 26px; }
+    .mk-grid { grid-template-columns: 1fr; }
+    .mk-featured { grid-template-columns: 1fr; }
+    .mk-modal__grid { grid-template-columns: 1fr; }
+    .mk-analytics { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="mk">
+
+    <!-- ── Hero banner ── -->
+    <section class="mk-hero">
+        <div class="mk-hero__inner">
+            <span class="mk-hero__eyebrow">
+                <span class="mk-hero__eyebrow-dot"></span>
+                <span>{{len .Apps}} apps ready to deploy</span>
+            </span>
+
+            <h1 class="mk-hero__title">
+                Launch any app in seconds with the<br/>
+                <span class="mk-hero__title-grad">Marketplace</span>
+            </h1>
+
+            <p class="mk-hero__sub">
+                Curated open-source and commercial software — preconfigured, security-hardened,
+                and ready to run. One click to deploy on your infrastructure.
+            </p>
+
+            <div class="mk-search">
+                <span class="mk-search__icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M12 12l4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <input type="text" id="mkSearch" class="mk-search__input"
+                       placeholder="Search WordPress, Redis, Grafana, n8n…" autocomplete="off"/>
+                <span class="mk-search__kbd">/</span>
+            </div>
+
+            <div class="mk-hero__stats">
+                <span class="mk-hero__stat">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/></svg>
+                    <strong>11</strong>&nbsp;categories
+                </span>
+                <span class="mk-hero__stat">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.5 3L5.5 9L2.5 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Security hardened
+                </span>
+                <span class="mk-hero__stat">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    Automatic backups
+                </span>
+                <span class="mk-hero__stat">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                    ~90s deploy
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Usage analytics strip ── -->
+    <div class="mk-analytics">
+        <div class="mk-analytics__card">
+            <div class="mk-analytics__icon mk-analytics__icon--apps">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+            </div>
+            <div>
+                <div class="mk-analytics__label">Total Deployed</div>
+                <div class="mk-analytics__value">3 apps</div>
+            </div>
+        </div>
+        <div class="mk-analytics__card">
+            <div class="mk-analytics__icon mk-analytics__icon--cost">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M5.5 5.5h4.5a2 2 0 010 4H6M6 9.5h4.5a2 2 0 010 4H5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+                <div class="mk-analytics__label">Monthly App Cost</div>
+                <div class="mk-analytics__value">$47.00</div>
+            </div>
+        </div>
+        <div class="mk-analytics__card">
+            <div class="mk-analytics__icon mk-analytics__icon--api">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 13l3-4 3 2.5 4-6 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+                <div class="mk-analytics__label">API Calls via Apps</div>
+                <div class="mk-analytics__value">12.4K</div>
+            </div>
+        </div>
+        <div class="mk-analytics__card">
+            <div class="mk-analytics__icon mk-analytics__icon--avail">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+                <div class="mk-analytics__label">Available Apps</div>
+                <div class="mk-analytics__value">48</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Your deployed apps ── -->
+    <div class="mk-section-head">
+        <div>
+            <h2 class="mk-section-head__h">Your Deployed Apps</h2>
+            <p class="mk-section-head__sub">Currently running on your infrastructure.</p>
+        </div>
+        <a href="#" class="mk-section-head__link">
+            View all
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
+
+    <div class="mk-deployed">
+        <div class="mk-deployed__card">
+            <div class="mk-deployed__icon" style="background:#2563eb;color:#fff;">W</div>
+            <div class="mk-deployed__info">
+                <div class="mk-deployed__name">
+                    WordPress
+                    <span class="mk-deployed__status mk-deployed__status--running">
+                        <span class="mk-deployed__status-dot"></span>
+                        Running
+                    </span>
+                </div>
+                <div class="mk-deployed__meta">
+                    <span class="mk-deployed__region">us-east-1</span>
+                    <span>2 instances</span>
+                    <span>Deployed 3d ago</span>
+                </div>
+            </div>
+            <button class="mk-deployed__manage">Manage</button>
+        </div>
+        <div class="mk-deployed__card">
+            <div class="mk-deployed__icon" style="background:#dc2626;color:#fff;">R</div>
+            <div class="mk-deployed__info">
+                <div class="mk-deployed__name">
+                    Redis Cache
+                    <span class="mk-deployed__status mk-deployed__status--running">
+                        <span class="mk-deployed__status-dot"></span>
+                        Running
+                    </span>
+                </div>
+                <div class="mk-deployed__meta">
+                    <span class="mk-deployed__region">eu-west-1</span>
+                    <span>1 instance</span>
+                    <span>Deployed 1w ago</span>
+                </div>
+            </div>
+            <button class="mk-deployed__manage">Manage</button>
+        </div>
+        <div class="mk-deployed__card">
+            <div class="mk-deployed__icon" style="background:#336791;color:#fff;">P</div>
+            <div class="mk-deployed__info">
+                <div class="mk-deployed__name">
+                    PostgreSQL
+                    <span class="mk-deployed__status mk-deployed__status--updating">
+                        <span class="mk-deployed__status-dot"></span>
+                        Updating
+                    </span>
+                </div>
+                <div class="mk-deployed__meta">
+                    <span class="mk-deployed__region">us-east-1</span>
+                    <span>1 instance</span>
+                    <span>Deployed 2w ago</span>
+                </div>
+            </div>
+            <button class="mk-deployed__manage">Manage</button>
+        </div>
+    </div>
+
+    <!-- ── Featured rail ── -->
+    <div class="mk-section-head">
+        <div>
+            <h2 class="mk-section-head__h">Featured</h2>
+            <p class="mk-section-head__sub">Hand-picked by our team — fastest deploys, best ratings.</p>
+        </div>
+        <a href="#all" class="mk-section-head__link" onclick="mkSetCategory('all');return false;">
+            View all
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
+
+    <div class="mk-featured">
+        {{range .Featured}}
+        <div class="mk-featured__card" style="--fc1:{{.IconColor}};--fc2:{{.IconColor}};" onclick="mkOpenApp('{{.Slug}}')">
+            <div class="mk-featured__top">
+                <div class="mk-featured__icon" style="background:{{.IconColor}};color:{{.IconFG}};">
+                    {{slice .Name 0 1}}
+                </div>
+                <div>
+                    <div class="mk-featured__name">{{.Name}}</div>
+                    <div class="mk-featured__tag">{{.Category}}</div>
+                </div>
+            </div>
+            <p class="mk-featured__desc">{{.Tagline}}</p>
+            <div class="mk-featured__foot">
+                <span class="mk-featured__meta">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z" fill="#f59e0b" stroke="#f59e0b" stroke-width="1" stroke-linejoin="round"/></svg>
+                    {{printf "%.1f" .Rating}} · {{.Installs}} installs
+                </span>
+                <button class="mk-featured__btn" onclick="event.stopPropagation();mkOpenApp('{{.Slug}}')">Deploy</button>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- ── Category filter ── -->
+    <div class="mk-cats" role="tablist">
+        {{range .Categories}}
+        <button class="mk-cat{{if eq .ID "all"}} mk-cat--active{{end}}" data-cat="{{.ID}}" onclick="mkSetCategory('{{.ID}}')" role="tab">
+            {{.Label}}
+            <span class="mk-cat__count">{{.Count}}</span>
+        </button>
+        {{end}}
+    </div>
+
+    <!-- ── App grid ── -->
+    <div class="mk-grid" id="mkGrid">
+        {{range .Apps}}
+        <article class="mk-app" data-cat="{{.Category}}"
+                 data-name="{{.Name}}" data-tags="{{range .Tags}}{{.}} {{end}}"
+                 onclick="mkOpenApp('{{.Slug}}')">
+            <div class="mk-app__head">
+                <div class="mk-app__icon" style="background:{{.IconColor}};color:{{.IconFG}};">
+                    {{slice .Name 0 1}}
+                </div>
+                <div class="mk-app__title">
+                    <div class="mk-app__name">
+                        {{.Name}}
+                        {{if .Verified}}
+                        <svg class="mk-app__verified" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 1.2 2-.2.6 1.9L12.5 5 12 7l.5 2-1.4 1.1-.6 1.9-2-.2L7 13 5.5 11.8l-2 .2-.6-1.9L1.5 9 2 7l-.5-2 1.4-1.1.6-1.9 2 .2z" fill="currentColor"/><path d="M5 7l1.5 1.5L9 6" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {{end}}
+                    </div>
+                    <div class="mk-app__tag">v{{.Version}} · {{.License}}</div>
+                </div>
+            </div>
+            <p class="mk-app__desc">{{.Tagline}}</p>
+            <div class="mk-app__rating">
+                <span class="mk-app__rating-stars">
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor" style="opacity:.35"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                </span>
+                {{printf "%.1f" .Rating}}
+                <span class="mk-app__rating-count">({{.Installs}} reviews)</span>
+            </div>
+            <div class="mk-app__chips">
+                {{range .Tags}}<span class="mk-app__chip">{{.}}</span>{{end}}
+            </div>
+            <div class="mk-app__foot">
+                <div class="mk-app__stats">
+                    <span class="mk-app__stat">
+                        <svg class="mk-app__star" width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.2L13 6l-3.4 3L10.5 13 7 10.6 3.5 13l1-4L1 6l4.5-.8z"/></svg>
+                        {{printf "%.1f" .Rating}}
+                    </span>
+                    <span class="mk-app__stat">
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v8M3 6l3 3 3-3M2 11h8" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {{.Installs}}
+                    </span>
+                </div>
+                <button class="mk-app__install" onclick="event.stopPropagation();mkOpenApp('{{.Slug}}')">Install</button>
+            </div>
+        </article>
+        {{end}}
+        <div class="mk-empty" id="mkEmpty" hidden>
+            <div class="mk-empty__icon">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            No apps match your search. Try a different keyword or category.
+        </div>
+    </div>
+</div>
+
+<!-- ── Deploy modal ── -->
+<div class="mk-modal-backdrop" id="mkModal" onclick="if(event.target===this)mkCloseModal()">
+    <div class="mk-modal" role="dialog" aria-modal="true">
+        <div class="mk-modal__banner" id="mkMBanner">
+            <div class="mk-modal__icon" id="mkMIcon">W</div>
+            <div class="mk-modal__title-wrap">
+                <div class="mk-modal__name" id="mkMName">
+                    App
+                    <svg width="16" height="16" viewBox="0 0 14 14" fill="none" id="mkMVerified" style="display:none;"><path d="M7 1l1.5 1.2 2-.2.6 1.9L12.5 5 12 7l.5 2-1.4 1.1-.6 1.9-2-.2L7 13 5.5 11.8l-2 .2-.6-1.9L1.5 9 2 7l-.5-2 1.4-1.1.6-1.9 2 .2z" fill="#fff"/><path d="M5 7l1.5 1.5L9 6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="mk-modal__sub" id="mkMSub">Tagline</div>
+            </div>
+            <button class="mk-modal__close" onclick="mkCloseModal()" title="Close">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="mk-modal__body">
+            <p class="mk-modal__desc" id="mkMDesc"></p>
+
+            <div class="mk-modal__grid">
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">Version</div>
+                    <div class="mk-modal__stat-val" id="mkMVersion">—</div>
+                </div>
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">License</div>
+                    <div class="mk-modal__stat-val" id="mkMLicense">—</div>
+                </div>
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">Publisher</div>
+                    <div class="mk-modal__stat-val" id="mkMPub">—</div>
+                </div>
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">Min RAM</div>
+                    <div class="mk-modal__stat-val" id="mkMRAM">—</div>
+                </div>
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">Min vCPU</div>
+                    <div class="mk-modal__stat-val" id="mkMCPU">—</div>
+                </div>
+                <div class="mk-modal__stat-cell">
+                    <div class="mk-modal__stat-lbl">Min Disk</div>
+                    <div class="mk-modal__stat-val" id="mkMDisk">—</div>
+                </div>
+            </div>
+
+            <h3 class="mk-modal__section-h">Choose a plan</h3>
+            <div class="mk-plan mk-plan--active" data-plan="basic" onclick="mkSelectPlan(this)">
+                <div class="mk-plan__radio"></div>
+                <div class="mk-plan__info">
+                    <div class="mk-plan__name">Basic</div>
+                    <div class="mk-plan__spec" id="mkPlanBasic">1 vCPU · 2 GB RAM · 25 GB SSD</div>
+                </div>
+                <div class="mk-plan__price">$12<span>/mo</span></div>
+            </div>
+            <div class="mk-plan" data-plan="standard" onclick="mkSelectPlan(this)">
+                <div class="mk-plan__radio"></div>
+                <div class="mk-plan__info">
+                    <div class="mk-plan__name">Standard</div>
+                    <div class="mk-plan__spec">2 vCPU · 4 GB RAM · 80 GB SSD · Daily backups</div>
+                </div>
+                <div class="mk-plan__price">$28<span>/mo</span></div>
+            </div>
+            <div class="mk-plan" data-plan="pro" onclick="mkSelectPlan(this)">
+                <div class="mk-plan__radio"></div>
+                <div class="mk-plan__info">
+                    <div class="mk-plan__name">Performance</div>
+                    <div class="mk-plan__spec">4 vCPU · 8 GB RAM · 160 GB NVMe · HA · Hourly backups</div>
+                </div>
+                <div class="mk-plan__price">$64<span>/mo</span></div>
+            </div>
+        </div>
+        <div class="mk-modal__foot">
+            <button class="mk-modal__btn" onclick="mkCloseModal()">Cancel</button>
+            <button class="mk-modal__btn mk-modal__btn--primary" onclick="mkDeploy()">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Deploy now
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── App data indexed by slug for the modal ─────────────────────
+const MK_APPS = {
+    {{range .Apps}}
+    "{{.Slug}}": {
+        name: "{{.Name}}",
+        tagline: "{{.Tagline}}",
+        desc: "{{.Description}}",
+        version: "{{.Version}}",
+        license: "{{.License}}",
+        pub: "{{.Publisher}}",
+        ram: "{{.MinRAM}}",
+        cpu: "{{.MinCPU}}",
+        disk: "{{.MinDisk}}",
+        iconBg: "{{.IconColor}}",
+        iconFg: "{{.IconFG}}",
+        verified: {{.Verified}}
+    },
+    {{end}}
+};
+
+// ── Category filter + search ───────────────────────────────────
+let mkActiveCategory = 'all';
+function mkSetCategory(id) {
+    mkActiveCategory = id;
+    document.querySelectorAll('.mk-cat').forEach(b => {
+        b.classList.toggle('mk-cat--active', b.dataset.cat === id);
+    });
+    mkApplyFilters();
+}
+
+function mkApplyFilters() {
+    const q = (document.getElementById('mkSearch').value || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.mk-app');
+    let shown = 0;
+    cards.forEach(c => {
+        const catOk = mkActiveCategory === 'all' || c.dataset.cat === mkActiveCategory;
+        const txt = ((c.dataset.name || '') + ' ' + (c.dataset.tags || '')).toLowerCase();
+        const qOk  = !q || txt.indexOf(q) !== -1;
+        const show = catOk && qOk;
+        c.hidden = !show;
+        if (show) shown++;
+    });
+    document.getElementById('mkEmpty').hidden = shown !== 0;
+}
+
+document.getElementById('mkSearch').addEventListener('input', mkApplyFilters);
+
+// "/" to focus search
+document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        document.getElementById('mkSearch').focus();
+    }
+    if (e.key === 'Escape') mkCloseModal();
+});
+
+// ── Modal ──────────────────────────────────────────────────────
+function mkOpenApp(slug) {
+    const a = MK_APPS[slug];
+    if (!a) return;
+    document.getElementById('mkMName').firstChild.textContent = a.name + ' ';
+    document.getElementById('mkMSub').textContent  = a.tagline;
+    document.getElementById('mkMDesc').textContent = a.desc;
+    document.getElementById('mkMVersion').textContent = 'v' + a.version;
+    document.getElementById('mkMLicense').textContent = a.license;
+    document.getElementById('mkMPub').textContent = a.pub;
+    document.getElementById('mkMRAM').textContent = a.ram;
+    document.getElementById('mkMCPU').textContent = a.cpu;
+    document.getElementById('mkMDisk').textContent = a.disk;
+    document.getElementById('mkMIcon').textContent = a.name.charAt(0);
+    document.getElementById('mkMIcon').style.background = 'rgba(255,255,255,.2)';
+    const banner = document.getElementById('mkMBanner');
+    banner.style.setProperty('--mc1', a.iconBg);
+    banner.style.setProperty('--mc2', a.iconBg);
+    document.getElementById('mkMVerified').style.display = a.verified ? '' : 'none';
+    document.getElementById('mkModal').classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+}
+function mkCloseModal() {
+    document.getElementById('mkModal').classList.remove('is-open');
+    document.body.style.overflow = '';
+}
+function mkSelectPlan(el) {
+    document.querySelectorAll('.mk-plan').forEach(p => p.classList.remove('mk-plan--active'));
+    el.classList.add('mk-plan--active');
+}
+function mkDeploy() {
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="animation:mkSpin .8s linear infinite"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2" stroke-dasharray="8 20" stroke-linecap="round"/></svg> Provisioning…';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l2.5 2.5L11 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Queued successfully';
+        btn.style.background = '#10b981';
+        btn.style.borderColor = '#10b981';
+    }, 1800);
+    setTimeout(() => {
+        mkCloseModal();
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+    }, 3200);
+}
+</script>
+<style>@keyframes mkSpin { to { transform: rotate(360deg); } }</style>
+{{end}}

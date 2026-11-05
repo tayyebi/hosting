@@ -1,0 +1,1139 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── SLA page — scoped under .sla ── */
+.sla {
+  --sla-red:     #ef4444;
+  --sla-orange:  #f97316;
+  --sla-amber:   #f59e0b;
+  --sla-green:   #10b981;
+  --sla-blue:    #3b82f6;
+  --sla-indigo:  #6366f1;
+  --sla-violet:  #8b5cf6;
+  --sla-bg:       var(--c-surface, #fff);
+  --sla-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --sla-border:   var(--c-border, #e5e7eb);
+  --sla-border-s: var(--c-border-subtle, #eef0f3);
+  --sla-text:     var(--c-text, #111827);
+  --sla-text-2:   var(--c-text-dim, #6b7280);
+  --sla-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .sla {
+  --sla-bg:       #181a20;
+  --sla-bg-soft:  #13151b;
+  --sla-border:   #262932;
+  --sla-border-s: #1f2229;
+  --sla-text:     #e5e7eb;
+  --sla-text-2:   #9ca3af;
+  --sla-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes slaFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.sla-fade { animation: slaFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit span ── */
+.sla-kpi-unit {
+  font-size: 14px;
+  color: var(--sla-text-2);
+}
+
+/* ── Two-column grid ── */
+.sla-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+/* ── Panel (card) ── */
+.sla-panel {
+  margin-bottom: 0;
+}
+.sla-panel--spaced {
+  margin-top: 24px;
+}
+.sla-panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--sla-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sla-panel__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sla-text);
+}
+.sla-panel__subtitle {
+  font-size: 11.5px;
+  color: var(--sla-text-2);
+  font-weight: 300;
+}
+.sla-panel__body {
+  padding: 16px 18px;
+}
+.sla-panel__body--flush {
+  padding: 0;
+}
+.sla-panel__badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  background: rgba(16,185,129,.08);
+  color: #059669;
+}
+[data-theme="dark"] .sla-panel {
+  background: var(--sla-bg);
+  border-color: var(--sla-border);
+}
+[data-theme="dark"] .sla-panel__header {
+  border-color: var(--sla-border);
+}
+[data-theme="dark"] .sla-panel__title {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-panel__subtitle {
+  color: var(--sla-text-2);
+}
+[data-theme="dark"] .sla-panel__badge {
+  background: rgba(16,185,129,.15);
+  color: #6ee7b7;
+}
+
+/* ── Panel description ── */
+.sla-panel__desc {
+  font-size: 13px;
+  color: var(--sla-text-2);
+  margin: 0 0 16px;
+}
+[data-theme="dark"] .sla-panel__desc {
+  color: var(--sla-text-2);
+}
+
+/* ── Error budget stat cards ── */
+.sla-budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sla-budget-card {
+  padding: 10px;
+  border: 1px solid var(--sla-border);
+  border-radius: 8px;
+  background: var(--sla-bg-soft);
+  text-align: center;
+}
+.sla-budget-card__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--sla-text-3);
+  font-weight: 500;
+}
+.sla-budget-card__value {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 2px;
+  color: var(--sla-text);
+}
+.sla-budget-card__value--amber {
+  color: var(--sla-amber);
+}
+.sla-budget-card__value--green {
+  color: var(--sla-green);
+}
+[data-theme="dark"] .sla-budget-card {
+  background: var(--sla-bg-soft);
+  border-color: var(--sla-border);
+}
+[data-theme="dark"] .sla-budget-card__value {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-budget-card__label {
+  color: var(--sla-text-3);
+}
+
+/* ── Burn-down progress bar ── */
+.sla-budget-bar {
+  margin-bottom: 10px;
+}
+.sla-budget-bar__labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.sla-budget-bar__label {
+  font-size: 11px;
+  color: var(--sla-text-2);
+}
+.sla-budget-bar__label--bold {
+  font-weight: 500;
+  color: var(--sla-text);
+}
+.sla-budget-bar__track {
+  height: 8px;
+  background: var(--sla-bg-soft);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.sla-budget-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 999px;
+}
+.sla-budget-bar__midline {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: var(--sla-border);
+}
+.sla-budget-bar__legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.sla-budget-bar__tick {
+  font-size: 10px;
+  color: var(--sla-text-3);
+}
+[data-theme="dark"] .sla-budget-bar__label {
+  color: var(--sla-text-2);
+}
+[data-theme="dark"] .sla-budget-bar__label--bold {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-budget-bar__track {
+  background: var(--sla-bg-soft);
+}
+[data-theme="dark"] .sla-budget-bar__midline {
+  background: var(--sla-border);
+}
+[data-theme="dark"] .sla-budget-bar__tick {
+  color: var(--sla-text-3);
+}
+
+/* ── Burn-down explanation ── */
+.sla-budget-explain {
+  font-size: 11.5px;
+  color: var(--sla-text-2);
+  font-weight: 300;
+  line-height: 1.55;
+}
+[data-theme="dark"] .sla-budget-explain {
+  color: var(--sla-text-2);
+}
+
+/* ── Composite SLO service rows ── */
+.sla-svc-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--sla-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sla-svc-row:last-child {
+  border-bottom: none;
+}
+.sla-svc-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sla-svc-icon--ok {
+  background: rgba(16,185,129,.08);
+}
+.sla-svc-icon--warn {
+  background: rgba(245,158,11,.08);
+}
+[data-theme="dark"] .sla-svc-icon--ok {
+  background: rgba(16,185,129,.15);
+}
+[data-theme="dark"] .sla-svc-icon--warn {
+  background: rgba(245,158,11,.15);
+}
+.sla-svc-info {
+  flex: 1;
+  min-width: 0;
+}
+.sla-svc-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--sla-text);
+}
+.sla-svc-desc {
+  font-size: 11px;
+  color: var(--sla-text-2);
+  font-weight: 300;
+}
+.sla-svc-stats {
+  text-align: right;
+}
+.sla-svc-value {
+  font-size: 14px;
+  font-weight: 500;
+}
+.sla-svc-value--ok {
+  color: var(--sla-green);
+}
+.sla-svc-value--warn {
+  color: var(--sla-amber);
+}
+.sla-svc-sub {
+  font-size: 10px;
+  color: var(--sla-text-2);
+}
+.sla-svc-sub--warn {
+  color: #b45309;
+}
+[data-theme="dark"] .sla-svc-row {
+  border-color: var(--sla-border);
+}
+[data-theme="dark"] .sla-svc-name {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-svc-desc {
+  color: var(--sla-text-2);
+}
+[data-theme="dark"] .sla-svc-sub {
+  color: var(--sla-text-2);
+}
+[data-theme="dark"] .sla-svc-sub--warn {
+  color: #fbbf24;
+}
+
+/* ── Alert stat cards override ── */
+.sla-stat-sub--amber  { color: var(--sla-amber); }
+.sla-stat-sub--green  { color: var(--sla-green); }
+[data-theme="dark"] .sla-stat-sub--amber { color: #fcd34d; }
+[data-theme="dark"] .sla-stat-sub--green { color: #6ee7b7; }
+
+/* ── Alert stats grid ── */
+.sla-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Alert table cell helpers ── */
+.sla-policy-name {
+  font-weight: 500;
+}
+.sla-burn-rate--critical {
+  color: var(--sla-red);
+  font-weight: 500;
+}
+.sla-burn-rate--warning {
+  color: var(--sla-amber);
+  font-weight: 500;
+}
+
+/* ── Budget consumption threshold bars ── */
+.sla-threshold-panel {
+  border: 1px solid var(--sla-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.sla-threshold-panel__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--sla-text);
+}
+.sla-threshold-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sla-threshold {
+  /* single threshold item */
+}
+.sla-threshold__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: var(--sla-text);
+}
+.sla-threshold__severity {
+  font-weight: 500;
+}
+.sla-threshold__severity--info     { color: var(--sla-blue); }
+.sla-threshold__severity--warning  { color: var(--sla-amber); }
+.sla-threshold__severity--critical { color: var(--sla-red); }
+.sla-threshold__track {
+  height: 5px;
+  border-radius: 2px;
+  background: var(--sla-bg-soft);
+  overflow: hidden;
+}
+.sla-threshold__fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.sla-threshold__fill--info     { background: var(--sla-blue); }
+.sla-threshold__fill--warning  { background: var(--sla-amber); }
+.sla-threshold__fill--critical { background: var(--sla-red); }
+[data-theme="dark"] .sla-threshold-panel {
+  border-color: var(--sla-border);
+  background: var(--sla-bg);
+}
+[data-theme="dark"] .sla-threshold-panel__title {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-threshold__header {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-threshold__track {
+  background: var(--sla-bg-soft);
+}
+
+/* ── Notification routing rows ── */
+.sla-routing-panel {
+  border: 1px solid var(--sla-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.sla-routing-panel__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--sla-text);
+}
+.sla-routing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.sla-routing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--sla-border);
+  color: var(--sla-text);
+}
+.sla-routing-row:last-child {
+  border-bottom: none;
+}
+.sla-routing-status {
+  font-weight: 500;
+}
+.sla-routing-status--ok {
+  color: var(--sla-green);
+}
+.sla-routing-status--dim {
+  color: var(--sla-text-2);
+}
+[data-theme="dark"] .sla-routing-panel {
+  border-color: var(--sla-border);
+  background: var(--sla-bg);
+}
+[data-theme="dark"] .sla-routing-panel__title {
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-routing-row {
+  border-color: var(--sla-border);
+  color: var(--sla-text);
+}
+[data-theme="dark"] .sla-routing-status--ok {
+  color: #6ee7b7;
+}
+[data-theme="dark"] .sla-routing-status--dim {
+  color: var(--sla-text-2);
+}
+
+/* ── SLI hint text ── */
+.sla-hint {
+  font-size: 12.5px;
+  color: var(--sla-text-2);
+  margin: -4px 0 12px;
+}
+[data-theme="dark"] .sla-hint {
+  color: var(--sla-text-2);
+}
+
+/* ── Response time footnote ── */
+.sla-footnote {
+  font-size: 12.5px;
+  color: var(--sla-text-3);
+}
+[data-theme="dark"] .sla-footnote {
+  color: var(--sla-text-3);
+}
+
+/* ── Below-threshold status badge ── */
+.sla-status--below {
+  background: rgba(107,114,128,.1);
+  color: #6b7280;
+}
+[data-theme="dark"] .sla-status--below {
+  background: rgba(107,114,128,.15);
+  color: #9ca3af;
+}
+
+/* ── Constrained input width ── */
+.sla-input--narrow {
+  max-width: 160px;
+}
+
+/* ── Table flush ── */
+.sla-table--flush {
+  margin: 0;
+}
+
+/* ── Badge size override ── */
+.sla-badge--sm {
+  font-size: 11px;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .sla-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .sla-budget-grid {
+    grid-template-columns: 1fr;
+  }
+  .sla-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .sla-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .sla-svc-row {
+    flex-wrap: wrap;
+  }
+  .sla-threshold__header {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+@media (max-width: 380px) {
+  .sla-svc-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sla-svc-stats {
+    text-align: left;
+  }
+  .sla-routing-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .sla-budget-bar__legend {
+    flex-direction: column;
+  }
+}
+</style>
+
+<div class="sla" role="main" aria-label="SLA management">
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">SLA</h1>
+    <p class="ds-page-subtitle">Contractual SLO tiers, live error-budget posture and credit policy.</p>
+</div>
+
+<!-- KPI row -- live SLO posture -->
+<div class="ws-kpi-grid sla-fade" style="animation-delay:.05s" role="region" aria-label="SLO posture metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">99.978<span class="sla-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">30-day availability &middot; API</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2.5" y="7" width="13" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 9h2M5.5 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">72<span class="sla-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Error budget remaining &middot; 28 d</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 12l3-3 3 3 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 6h5v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">1.8<span class="sla-kpi-unit">&times;</span></div>
+            <div class="ws-kpi-card__label">Burn rate &middot; 1 h window</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">3</div>
+            <div class="ws-kpi-card__label">Breaches YTD &middot; $121.75 credits</div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-layout sla-fade" style="animation-delay:.1s">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">SLA</div>
+        <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'sla-tiers')" aria-label="View SLA tiers">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 12V8l3.5-4 3.5 2.5L13 3v9" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Tiers
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'sla-response')" aria-label="View response times">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 4v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Response Times
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'sla-credits')" aria-label="View credit policy">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 4v1M7.5 10v1M5 6a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Credits
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'sla-history')" aria-label="View breach history">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="2" y="3" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M5 3V2M10 3V2M2 6h11" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            History
+        </button>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- Tiers -->
+        <section class="settings-section settings-section--active" id="sla-tiers">
+            <h2 class="settings-section__title">SLA Tiers</h2>
+            <p class="settings-section__sub">Uptime guarantees linked to pricing plans.</p>
+
+            <div class="sla-tier-grid">
+                <div class="sla-tier-card">
+                    <div class="sla-tier-card__plan">Starter</div>
+                    <div class="sla-tier-card__uptime">No SLA</div>
+                    <div class="sla-tier-card__desc">Best-effort service. No contractual uptime commitment.</div>
+                    <div class="sla-tier-card__credit">No credits</div>
+                </div>
+                <div class="sla-tier-card sla-tier-card--active">
+                    <div class="sla-tier-card__plan">Pro</div>
+                    <div class="sla-tier-card__uptime">99.5%</div>
+                    <div class="sla-tier-card__desc">Max 3.65 hrs downtime/month. Credits issued for breaches.</div>
+                    <div class="sla-tier-card__credit">10% of monthly fee per breach</div>
+                </div>
+                <div class="sla-tier-card sla-tier-card--active">
+                    <div class="sla-tier-card__plan">Business</div>
+                    <div class="sla-tier-card__uptime">99.9%</div>
+                    <div class="sla-tier-card__desc">Max 43.8 min downtime/month. Priority incident response.</div>
+                    <div class="sla-tier-card__credit">25% of monthly fee per breach</div>
+                </div>
+                <div class="sla-tier-card">
+                    <div class="sla-tier-card__plan">Enterprise</div>
+                    <div class="sla-tier-card__uptime">Custom</div>
+                    <div class="sla-tier-card__desc">Negotiated per-client MSA. Up to 99.99% available.</div>
+                    <div class="sla-tier-card__credit">Per MSA terms</div>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Service Level Indicators</h3>
+            <p class="sla-hint">Signals that roll up into each tier's uptime calculation. Measured from external black-box probes (fra1, sin1, iad1).</p>
+            <div class="clients-table-wrap">
+            <table class="tenant-table" role="table" aria-label="Service level indicators">
+                <thead><tr><th scope="col">SLI</th><th scope="col">Definition</th><th scope="col">Target</th><th scope="col">Current 28 d</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="tenant-table__name">api.availability</td>
+                        <td class="tenant-table__domain">% of /v1/* requests with 2xx/3xx over 1-min window</td>
+                        <td>&ge; 99.9%</td>
+                        <td><strong>99.978%</strong></td>
+                        <td><span class="tk-status tk-status--resolved">On track</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tenant-table__name">api.latency.p99</td>
+                        <td class="tenant-table__domain">p99 of /v1/* latency, measured edge-to-edge</td>
+                        <td>&le; 350 ms</td>
+                        <td><strong>284 ms</strong></td>
+                        <td><span class="tk-status tk-status--resolved">On track</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tenant-table__name">dashboard.availability</td>
+                        <td class="tenant-table__domain">Synthetic login&rarr;render check every 30 s</td>
+                        <td>&ge; 99.5%</td>
+                        <td><strong>99.612%</strong></td>
+                        <td><span class="tk-status tk-status--resolved">On track</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tenant-table__name">webhook.delivery</td>
+                        <td class="tenant-table__domain">% of webhook attempts delivered &lt; 60 s (w/ retries)</td>
+                        <td>&ge; 99.0%</td>
+                        <td><strong>98.71%</strong></td>
+                        <td><span class="tk-status tk-status--progress">At risk</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Maintenance windows</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Scheduled maintenance excludes SLA</div>
+                    <div class="st-toggle-sub">Announced maintenance does not count toward downtime calculations</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group" style="margin-top:16px;">
+                <label class="st-label">Minimum advance notice (hours)</label>
+                <input class="st-input sla-input--narrow" type="number" value="72">
+            </div>
+            <div class="st-btn-row"><button class="st-btn-primary" aria-label="Save maintenance window settings">Save</button></div>
+        </section>
+
+        <!-- Response Times -->
+        <section class="settings-section" id="sla-response">
+            <h2 class="settings-section__title">Response Times</h2>
+            <p class="settings-section__sub">Target first-response times by issue severity.</p>
+
+            <div class="clients-table-wrap">
+            <table class="tenant-table" role="table" aria-label="Response time targets by severity">
+                <thead><tr><th scope="col">Severity</th><th scope="col">Description</th><th scope="col">Starter</th><th scope="col">Pro</th><th scope="col">Business</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tk-priority tk-priority--critical">Critical</span></td>
+                        <td class="tenant-table__domain">Complete service outage</td>
+                        <td class="sla-resp">Best effort</td>
+                        <td class="sla-resp sla-resp--ok">2 hr</td>
+                        <td class="sla-resp sla-resp--ok">30 min</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tk-priority tk-priority--high">High</span></td>
+                        <td class="tenant-table__domain">Major feature degraded</td>
+                        <td class="sla-resp">Best effort</td>
+                        <td class="sla-resp sla-resp--ok">8 hr</td>
+                        <td class="sla-resp sla-resp--ok">2 hr</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tk-priority tk-priority--normal">Normal</span></td>
+                        <td class="tenant-table__domain">Minor issue or question</td>
+                        <td class="sla-resp">48 hr</td>
+                        <td class="sla-resp">24 hr</td>
+                        <td class="sla-resp sla-resp--ok">8 hr</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tk-priority tk-priority--low">Low</span></td>
+                        <td class="tenant-table__domain">General inquiry</td>
+                        <td class="sla-resp">72 hr</td>
+                        <td class="sla-resp">48 hr</td>
+                        <td class="sla-resp">24 hr</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="sla-footnote">Response times are measured during business hours (Mon&ndash;Fri 08:00&ndash;20:00 CET) for Starter and Pro. Business tier is 24/7.</p>
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Business hours</h3>
+            <div class="st-group"><label class="st-label">Start time</label><input class="st-input sla-input--narrow" type="time" value="08:00"></div>
+            <div class="st-group"><label class="st-label">End time</label><input class="st-input sla-input--narrow" type="time" value="20:00"></div>
+            <div class="st-group"><label class="st-label">Timezone</label><select class="st-input st-select"><option selected>Europe/Berlin</option><option>UTC</option><option>America/New_York</option></select></div>
+            <div class="st-btn-row"><button class="st-btn-primary" aria-label="Save business hours settings">Save</button></div>
+        </section>
+
+        <!-- Credits -->
+        <section class="settings-section" id="sla-credits">
+            <h2 class="settings-section__title">Credits</h2>
+            <p class="settings-section__sub">Rules for issuing service credits when SLA is breached.</p>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Automatic credit issuance</div>
+                    <div class="st-toggle-sub">Issue credits automatically when a breach is detected</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Require client request</div>
+                    <div class="st-toggle-sub">Client must submit a complaint ticket to receive credits</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Credit limits</h3>
+            <div class="st-group"><label class="st-label">Max credits per month (% of invoice)</label><input class="st-input sla-input--narrow" type="number" value="50" min="0" max="100"></div>
+            <div class="st-group"><label class="st-label">Credit expiry (days after issue)</label><input class="st-input sla-input--narrow" type="number" value="90"></div>
+            <div class="st-group"><label class="st-label">Credit form (applied as)</label>
+                <select class="st-input st-select">
+                    <option selected>Account credit (deducted from next invoice)</option>
+                    <option>Direct refund</option>
+                    <option>Manual &mdash; reviewed per case</option>
+                </select>
+            </div>
+            <div class="st-btn-row"><button class="st-btn-primary" aria-label="Save credit policy settings">Save</button></div>
+        </section>
+
+        <!-- History -->
+        <section class="settings-section" id="sla-history">
+            <h2 class="settings-section__title">History</h2>
+            <p class="settings-section__sub">Recent SLA breaches and credits issued.</p>
+
+            <div class="clients-table-wrap">
+            <table class="tenant-table" role="table" aria-label="SLA breach history">
+                <thead><tr><th scope="col">Date</th><th scope="col">Client</th><th scope="col">Incident</th><th scope="col">Downtime</th><th scope="col">Credit issued</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td class="tk-date">2024-11-01</td>
+                        <td><div class="tk-client">Lena Bauer</div></td>
+                        <td class="tenant-table__domain">Network outage &mdash; fra1 rack 7</td>
+                        <td><strong>2h 14m</strong></td>
+                        <td class="rf-amount">$49.75</td>
+                        <td><span class="tk-status tk-status--resolved">Issued</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tk-date">2024-10-18</td>
+                        <td><div class="tk-client">Alice Monroe</div></td>
+                        <td class="tenant-table__domain">Storage controller failover delay</td>
+                        <td><strong>47m</strong></td>
+                        <td class="rf-amount">$22.25</td>
+                        <td><span class="tk-status tk-status--resolved">Issued</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tk-date">2024-09-05</td>
+                        <td><div class="tk-client">Faisal Al-Amin</div></td>
+                        <td class="tenant-table__domain">Hypervisor reboot &mdash; unplanned</td>
+                        <td><strong>1h 03m</strong></td>
+                        <td class="rf-amount">$49.75</td>
+                        <td><span class="tk-status tk-status--progress">Pending review</span></td>
+                    </tr>
+                    <tr>
+                        <td class="tk-date">2024-08-22</td>
+                        <td><div class="tk-client">James Wright</div></td>
+                        <td class="tenant-table__domain">DDoS mitigation routing issue</td>
+                        <td><strong>31m</strong></td>
+                        <td class="rf-amount">&mdash;</td>
+                        <td><span class="tk-status sla-status--below">Below threshold</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- ── Composite SLO Dashboard & Error Budget ── -->
+<div class="sla-two-col sla-fade" style="animation-delay:.15s">
+
+    <!-- Error budget burn-down -->
+    <div class="clients-table-wrap sla-panel" role="region" aria-label="Error budget burn-down">
+        <div class="sla-panel__header">
+            <div>
+                <div class="sla-panel__title">Error Budget Burn-Down</div>
+                <div class="sla-panel__subtitle">Rolling 28-day window &middot; Pro tier (99.5% SLO)</div>
+            </div>
+            <span class="sla-panel__badge">Healthy</span>
+        </div>
+        <div class="sla-panel__body">
+            <div class="sla-budget-grid">
+                <div class="sla-budget-card">
+                    <div class="sla-budget-card__label">Budget total</div>
+                    <div class="sla-budget-card__value">3 h 39 m</div>
+                </div>
+                <div class="sla-budget-card">
+                    <div class="sla-budget-card__label">Consumed</div>
+                    <div class="sla-budget-card__value sla-budget-card__value--amber">1 h 02 m</div>
+                </div>
+                <div class="sla-budget-card">
+                    <div class="sla-budget-card__label">Remaining</div>
+                    <div class="sla-budget-card__value sla-budget-card__value--green">2 h 37 m</div>
+                </div>
+            </div>
+            <!-- Mini burn-down bar -->
+            <div class="sla-budget-bar">
+                <div class="sla-budget-bar__labels">
+                    <span class="sla-budget-bar__label">Budget consumed</span>
+                    <span class="sla-budget-bar__label sla-budget-bar__label--bold">28%</span>
+                </div>
+                <div class="sla-budget-bar__track">
+                    <div class="sla-budget-bar__fill" style="width:28%;"></div>
+                    <div class="sla-budget-bar__midline"></div>
+                </div>
+                <div class="sla-budget-bar__legend">
+                    <span class="sla-budget-bar__tick">0%</span>
+                    <span class="sla-budget-bar__tick">50% ideal line (day 14 of 28)</span>
+                    <span class="sla-budget-bar__tick">100%</span>
+                </div>
+            </div>
+            <div class="sla-budget-explain">
+                Burn rate 1.8&times; over 1 h &mdash; within safe range. If sustained for 6 h, budget exhausts in ~18 d. No alert triggered.
+            </div>
+        </div>
+    </div>
+
+    <!-- Composite SLO per service -->
+    <div class="clients-table-wrap sla-panel" role="region" aria-label="Composite SLO by service">
+        <div class="sla-panel__header">
+            <div>
+                <div class="sla-panel__title">Composite SLO by Service</div>
+                <div class="sla-panel__subtitle">Weighted availability from external probes (fra1, sin1, iad1)</div>
+            </div>
+        </div>
+        <div class="sla-panel__body--flush">
+            <div class="sla-svc-row">
+                <div class="sla-svc-icon sla-svc-icon--ok" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="sla-svc-info">
+                    <div class="sla-svc-name">API Gateway</div>
+                    <div class="sla-svc-desc">Target: 99.9% &middot; p99 latency &le; 350 ms</div>
+                </div>
+                <div class="sla-svc-stats">
+                    <div class="sla-svc-value sla-svc-value--ok">99.978%</div>
+                    <div class="sla-svc-sub">284 ms p99</div>
+                </div>
+            </div>
+            <div class="sla-svc-row">
+                <div class="sla-svc-icon sla-svc-icon--ok" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="sla-svc-info">
+                    <div class="sla-svc-name">Compute (VM provisioning)</div>
+                    <div class="sla-svc-desc">Target: 99.9% &middot; boot &lt; 90 s</div>
+                </div>
+                <div class="sla-svc-stats">
+                    <div class="sla-svc-value sla-svc-value--ok">99.941%</div>
+                    <div class="sla-svc-sub">62 s avg boot</div>
+                </div>
+            </div>
+            <div class="sla-svc-row">
+                <div class="sla-svc-icon sla-svc-icon--ok" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="sla-svc-info">
+                    <div class="sla-svc-name">Dashboard (web console)</div>
+                    <div class="sla-svc-desc">Target: 99.5% &middot; synthetic login-to-render</div>
+                </div>
+                <div class="sla-svc-stats">
+                    <div class="sla-svc-value sla-svc-value--ok">99.612%</div>
+                    <div class="sla-svc-sub">1.4 s LCP</div>
+                </div>
+            </div>
+            <div class="sla-svc-row">
+                <div class="sla-svc-icon sla-svc-icon--warn" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v5M7 10h.01" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="sla-svc-info">
+                    <div class="sla-svc-name">Webhook delivery</div>
+                    <div class="sla-svc-desc">Target: 99.0% &middot; delivered &lt; 60 s w/ retries</div>
+                </div>
+                <div class="sla-svc-stats">
+                    <div class="sla-svc-value sla-svc-value--warn">98.71%</div>
+                    <div class="sla-svc-sub sla-svc-sub--warn">At risk</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('#sla-tiers,#sla-response,#sla-credits,#sla-history').forEach(s => s.classList.remove('settings-section--active'));
+    document.querySelectorAll('.settings-sidebar .settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
+    btn.classList.add('settings-nav__item--active');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+</script>
+
+<!-- ── Error Budget Alerting & Burn-Rate Policies ── -->
+<div class="ds-panel sla-panel--spaced sla-fade" style="animation-delay:.2s" role="region" aria-label="Error budget alerting and burn-rate policies">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">Error Budget Alerting &amp; Burn-Rate Policies</h2>
+        <button class="btn btn--primary btn--sm" aria-label="Create new alert policy">+ New alert policy</button>
+    </div>
+    <p class="sla-panel__desc">Define multi-window burn-rate alerts that fire before error budgets are exhausted. Policies integrate with PagerDuty, Slack, and the incident management pipeline.</p>
+
+    <div class="sla-stats-grid">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Active alert policies</div>
+            <div class="ds-stat-card__value">7</div>
+            <div class="ds-stat-card__sub">Across 4 SLIs</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Alerts fired (30 d)</div>
+            <div class="ds-stat-card__value">12</div>
+            <div class="ds-stat-card__sub sla-stat-sub--amber">3 escalated to incident</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">False-positive rate</div>
+            <div class="ds-stat-card__value">8.3%</div>
+            <div class="ds-stat-card__sub sla-stat-sub--green">&darr; from 14% after tuning</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Avg time to page</div>
+            <div class="ds-stat-card__value">22 s</div>
+            <div class="ds-stat-card__sub sla-stat-sub--green">From budget breach detection</div>
+        </div>
+    </div>
+
+    <!-- Alert policies table -->
+    <div class="clients-table-wrap sla-fade" style="animation-delay:.25s">
+        <table class="tenant-table" role="table" aria-label="Burn-rate alert policies">
+            <thead>
+                <tr>
+                    <th scope="col">Policy name</th>
+                    <th scope="col">SLI</th>
+                    <th scope="col">Burn rate threshold</th>
+                    <th scope="col">Short window</th>
+                    <th scope="col">Long window</th>
+                    <th scope="col">Channels</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="sla-policy-name">API fast burn</td>
+                    <td>api.availability</td>
+                    <td class="sla-burn-rate--critical">14.4&times;</td>
+                    <td>5 min</td>
+                    <td>1 h</td>
+                    <td>PagerDuty P1</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">API slow burn</td>
+                    <td>api.availability</td>
+                    <td class="sla-burn-rate--warning">6.0&times;</td>
+                    <td>30 min</td>
+                    <td>6 h</td>
+                    <td>Slack #sre-alerts</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">Latency P99 spike</td>
+                    <td>api.latency.p99</td>
+                    <td class="sla-burn-rate--critical">14.4&times;</td>
+                    <td>5 min</td>
+                    <td>1 h</td>
+                    <td>PagerDuty P2</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">Dashboard availability</td>
+                    <td>dashboard.availability</td>
+                    <td class="sla-burn-rate--warning">6.0&times;</td>
+                    <td>15 min</td>
+                    <td>3 h</td>
+                    <td>Slack #platform</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">Webhook delivery drop</td>
+                    <td>webhook.delivery</td>
+                    <td class="sla-burn-rate--warning">6.0&times;</td>
+                    <td>30 min</td>
+                    <td>6 h</td>
+                    <td>Slack #integrations</td>
+                    <td><span class="badge badge--warning sla-badge--sm">Firing</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">DB cluster fast burn</td>
+                    <td>db.availability</td>
+                    <td class="sla-burn-rate--critical">14.4&times;</td>
+                    <td>5 min</td>
+                    <td>1 h</td>
+                    <td>PagerDuty P1</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+                <tr>
+                    <td class="sla-policy-name">Storage I/O degradation</td>
+                    <td>storage.iops</td>
+                    <td class="sla-burn-rate--warning">3.0&times;</td>
+                    <td>1 h</td>
+                    <td>24 h</td>
+                    <td>Slack #infra</td>
+                    <td><span class="badge badge--success sla-badge--sm">Armed</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Budget consumption & notification config -->
+    <div class="sla-two-col sla-fade" style="animation-delay:.3s;margin-top:16px;margin-bottom:0;">
+        <div class="sla-threshold-panel" role="region" aria-label="Budget consumption thresholds">
+            <div class="sla-threshold-panel__title">Budget Consumption Thresholds</div>
+            <div class="sla-threshold-list">
+                <div class="sla-threshold">
+                    <div class="sla-threshold__header">
+                        <span>50% consumed &rarr; Slack notification</span>
+                        <span class="sla-threshold__severity sla-threshold__severity--info">Info</span>
+                    </div>
+                    <div class="sla-threshold__track">
+                        <div class="sla-threshold__fill sla-threshold__fill--info" style="width:50%;"></div>
+                    </div>
+                </div>
+                <div class="sla-threshold">
+                    <div class="sla-threshold__header">
+                        <span>75% consumed &rarr; Slack + email to SRE lead</span>
+                        <span class="sla-threshold__severity sla-threshold__severity--warning">Warning</span>
+                    </div>
+                    <div class="sla-threshold__track">
+                        <div class="sla-threshold__fill sla-threshold__fill--warning" style="width:75%;"></div>
+                    </div>
+                </div>
+                <div class="sla-threshold">
+                    <div class="sla-threshold__header">
+                        <span>90% consumed &rarr; PagerDuty page</span>
+                        <span class="sla-threshold__severity sla-threshold__severity--critical">Critical</span>
+                    </div>
+                    <div class="sla-threshold__track">
+                        <div class="sla-threshold__fill sla-threshold__fill--critical" style="width:90%;"></div>
+                    </div>
+                </div>
+                <div class="sla-threshold">
+                    <div class="sla-threshold__header">
+                        <span>100% exhausted &rarr; Auto-create incident</span>
+                        <span class="sla-threshold__severity sla-threshold__severity--critical">Breach</span>
+                    </div>
+                    <div class="sla-threshold__track">
+                        <div class="sla-threshold__fill sla-threshold__fill--critical" style="width:100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sla-routing-panel" role="region" aria-label="Notification routing configuration">
+            <div class="sla-routing-panel__title">Notification Routing</div>
+            <div class="sla-routing-list">
+                <div class="sla-routing-row">
+                    <span>PagerDuty service key</span>
+                    <span class="sla-routing-status sla-routing-status--ok">&bull; Connected</span>
+                </div>
+                <div class="sla-routing-row">
+                    <span>Slack workspace</span>
+                    <span class="sla-routing-status sla-routing-status--ok">&bull; Connected (4 channels)</span>
+                </div>
+                <div class="sla-routing-row">
+                    <span>Email distribution list</span>
+                    <span class="sla-routing-status sla-routing-status--ok">&bull; sre@acme.io (8 members)</span>
+                </div>
+                <div class="sla-routing-row">
+                    <span>Webhook (custom)</span>
+                    <span class="sla-routing-status sla-routing-status--dim">Not configured</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.sla -->
+{{end}}

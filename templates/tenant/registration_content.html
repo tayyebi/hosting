@@ -1,0 +1,1148 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Registration page — scoped under .reg ── */
+.reg {
+  --reg-indigo:  #6366f1;
+  --reg-emerald: #10b981;
+  --reg-amber:   #f59e0b;
+  --reg-red:     #ef4444;
+  --reg-violet:  #8b5cf6;
+  --reg-blue:    #3b82f6;
+  --reg-bg:       var(--c-surface, #fff);
+  --reg-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --reg-border:   var(--c-border, #e5e7eb);
+  --reg-text:     var(--c-text, #111827);
+  --reg-text-2:   var(--c-text-dim, #6b7280);
+  --reg-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .reg {
+  --reg-bg:       #181a20;
+  --reg-bg-soft:  #13151b;
+  --reg-border:   #262932;
+  --reg-text:     #e5e7eb;
+  --reg-text-2:   #9ca3af;
+  --reg-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes regFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.reg-fade { animation: regFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit text ── */
+.reg-kpi-unit {
+  font-size: 14px;
+  color: var(--reg-text-2);
+}
+
+/* ── Master toggle ── */
+.reg-master-toggle {
+  padding: 14px 0;
+}
+
+/* ── Access mode cards ── */
+.reg-access-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.reg-access-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 14px;
+  border: 1.5px solid var(--reg-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  background: var(--reg-bg);
+  text-align: center;
+}
+.reg-access-card:hover {
+  border-color: var(--reg-indigo);
+  background: rgba(99,102,241,.03);
+}
+.reg-access-card--active {
+  border-color: var(--reg-indigo);
+  box-shadow: 0 0 0 2px rgba(99,102,241,.15);
+  background: rgba(99,102,241,.04);
+}
+.reg-access-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(99,102,241,.08);
+  color: var(--reg-indigo);
+}
+.reg-access-card__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--reg-text);
+}
+.reg-access-card__desc {
+  font-size: 11px;
+  color: var(--reg-text-2);
+  font-weight: 300;
+}
+[data-theme="dark"] .reg-access-card {
+  background: var(--reg-bg);
+  border-color: var(--reg-border);
+}
+[data-theme="dark"] .reg-access-card:hover {
+  border-color: var(--reg-indigo);
+  background: rgba(99,102,241,.08);
+}
+[data-theme="dark"] .reg-access-card--active {
+  border-color: var(--reg-indigo);
+  box-shadow: 0 0 0 2px rgba(99,102,241,.2);
+  background: rgba(99,102,241,.1);
+}
+[data-theme="dark"] .reg-access-card__icon {
+  background: rgba(99,102,241,.15);
+}
+[data-theme="dark"] .reg-access-card__name {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-access-card__desc {
+  color: var(--reg-text-2);
+}
+
+/* ── Domain list & chips ── */
+.reg-domain-list {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.reg-domain-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(99,102,241,.06);
+  color: var(--reg-text);
+  font-size: 12px;
+  font-weight: 400;
+}
+.reg-domain-chip__remove {
+  background: none;
+  border: none;
+  color: var(--reg-text-3);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color .15s;
+}
+.reg-domain-chip__remove:hover {
+  color: var(--reg-red);
+}
+.reg-domain-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  margin-top: 4px;
+}
+.reg-domain-input {
+  max-width: 220px;
+}
+[data-theme="dark"] .reg-domain-chip {
+  background: rgba(99,102,241,.12);
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-domain-chip__remove {
+  color: var(--reg-text-3);
+}
+[data-theme="dark"] .reg-domain-chip__remove:hover {
+  color: #fca5a5;
+}
+
+/* ── Rate limit input width ── */
+.reg-rate-input {
+  max-width: 140px;
+}
+
+/* ── Field list (drag-sortable rows) ── */
+.reg-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+.reg-field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--reg-border);
+  background: var(--reg-bg);
+  transition: box-shadow .15s, border-color .15s;
+}
+.reg-field-row:hover {
+  border-color: var(--reg-indigo);
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.reg-field-row__drag {
+  cursor: grab;
+  color: var(--reg-text-3);
+  flex-shrink: 0;
+}
+.reg-field-row__name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--reg-text);
+  flex: 1;
+  min-width: 0;
+}
+.reg-field-row__badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.reg-field-row__toggle {
+  flex-shrink: 0;
+}
+.reg-field-badge {
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.reg-field-badge--required {
+  background: rgba(99,102,241,.08);
+  color: #4f46e5;
+}
+.reg-field-badge--system {
+  background: rgba(107,114,128,.08);
+  color: #6b7280;
+}
+.reg-field-badge--optional {
+  background: rgba(16,185,129,.08);
+  color: #059669;
+}
+[data-theme="dark"] .reg-field-row {
+  background: var(--reg-bg);
+  border-color: var(--reg-border);
+}
+[data-theme="dark"] .reg-field-row:hover {
+  border-color: var(--reg-indigo);
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+[data-theme="dark"] .reg-field-row__name {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-field-row__drag {
+  color: var(--reg-text-3);
+}
+[data-theme="dark"] .reg-field-badge--required {
+  background: rgba(99,102,241,.15);
+  color: #a5b4fc;
+}
+[data-theme="dark"] .reg-field-badge--system {
+  background: rgba(107,114,128,.15);
+  color: #9ca3af;
+}
+[data-theme="dark"] .reg-field-badge--optional {
+  background: rgba(16,185,129,.15);
+  color: #6ee7b7;
+}
+
+/* ── Verification funnel ── */
+.reg-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.reg-funnel__step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.reg-funnel__value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--reg-text);
+}
+.reg-funnel__label {
+  font-size: 12px;
+  color: var(--reg-text-2);
+  font-weight: 300;
+}
+.reg-funnel__pct {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--reg-emerald);
+}
+.reg-funnel__bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--reg-indigo);
+  transition: width .4s ease;
+}
+[data-theme="dark"] .reg-funnel__value {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-funnel__label {
+  color: var(--reg-text-2);
+}
+[data-theme="dark"] .reg-funnel__pct {
+  color: #6ee7b7;
+}
+
+/* ── Verification group top spacing ── */
+.reg-verify-group {
+  margin-top: 14px;
+}
+
+/* ── Save button row ── */
+.reg-btn-row {
+  margin-top: 24px;
+}
+
+/* ── Save fields button row ── */
+.reg-btn-row--fields {
+  margin-top: 20px;
+}
+
+/* ── Developer onboarding pipeline ── */
+.reg-pipeline {
+  margin-top: 24px;
+}
+.reg-pipeline__desc {
+  font-size: 13px;
+  color: var(--reg-text-2);
+  margin: 0 0 16px;
+}
+.reg-pipeline__badge {
+  font-size: 11px;
+}
+.reg-pipeline__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.reg-pipeline__sub--amber {
+  color: var(--reg-amber);
+}
+.reg-pipeline__sub--emerald {
+  color: var(--reg-emerald);
+}
+.reg-pipeline__sub--dim {
+  color: var(--reg-text-2);
+}
+.reg-pipeline__sub--red {
+  color: var(--reg-red);
+}
+
+/* Pipeline funnel box */
+.reg-pipeline-funnel {
+  border: 1px solid var(--reg-border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.reg-pipeline-funnel__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 14px;
+  color: var(--reg-text);
+}
+.reg-pipeline-funnel__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reg-pipeline-step__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--reg-text);
+}
+.reg-pipeline-step__pct {
+  font-weight: 500;
+}
+.reg-pipeline-step__pct--green  { color: var(--reg-emerald); }
+.reg-pipeline-step__pct--amber  { color: var(--reg-amber); }
+.reg-pipeline-step__pct--red    { color: var(--reg-red); }
+.reg-pipeline-step__track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-bg-card, #f3f4f6);
+  overflow: hidden;
+}
+.reg-pipeline-step__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s ease;
+}
+.reg-pipeline-step__fill--green  { background: var(--reg-emerald); }
+.reg-pipeline-step__fill--amber  { background: var(--reg-amber); }
+.reg-pipeline-step__fill--red    { background: var(--reg-red); }
+
+[data-theme="dark"] .reg-pipeline-funnel {
+  border-color: var(--reg-border);
+}
+[data-theme="dark"] .reg-pipeline-funnel__title {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-pipeline-step__header {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-pipeline-step__track {
+  background: rgba(255,255,255,.06);
+}
+
+/* Pipeline two-column layout (sandbox + quickstart) */
+.reg-pipeline-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.reg-pipeline-card {
+  border: 1px solid var(--reg-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.reg-pipeline-card__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--reg-text);
+}
+
+/* Sandbox defaults table */
+.reg-sandbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.reg-sandbox-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--reg-border);
+  color: var(--reg-text);
+}
+.reg-sandbox-row:last-child {
+  border-bottom: none;
+}
+.reg-sandbox-row__value {
+  font-weight: 500;
+}
+[data-theme="dark"] .reg-sandbox-row {
+  border-color: var(--reg-border);
+  color: var(--reg-text);
+}
+
+/* Quickstart template rows */
+.reg-quickstart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reg-quickstart-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--c-bg-card, #f9fafb);
+  font-size: 12px;
+  color: var(--reg-text);
+}
+.reg-quickstart-row__count {
+  color: var(--reg-text-2);
+}
+[data-theme="dark"] .reg-pipeline-card {
+  border-color: var(--reg-border);
+  background: var(--reg-bg);
+}
+[data-theme="dark"] .reg-pipeline-card__title {
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-quickstart-row {
+  background: rgba(255,255,255,.04);
+  color: var(--reg-text);
+}
+[data-theme="dark"] .reg-quickstart-row__count {
+  color: var(--reg-text-2);
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .reg-access-cards {
+    grid-template-columns: 1fr;
+  }
+  .reg-pipeline-grid {
+    grid-template-columns: 1fr;
+  }
+  .reg-pipeline__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .reg-field-row {
+    flex-wrap: wrap;
+  }
+  .reg-field-row__badges {
+    order: 3;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .reg-pipeline__stats {
+    grid-template-columns: 1fr;
+  }
+  .reg-access-cards {
+    gap: 8px;
+  }
+  .reg-domain-add {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reg-domain-input {
+    max-width: none;
+  }
+}
+@media (max-width: 380px) {
+  .reg-access-card {
+    padding: 14px 10px;
+  }
+  .reg-funnel__value {
+    font-size: 13px;
+  }
+  .reg-pipeline-step__header {
+    font-size: 11px;
+  }
+  .reg-sandbox-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+</style>
+
+<div class="reg" role="main" aria-label="Registration settings">
+
+<div class="ds-page-header reg-fade" style="animation-delay:.05s">
+    <h1 class="ds-page-title">Registration</h1>
+    <p class="ds-page-subtitle">Sign-up flow, KYC funnel and fraud signals for your tenant domain.</p>
+</div>
+
+<!-- KPI row — funnel metrics -->
+<div class="ws-kpi-grid reg-fade" style="animation-delay:.1s;margin-bottom:20px;" role="region" aria-label="Registration funnel metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4h14l-5 6v5l-4-2V10L2 4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">218</div>
+            <div class="ws-kpi-card__label">Sign-ups · 7 d</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">63.8<span class="reg-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Verify → activate rate</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">9 <span class="reg-kpi-unit">min</span></div>
+            <div class="ws-kpi-card__label">Median KYC approval time</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2l7 13H2L9 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 7v4M9 13h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">4</div>
+            <div class="ws-kpi-card__label">High-risk flagged · awaiting review</div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-layout reg-fade" style="animation-delay:.15s" role="region" aria-label="Registration settings panels">
+    <aside class="settings-sidebar" role="navigation" aria-label="Registration settings navigation">
+        <div class="settings-sidebar__title">Registration</div>
+        <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'reg-general')" aria-label="General registration settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M2 13c0-3.04 2.46-5.5 5.5-5.5S13 9.96 13 13" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            General
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'reg-rules')" aria-label="Registration rules settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="1.5" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M4 5.5h7M4 8h5M4 10.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Rules
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'reg-fields')" aria-label="Form fields settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="1.5" y="3.5" width="12" height="3" rx="1" stroke="currentColor" stroke-width="1.0"/><rect x="1.5" y="8.5" width="12" height="3" rx="1" stroke="currentColor" stroke-width="1.0"/></svg>
+            Form Fields
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'reg-verification')" aria-label="Verification settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 8l3.5 3.5L13 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Verification
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'reg-notifications')" aria-label="Notification settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1.5a4.5 4.5 0 014.5 4.5c0 3 1.5 4 1.5 4H2s1.5-1 1.5-4a4.5 4.5 0 014.5-4.5z" stroke="currentColor" stroke-width="1.0"/><path d="M6 10.5a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.0"/></svg>
+            Notifications
+        </button>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- ── General ── -->
+        <section class="settings-section settings-section--active" id="reg-general" role="region" aria-label="General registration settings">
+            <h2 class="settings-section__title">General</h2>
+            <p class="settings-section__sub">Enable or disable the public registration page for this tenant domain.</p>
+
+            <div class="st-toggle-row reg-master-toggle">
+                <div>
+                    <div class="st-toggle-label">Registration enabled</div>
+                    <div class="st-toggle-sub">Show the sign-up page at <code>/register</code> on this tenant's domain</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle registration enabled"><input type="checkbox" checked id="regMasterToggle" onchange="syncMasterToggle()" aria-label="Registration enabled toggle"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div id="regGeneralBody">
+                <div class="settings-divider"></div>
+
+                <div class="st-group">
+                    <label class="st-label" for="regPageUrl">Registration page URL</label>
+                    <input class="st-input" type="text" value="https://acme.platform.io/register" readonly id="regPageUrl" aria-label="Registration page URL">
+                </div>
+
+                <div class="st-group">
+                    <label class="st-label" for="regRedirect">Redirect after registration</label>
+                    <input class="st-input" type="text" value="/dashboard" placeholder="/dashboard" id="regRedirect" aria-label="Redirect path after registration">
+                </div>
+
+                <div class="st-group">
+                    <label class="st-label" for="regDefaultRole">Default new-user role</label>
+                    <select class="st-input" id="regDefaultRole" aria-label="Default role for new users">
+                        <option>Client</option>
+                        <option>Viewer</option>
+                        <option>Member</option>
+                    </select>
+                </div>
+
+                <div class="settings-divider"></div>
+                <h3 class="st-subheading">Access mode</h3>
+
+                <div class="reg-access-cards" role="radiogroup" aria-label="Registration access mode">
+                    <label class="reg-access-card reg-access-card--active" role="radio" aria-checked="true" aria-label="Open registration - anyone can register">
+                        <input type="radio" name="accessMode" value="open" checked hidden>
+                        <div class="reg-access-card__icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.2"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="reg-access-card__name">Open</div>
+                        <div class="reg-access-card__desc">Anyone can register</div>
+                    </label>
+                    <label class="reg-access-card" role="radio" aria-checked="false" aria-label="Invite only registration - requires a valid invite link">
+                        <input type="radio" name="accessMode" value="invite" hidden>
+                        <div class="reg-access-card__icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="reg-access-card__name">Invite only</div>
+                        <div class="reg-access-card__desc">Requires a valid invite link</div>
+                    </label>
+                    <label class="reg-access-card" role="radio" aria-checked="false" aria-label="Approval required registration - admin approves each request">
+                        <input type="radio" name="accessMode" value="approval" hidden>
+                        <div class="reg-access-card__icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="8" r="3.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M14 13l2 2 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="reg-access-card__name">Approval required</div>
+                        <div class="reg-access-card__desc">Admin approves each request</div>
+                    </label>
+                </div>
+
+                <div class="st-btn-row reg-btn-row">
+                    <button class="st-btn-primary" aria-label="Save general registration settings">Save</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Rules ── -->
+        <section class="settings-section" id="reg-rules" role="region" aria-label="Registration rules settings">
+            <h2 class="settings-section__title">Rules</h2>
+            <p class="settings-section__sub">Restrict who is allowed to register based on domain, geography, or rate limits.</p>
+
+            <h3 class="st-subheading">Email domain restrictions</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Restrict to allowed domains</div>
+                    <div class="st-toggle-sub">Only emails from the list below can register</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle domain restriction"><input type="checkbox" id="domainRestrict" onchange="toggleDomainList()" aria-label="Restrict to allowed domains toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="reg-domain-list" id="domainList" hidden role="group" aria-label="Allowed email domains">
+                <div class="reg-domain-chip">acme.com <button class="reg-domain-chip__remove" onclick="this.closest('.reg-domain-chip').remove()" aria-label="Remove acme.com domain">×</button></div>
+                <div class="reg-domain-chip">acme.io <button class="reg-domain-chip__remove" onclick="this.closest('.reg-domain-chip').remove()" aria-label="Remove acme.io domain">×</button></div>
+                <div class="reg-domain-add">
+                    <input class="st-input reg-domain-input" type="text" placeholder="example.com" id="domainInput" aria-label="New domain to allow">
+                    <button class="st-btn-secondary" onclick="addDomain()" aria-label="Add domain to allowed list">Add</button>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Disposable email blocking</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Block disposable email addresses</div>
+                    <div class="st-toggle-sub">Reject known temporary / throwaway email providers</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle disposable email blocking"><input type="checkbox" checked aria-label="Block disposable emails toggle"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Rate limiting</h3>
+            <div class="st-group">
+                <label class="st-label" for="regRatePerIp">Max registrations per hour (per IP)</label>
+                <input class="st-input reg-rate-input" type="number" value="5" id="regRatePerIp" aria-label="Maximum registrations per hour per IP address">
+            </div>
+            <div class="st-group">
+                <label class="st-label" for="regRatePerDay">Max registrations per day (total)</label>
+                <input class="st-input reg-rate-input" type="number" value="200" id="regRatePerDay" aria-label="Maximum total registrations per day">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Geographic restrictions</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Block registrations by country</div>
+                    <div class="st-toggle-sub">Deny sign-ups from selected countries</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle geographic restrictions"><input type="checkbox" aria-label="Block registrations by country toggle"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row reg-btn-row">
+                <button class="st-btn-primary" aria-label="Save registration rules">Save rules</button>
+            </div>
+        </section>
+
+        <!-- ── Form Fields ── -->
+        <section class="settings-section" id="reg-fields" role="region" aria-label="Registration form fields settings">
+            <h2 class="settings-section__title">Form Fields</h2>
+            <p class="settings-section__sub">Choose which fields appear on the registration form and mark which are required.</p>
+
+            <div class="reg-field-list" role="list" aria-label="Registration form fields">
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder email address field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Email address</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--required">Required</span>
+                        <span class="reg-field-badge reg-field-badge--system">System</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Email address field enabled"><input type="checkbox" checked disabled aria-label="Email address field toggle"><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder password field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Password</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--required">Required</span>
+                        <span class="reg-field-badge reg-field-badge--system">System</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Password field enabled"><input type="checkbox" checked disabled aria-label="Password field toggle"><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder full name field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Full name</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--optional">Optional</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Full name field toggle"><input type="checkbox" checked aria-label="Enable full name field"><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder company name field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Company name</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--optional">Optional</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Company name field toggle"><input type="checkbox" aria-label="Enable company name field"><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder phone number field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Phone number</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--optional">Optional</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Phone number field toggle"><input type="checkbox" aria-label="Enable phone number field"><span class="st-toggle__track"></span></label>
+                </div>
+                <div class="reg-field-row" role="listitem">
+                    <div class="reg-field-row__drag" aria-label="Drag to reorder country field">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="4" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="9" r="1" fill="currentColor"/><circle cx="8" cy="9" r="1" fill="currentColor"/></svg>
+                    </div>
+                    <div class="reg-field-row__name">Country</div>
+                    <div class="reg-field-row__badges">
+                        <span class="reg-field-badge reg-field-badge--optional">Optional</span>
+                    </div>
+                    <label class="st-toggle reg-field-row__toggle" aria-label="Country field toggle"><input type="checkbox" aria-label="Enable country field"><span class="st-toggle__track"></span></label>
+                </div>
+            </div>
+
+            <div class="st-btn-row reg-btn-row--fields">
+                <button class="st-btn-primary" aria-label="Save form field settings">Save fields</button>
+            </div>
+        </section>
+
+        <!-- ── Verification ── -->
+        <section class="settings-section" id="reg-verification" role="region" aria-label="Verification settings">
+            <h2 class="settings-section__title">Verification</h2>
+            <p class="settings-section__sub">Identity, risk and compliance checks applied across the onboarding funnel.</p>
+
+            <!-- Funnel -->
+            <div class="reg-funnel" role="img" aria-label="Registration verification funnel showing conversion at each step">
+                <div class="reg-funnel__step">
+                    <div class="reg-funnel__value">218</div>
+                    <div class="reg-funnel__label">Form submitted</div>
+                    <div class="reg-funnel__bar" style="width:100%;"></div>
+                </div>
+                <div class="reg-funnel__step">
+                    <div class="reg-funnel__value">201</div>
+                    <div class="reg-funnel__label">Email verified <span class="reg-funnel__pct">92.2%</span></div>
+                    <div class="reg-funnel__bar" style="width:92%;"></div>
+                </div>
+                <div class="reg-funnel__step">
+                    <div class="reg-funnel__value">178</div>
+                    <div class="reg-funnel__label">Phone OTP passed <span class="reg-funnel__pct">88.6%</span></div>
+                    <div class="reg-funnel__bar" style="width:81.6%;"></div>
+                </div>
+                <div class="reg-funnel__step">
+                    <div class="reg-funnel__value">158</div>
+                    <div class="reg-funnel__label">KYC approved <span class="reg-funnel__pct">88.8%</span></div>
+                    <div class="reg-funnel__bar" style="width:72.5%;"></div>
+                </div>
+                <div class="reg-funnel__step">
+                    <div class="reg-funnel__value">139</div>
+                    <div class="reg-funnel__label">Billing &amp; TOS accepted <span class="reg-funnel__pct">87.9%</span></div>
+                    <div class="reg-funnel__bar" style="width:63.8%;"></div>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Email verification</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Require email confirmation</div>
+                    <div class="st-toggle-sub">Send a verification link before activating the account</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle email confirmation requirement"><input type="checkbox" checked aria-label="Require email confirmation toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group reg-verify-group">
+                <label class="st-label" for="regVerifyExpiry">Verification link expiry</label>
+                <select class="st-input" id="regVerifyExpiry" aria-label="Verification link expiry duration">
+                    <option>1 hour</option>
+                    <option selected>24 hours</option>
+                    <option>72 hours</option>
+                    <option>7 days</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">CAPTCHA</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Enable CAPTCHA</div>
+                    <div class="st-toggle-sub">Protect the registration form from automated sign-ups</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle CAPTCHA"><input type="checkbox" checked aria-label="Enable CAPTCHA toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group reg-verify-group">
+                <label class="st-label" for="regCaptchaProvider">CAPTCHA provider</label>
+                <select class="st-input" id="regCaptchaProvider" aria-label="CAPTCHA provider selection">
+                    <option selected>hCaptcha</option>
+                    <option>reCAPTCHA v2</option>
+                    <option>reCAPTCHA v3</option>
+                    <option>Turnstile (Cloudflare)</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label" for="regCaptchaSiteKey">Site key</label>
+                <input class="st-input" type="text" placeholder="Paste your site key here" id="regCaptchaSiteKey" aria-label="CAPTCHA site key">
+            </div>
+            <div class="st-group">
+                <label class="st-label" for="regCaptchaSecret">Secret key</label>
+                <input class="st-input" type="password" placeholder="Paste your secret key here" id="regCaptchaSecret" aria-label="CAPTCHA secret key">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Password policy</h3>
+            <div class="st-group">
+                <label class="st-label" for="regPwdMinLen">Minimum length</label>
+                <input class="st-input reg-rate-input" type="number" value="8" id="regPwdMinLen" aria-label="Minimum password length">
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Require uppercase letter</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle uppercase letter requirement"><input type="checkbox" checked aria-label="Require uppercase letter toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Require number</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle number requirement"><input type="checkbox" checked aria-label="Require number toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Require special character</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle special character requirement"><input type="checkbox" aria-label="Require special character toggle"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row reg-btn-row">
+                <button class="st-btn-primary" aria-label="Save verification settings">Save</button>
+            </div>
+        </section>
+
+        <!-- ── Notifications ── -->
+        <section class="settings-section" id="reg-notifications" role="region" aria-label="Notification settings">
+            <h2 class="settings-section__title">Notifications</h2>
+            <p class="settings-section__sub">Configure who gets notified when a new user registers.</p>
+
+            <h3 class="st-subheading">Admin notifications</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Notify admins on new registration</div>
+                    <div class="st-toggle-sub">Send an email to the addresses below for every new sign-up</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle admin notification on new registration"><input type="checkbox" checked aria-label="Notify admins on new registration toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group reg-verify-group">
+                <label class="st-label" for="regNotifyEmails">Notification email addresses</label>
+                <input class="st-input" type="text" value="admin@acme.com, ops@acme.com" placeholder="comma-separated emails" id="regNotifyEmails" aria-label="Admin notification email addresses">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Welcome email</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Send welcome email to new users</div>
+                    <div class="st-toggle-sub">Automatically email the user after successful registration</div>
+                </div>
+                <label class="st-toggle" aria-label="Toggle welcome email"><input type="checkbox" checked aria-label="Send welcome email toggle"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group reg-verify-group">
+                <label class="st-label" for="regWelcomeFrom">From name</label>
+                <input class="st-input" type="text" value="Acme Platform" id="regWelcomeFrom" aria-label="Welcome email from name">
+            </div>
+            <div class="st-group">
+                <label class="st-label" for="regWelcomeReply">Reply-to address</label>
+                <input class="st-input" type="email" value="no-reply@acme.com" id="regWelcomeReply" aria-label="Welcome email reply-to address">
+            </div>
+
+            <div class="st-btn-row reg-btn-row">
+                <button class="st-btn-primary" aria-label="Save notification settings">Save</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('settings-section--active'));
+    btn.classList.add('settings-nav__item--active');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+
+function syncMasterToggle() {
+    const on = document.getElementById('regMasterToggle').checked;
+    document.getElementById('regGeneralBody').style.opacity = on ? '1' : '0.4';
+    document.getElementById('regGeneralBody').style.pointerEvents = on ? '' : 'none';
+}
+
+function toggleDomainList() {
+    const el = document.getElementById('domainList');
+    el.hidden = !document.getElementById('domainRestrict').checked;
+}
+
+function addDomain() {
+    const inp = document.getElementById('domainInput');
+    const val = inp.value.trim();
+    if (!val) return;
+    const chip = document.createElement('div');
+    chip.className = 'reg-domain-chip';
+    chip.innerHTML = val + ' <button class="reg-domain-chip__remove" onclick="this.closest(\'.reg-domain-chip\').remove()" aria-label="Remove ' + val + ' domain">×</button>';
+    document.getElementById('domainList').insertBefore(chip, document.querySelector('.reg-domain-add'));
+    inp.value = '';
+}
+
+document.querySelectorAll('.reg-access-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.reg-access-card').forEach(c => {
+            c.classList.remove('reg-access-card--active');
+            c.setAttribute('aria-checked', 'false');
+        });
+        card.classList.add('reg-access-card--active');
+        card.setAttribute('aria-checked', 'true');
+    });
+});
+</script>
+
+<!-- ═══════ Developer Onboarding Pipeline ═══════ -->
+<div class="ds-panel reg-pipeline reg-fade" style="animation-delay:.2s" role="region" aria-label="Developer onboarding pipeline">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">Developer Onboarding Pipeline</h2>
+        <span class="badge badge--info reg-pipeline__badge">Post-registration</span>
+    </div>
+    <p class="reg-pipeline__desc">Guided steps that activate after KYC approval — API key generation, CLI setup, first-resource provisioning, and sandbox environment creation to reduce time-to-first-deploy.</p>
+
+    <div class="reg-pipeline__stats" role="group" aria-label="Pipeline performance metrics">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Pipeline completion rate</div>
+            <div class="ds-stat-card__value">68.4%</div>
+            <div class="ds-stat-card__sub reg-pipeline__sub--amber">Target: 80%</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Median time-to-first-deploy</div>
+            <div class="ds-stat-card__value">23 min</div>
+            <div class="ds-stat-card__sub reg-pipeline__sub--emerald">↓ 41% after pipeline launch</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Active sandboxes</div>
+            <div class="ds-stat-card__value">34</div>
+            <div class="ds-stat-card__sub reg-pipeline__sub--dim">Auto-expire after 72 h</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Drop-off stage</div>
+            <div class="ds-stat-card__value">Step 3</div>
+            <div class="ds-stat-card__sub reg-pipeline__sub--red">First resource provisioning</div>
+        </div>
+    </div>
+
+    <!-- Onboarding funnel steps -->
+    <div class="reg-pipeline-funnel" role="img" aria-label="Pipeline steps completion funnel">
+        <div class="reg-pipeline-funnel__title">Pipeline Steps &amp; Completion Funnel</div>
+        <div class="reg-pipeline-funnel__steps">
+            <div>
+                <div class="reg-pipeline-step__header">
+                    <span><strong>1.</strong> Generate API key pair</span>
+                    <span class="reg-pipeline-step__pct reg-pipeline-step__pct--green">94.2%</span>
+                </div>
+                <div class="reg-pipeline-step__track">
+                    <div class="reg-pipeline-step__fill reg-pipeline-step__fill--green" style="width:94.2%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="reg-pipeline-step__header">
+                    <span><strong>2.</strong> Install CLI + authenticate</span>
+                    <span class="reg-pipeline-step__pct reg-pipeline-step__pct--green">82.7%</span>
+                </div>
+                <div class="reg-pipeline-step__track">
+                    <div class="reg-pipeline-step__fill reg-pipeline-step__fill--green" style="width:82.7%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="reg-pipeline-step__header">
+                    <span><strong>3.</strong> Provision first resource (VM / object store / DB)</span>
+                    <span class="reg-pipeline-step__pct reg-pipeline-step__pct--amber">61.3%</span>
+                </div>
+                <div class="reg-pipeline-step__track">
+                    <div class="reg-pipeline-step__fill reg-pipeline-step__fill--amber" style="width:61.3%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="reg-pipeline-step__header">
+                    <span><strong>4.</strong> Deploy sample app to sandbox</span>
+                    <span class="reg-pipeline-step__pct reg-pipeline-step__pct--amber">54.8%</span>
+                </div>
+                <div class="reg-pipeline-step__track">
+                    <div class="reg-pipeline-step__fill reg-pipeline-step__fill--amber" style="width:54.8%;"></div>
+                </div>
+            </div>
+            <div>
+                <div class="reg-pipeline-step__header">
+                    <span><strong>5.</strong> Connect monitoring &amp; set budget alert</span>
+                    <span class="reg-pipeline-step__pct reg-pipeline-step__pct--red">38.1%</span>
+                </div>
+                <div class="reg-pipeline-step__track">
+                    <div class="reg-pipeline-step__fill reg-pipeline-step__fill--red" style="width:38.1%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sandbox & quickstart config -->
+    <div class="reg-pipeline-grid" role="group" aria-label="Sandbox and quickstart configuration">
+        <div class="reg-pipeline-card" role="region" aria-label="Sandbox environment defaults">
+            <div class="reg-pipeline-card__title">Sandbox Environment Defaults</div>
+            <div class="reg-sandbox-list">
+                <div class="reg-sandbox-row">
+                    <span>Compute quota</span>
+                    <span class="reg-sandbox-row__value">2 vCPU / 4 GB RAM</span>
+                </div>
+                <div class="reg-sandbox-row">
+                    <span>Storage quota</span>
+                    <span class="reg-sandbox-row__value">20 GB NVMe + 50 GB object</span>
+                </div>
+                <div class="reg-sandbox-row">
+                    <span>Network</span>
+                    <span class="reg-sandbox-row__value">Private VLAN, no public IPv4</span>
+                </div>
+                <div class="reg-sandbox-row">
+                    <span>TTL</span>
+                    <span class="reg-sandbox-row__value">72 hours (extendable to 168 h)</span>
+                </div>
+                <div class="reg-sandbox-row">
+                    <span>Spending cap</span>
+                    <span class="reg-sandbox-row__value">$0 (free tier credit)</span>
+                </div>
+            </div>
+        </div>
+        <div class="reg-pipeline-card" role="region" aria-label="Quickstart templates">
+            <div class="reg-pipeline-card__title">Quickstart Templates</div>
+            <div class="reg-quickstart-list">
+                <div class="reg-quickstart-row">
+                    <span>Node.js + PostgreSQL</span>
+                    <span class="reg-quickstart-row__count">deployed 89×</span>
+                </div>
+                <div class="reg-quickstart-row">
+                    <span>Python FastAPI + Redis</span>
+                    <span class="reg-quickstart-row__count">deployed 64×</span>
+                </div>
+                <div class="reg-quickstart-row">
+                    <span>Go microservice + NATS</span>
+                    <span class="reg-quickstart-row__count">deployed 41×</span>
+                </div>
+                <div class="reg-quickstart-row">
+                    <span>Static site + CDN</span>
+                    <span class="reg-quickstart-row__count">deployed 112×</span>
+                </div>
+                <div class="reg-quickstart-row">
+                    <span>WordPress + managed MySQL</span>
+                    <span class="reg-quickstart-row__count">deployed 73×</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.reg -->
+{{end}}

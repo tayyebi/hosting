@@ -1,0 +1,827 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Status Page — scoped under .stp ── */
+.stp {
+  --stp-green:   #10b981;
+  --stp-yellow:  #f59e0b;
+  --stp-red:     #ef4444;
+  --stp-blue:    #3b82f6;
+  --stp-purple:  #8b5cf6;
+  --stp-gray:    #6b7280;
+  --stp-bg:      var(--c-surface, #fff);
+  --stp-bg-soft: var(--c-bg-soft, #f7f8fa);
+  --stp-bg-card: var(--c-bg-card, #f9fafb);
+  --stp-border:  var(--c-border, #e5e7eb);
+  --stp-text:    var(--c-text, #111827);
+  --stp-text-dim:var(--c-text-dim, #6b7280);
+  --stp-text-3:  var(--c-text-faint, #9ca3af);
+  --stp-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Monaco, monospace;
+}
+[data-theme="dark"] .stp {
+  --stp-bg:      #181a20;
+  --stp-bg-soft: #13151b;
+  --stp-bg-card: #1e2028;
+  --stp-border:  #262932;
+  --stp-text:    #e5e7eb;
+  --stp-text-dim:#9ca3af;
+  --stp-text-3:  #6b7280;
+}
+
+@keyframes stpFade { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+.stp-fade { animation: stpFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Page header ── */
+.stp-page-header { margin-bottom: 16px; }
+
+/* ── Settings panel body ── */
+.stp-panel-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Toggle-row overrides ── */
+.stp-toggle-row--flat {
+  padding: 0;
+  border: none;
+}
+
+/* ── Form group flat ── */
+.stp-group--flat {
+  margin: 0;
+}
+
+/* ── Divider flat ── */
+.stp-divider--flat {
+  margin: 0;
+}
+
+/* ── Button row flat ── */
+.stp-btn-row--flat {
+  margin: 0;
+}
+
+/* ── Subscribers body ── */
+.stp-subs-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Toggle row borderless ── */
+.stp-toggle-row--borderless {
+  border: none;
+}
+
+/* ── Stats section ── */
+.stp-stats-section {
+  padding: 0 20px 16px;
+}
+
+/* ── Stat grid ── */
+.stp-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* ── Section gap ── */
+.stp-section {
+  margin-top: 24px;
+}
+
+/* ── Health-check endpoint mono ── */
+.stp-endpoint {
+  font-family: var(--stp-mono);
+  font-size: 12px;
+}
+
+/* ── HTTP method badges ── */
+.stp-method {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+}
+.stp-method--get {
+  background: rgba(16, 185, 129, .08);
+  color: var(--stp-green);
+}
+.stp-method--post {
+  background: rgba(59, 130, 246, .08);
+  color: var(--stp-blue);
+}
+.stp-method--tcp {
+  background: rgba(139, 92, 246, .08);
+  color: var(--stp-purple);
+}
+.stp-method--icmp {
+  background: rgba(107, 114, 128, .08);
+  color: var(--stp-gray);
+}
+[data-theme="dark"] .stp-method--get  { background: rgba(16, 185, 129, .15); }
+[data-theme="dark"] .stp-method--post { background: rgba(59, 130, 246, .15); }
+[data-theme="dark"] .stp-method--tcp  { background: rgba(139, 92, 246, .15); }
+[data-theme="dark"] .stp-method--icmp { background: rgba(107, 114, 128, .15); }
+
+/* ── Table dim cells ── */
+.stp-cell-dim {
+  font-size: 12px;
+  color: var(--stp-text-dim);
+}
+
+/* ── Latency values ── */
+.stp-latency {
+  font-size: 12px;
+  font-weight: 500;
+}
+.stp-latency--ok   { color: var(--stp-green); }
+.stp-latency--warn { color: var(--stp-yellow); }
+.stp-latency--bad  { color: var(--stp-red); }
+
+/* ── Modal widths ── */
+.stp-modal--check { max-width: 480px; }
+.stp-modal--comp  { max-width: 440px; }
+
+/* ── Form 2-col grid ── */
+.stp-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Live preview (merged from .sp-prev / .sp-mock) ── */
+.stp-prev {
+  margin-top: 24px;
+  background: var(--stp-bg);
+  border: 1px solid var(--stp-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.stp-prev__head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--stp-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--stp-bg-soft);
+}
+.stp-prev__title { font-size: 14px; font-weight: 500; }
+.stp-prev__title-sub {
+  color: var(--stp-text-dim);
+  font-weight: 400;
+}
+.stp-prev__url {
+  font-family: var(--stp-mono);
+  font-size: 12px;
+  color: var(--stp-text-dim);
+  background: var(--stp-bg);
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--stp-border);
+}
+.stp-prev__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.stp-prev__body {
+  padding: 28px;
+  background: linear-gradient(180deg, #f7f8fa, #fff);
+}
+[data-theme="dark"] .stp-prev       { background: #1a1e2e; border-color: rgba(255,255,255,.08); }
+[data-theme="dark"] .stp-prev__head { background: rgba(255,255,255,.04); }
+[data-theme="dark"] .stp-prev__url  { background: #222739; border-color: rgba(255,255,255,.1); color: #9aa0b4; }
+[data-theme="dark"] .stp-prev__body { background: linear-gradient(180deg, #0f1118, #1a1e2e); }
+
+/* Mock status page */
+.stp-mock {
+  max-width: 560px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.06);
+}
+[data-theme="dark"] .stp-mock {
+  background: #1a1e2e;
+  border-color: rgba(255,255,255,.08);
+  box-shadow: 0 10px 40px rgba(0,0,0,.4);
+}
+.stp-mock__brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.stp-mock__mark {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: #7c5cff; color: #fff;
+  display: grid; place-items: center; font-weight: 600;
+}
+.stp-mock__name { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.stp-mock__pill {
+  padding: 14px 18px; border-radius: 10px;
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.3);
+  display: flex; gap: 12px; align-items: center;
+  margin-bottom: 18px;
+}
+.stp-mock__pill-ic {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: #fff; display: grid; place-items: center; flex-shrink: 0;
+}
+.stp-mock__pill-title { font-size: 14px; font-weight: 500; color: #065f46; }
+.stp-mock__pill-sub   { font-size: 12px; color: #10b981; font-weight: 400; }
+[data-theme="dark"] .stp-mock__pill-title { color: #34d399; }
+.stp-mock__cmp {
+  padding: 11px 13px; display: flex;
+  justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,.05); font-size: 13px;
+}
+.stp-mock__cmp:last-child { border-bottom: none; }
+[data-theme="dark"] .stp-mock__cmp { border-color: rgba(255,255,255,.05); }
+.stp-mock__dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #10b981; display: inline-block; margin-right: 6px;
+}
+.stp-mock__bars { display: flex; gap: 1px; height: 18px; width: 140px; }
+.stp-mock__bars i { flex: 1; background: #10b981; border-radius: 1px; min-width: 1px; }
+.stp-mock__bars i.d { background: #f59e0b; }
+.stp-mock__bars i.p { background: #ef4444; }
+
+/* ── Incident Communication Templates ── */
+.stp-comm-panel { margin-top: 24px; }
+.stp-comm-desc {
+  font-size: 13px;
+  color: var(--stp-text-dim);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.stp-comm-code {
+  font-size: 11px;
+  background: var(--stp-bg-card);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+[data-theme="dark"] .stp-comm-code {
+  background: rgba(255,255,255,.08);
+}
+
+/* ── Stat card grid ── */
+.stp-stat-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Stat card sub variants ── */
+.stp-stat-sub--dim   { color: var(--stp-text-dim); }
+.stp-stat-sub--green { color: var(--stp-green); }
+
+/* ── Template table wrap ── */
+.stp-table-wrap {
+  margin-bottom: 16px;
+}
+
+/* ── Phase badges size ── */
+.stp-phase-badge {
+  font-size: 11px;
+}
+
+/* ── Table date cells ── */
+.stp-date-cell {
+  font-size: 12px;
+  color: var(--stp-text-dim);
+}
+
+/* ── Notification channels grid ── */
+.stp-channels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Channel card ── */
+.stp-channel-card {
+  border: 1px solid var(--stp-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+[data-theme="dark"] .stp-channel-card {
+  border-color: rgba(255,255,255,.08);
+  background: var(--stp-bg);
+}
+.stp-channel-card__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--stp-text);
+}
+.stp-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stp-channel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--stp-bg-card);
+  font-size: 12px;
+}
+[data-theme="dark"] .stp-channel-item {
+  background: rgba(255,255,255,.04);
+}
+.stp-channel-status {
+  font-weight: 500;
+}
+.stp-channel-status--green  { color: var(--stp-green); }
+.stp-channel-status--yellow { color: var(--stp-yellow); }
+
+/* ── Post-mortem settings ── */
+.stp-pm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.stp-pm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stp-pm-status--enabled {
+  color: var(--stp-green);
+  font-weight: 500;
+}
+
+/* ── Status link ── */
+.stp-status-link {
+  color: inherit;
+  font-weight: 600;
+}
+.stp-status-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .stp-channels-grid {
+    grid-template-columns: 1fr;
+  }
+  .stp-stat-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .stp-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .stp-form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .stp-prev__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .stp-mock__bars {
+    width: 100px;
+  }
+}
+@media (max-width: 380px) {
+  .stp-panel-body {
+    padding: 14px;
+    gap: 12px;
+  }
+  .stp-subs-body {
+    padding: 14px;
+  }
+  .stp-stats-section {
+    padding: 0 14px 12px;
+  }
+  .stp-prev__body {
+    padding: 16px;
+  }
+  .stp-mock {
+    padding: 16px;
+  }
+}
+</style>
+
+<div class="stp">
+
+<div class="ds-page-header stp-page-header">
+    <h1 class="ds-page-title">Public Status Page</h1>
+    <p class="ds-page-subtitle">Automated health checks, component registry and public incident communication.</p>
+</div>
+
+<!-- Status banner -->
+<div class="replica-status-banner replica-status-banner--healthy stp-section stp-fade" role="status" aria-label="Status page is live">
+    <div class="replica-status-banner__dot"></div>
+    <span>Status page is <strong>live</strong></span>
+    <span class="replica-status-banner__lag">
+        <a href="#" class="stp-status-link" aria-label="Visit public status page at status.acme.io">status.acme.io</a>
+    </span>
+</div>
+
+<div class="ws-mid-grid">
+
+    <!-- Settings panel -->
+    <div class="ws-panel stp-fade" style="animation-delay:60ms" role="region" aria-label="Page settings">
+        <div class="ws-panel__head"><span class="ws-panel__title">Page Settings</span></div>
+        <div class="stp-panel-body">
+            <div class="st-toggle-row stp-toggle-row--flat">
+                <div><div class="st-toggle-label">Status page enabled</div><div class="st-toggle-sub">Make the page publicly accessible</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle status page enabled"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group stp-group--flat">
+                <label class="st-label">Public URL</label>
+                <input class="st-input" type="text" value="status.acme.io" aria-label="Public URL">
+            </div>
+            <div class="st-group stp-group--flat">
+                <label class="st-label">Page title</label>
+                <input class="st-input" type="text" value="Acme Status" aria-label="Page title">
+            </div>
+            <div class="st-group stp-group--flat">
+                <label class="st-label">Support email (shown on page)</label>
+                <input class="st-input" type="email" value="support@acme.io" aria-label="Support email">
+            </div>
+            <div class="st-group stp-group--flat">
+                <label class="st-label">Time zone</label>
+                <select class="st-input st-select" aria-label="Time zone">
+                    <option selected>UTC</option>
+                    <option>Europe/Berlin</option>
+                    <option>America/New_York</option>
+                    <option>Asia/Tokyo</option>
+                </select>
+            </div>
+            <div class="settings-divider stp-divider--flat"></div>
+            <div class="st-toggle-row stp-toggle-row--flat">
+                <div><div class="st-toggle-label">Show uptime graph</div><div class="st-toggle-sub">90-day uptime bars per component</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle show uptime graph"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row stp-toggle-row--flat">
+                <div><div class="st-toggle-label">Show incident history</div><div class="st-toggle-sub">List past incidents on the page</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle show incident history"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row stp-toggle-row--flat">
+                <div><div class="st-toggle-label">Allow subscribers</div><div class="st-toggle-sub">Email &amp; webhook notification opt-in</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle allow subscribers"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-btn-row stp-btn-row--flat"><button class="st-btn-primary" aria-label="Save page settings">Save settings</button></div>
+        </div>
+    </div>
+
+    <!-- Subscribers panel -->
+    <div class="ws-panel stp-fade" style="animation-delay:120ms" role="region" aria-label="Subscribers management">
+        <div class="ws-panel__head">
+            <span class="ws-panel__title">Subscribers</span>
+            <button class="btn btn--ghost btn--sm" aria-label="Export subscribers">Export</button>
+        </div>
+        <div class="stp-subs-body">
+            <div class="st-toggle-row">
+                <div><div class="st-toggle-label">Email notifications</div><div class="st-toggle-sub">Send updates to email subscribers</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle email notifications"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div><div class="st-toggle-label">Webhook notifications</div><div class="st-toggle-sub">POST status events to registered webhooks</div></div>
+                <label class="st-toggle"><input type="checkbox" checked aria-label="Toggle webhook notifications"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row stp-toggle-row--borderless">
+                <div><div class="st-toggle-label">Slack integration</div><div class="st-toggle-sub">Push updates to a Slack channel</div></div>
+                <label class="st-toggle"><input type="checkbox" aria-label="Toggle Slack integration"><span class="st-toggle__track"></span></label>
+            </div>
+        </div>
+        <div class="stp-stats-section">
+            <div class="stp-stat-grid" role="group" aria-label="Subscriber statistics">
+                <div class="sp-stat-card"><div class="sp-stat-val">142</div><div class="sp-stat-label">Email</div></div>
+                <div class="sp-stat-card"><div class="sp-stat-val">8</div><div class="sp-stat-label">Webhooks</div></div>
+                <div class="sp-stat-card"><div class="sp-stat-val">3</div><div class="sp-stat-label">Slack</div></div>
+            </div>
+            <div class="st-group stp-group--flat">
+                <label class="st-label">Webhook URL</label>
+                <input class="st-input" type="url" placeholder="https://hooks.example.com/…" aria-label="Webhook URL">
+            </div>
+            <div class="st-btn-row"><button class="st-btn-primary" aria-label="Add webhook subscriber">Add webhook</button></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Components table -->
+<div class="stp-section stp-fade" style="animation-delay:180ms">
+    <div class="ar-reports-header">
+        <h2 class="ar-reports-title">Components</h2>
+        <button class="btn btn--primary btn--sm" onclick="document.getElementById('newCompModal').hidden=false" aria-label="Add new component">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Add Component
+        </button>
+    </div>
+    <div class="clients-table-wrap">
+    <table class="tenant-table" role="table" aria-label="Status page components">
+        <thead><tr><th>Component</th><th>Group</th><th>Status</th><th>Uptime (90d)</th><th>Visible</th><th></th></tr></thead>
+        <tbody>
+            {{range .Components}}
+            <tr>
+                <td>
+                    <div class="rs-name">{{.Name}}</div>
+                    {{if .Description}}<div class="rs-id">{{.Description}}</div>{{end}}
+                </td>
+                <td class="tenant-table__domain">{{.GroupName}}</td>
+                <td><span class="sp-status sp-status--{{.Status}}">{{.Status}}</span></td>
+                <td>
+                    <div class="sp-uptime-bar" title="{{.Uptime90d}}%">
+                        <div class="sp-uptime-fill{{if lt .Uptime90d "99"}} sp-uptime-fill--bad{{else if lt .Uptime90d "99.9"}} sp-uptime-fill--warn{{end}}" style="width:{{.Uptime90d}}%"></div>
+                    </div>
+                    <span class="sp-uptime-pct">{{.Uptime90d}}%</span>
+                </td>
+                <td><label class="st-toggle"><input type="checkbox" {{if .Visible}}checked{{end}} aria-label="Toggle {{.Name}} visibility"><span class="st-toggle__track"></span></label></td>
+                <td class="tenant-table__actions">
+                    <button class="btn btn--ghost btn--sm">Edit</button>
+                    <form method="POST" action="/t/{{$.TenantSlug}}/status-page/{{.ID}}/delete/" style="display:inline">
+                        <button type="submit" class="btn btn--danger btn--sm">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">No components yet — add one above</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Automated Health Checks -->
+<div class="stp-section stp-fade" style="animation-delay:240ms">
+    <div class="ar-reports-header">
+        <h2 class="ar-reports-title">Automated Health Checks</h2>
+        <button class="btn btn--primary btn--sm" onclick="document.getElementById('newCheckModal').hidden=false" aria-label="Add new health check">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Add Check
+        </button>
+    </div>
+    <div class="clients-table-wrap">
+    <table class="tenant-table" role="table" aria-label="Automated health checks">
+        <thead><tr><th>Endpoint</th><th>Method</th><th>Interval</th><th>Timeout</th><th>Expected</th><th>Status</th><th>Latency</th><th></th></tr></thead>
+        <tbody>
+            <tr>
+                <td><div class="rs-name stp-endpoint">https://api.acme.io/health</div></td>
+                <td><span class="stp-method stp-method--get">GET</span></td>
+                <td class="stp-cell-dim">30s</td>
+                <td class="stp-cell-dim">5s</td>
+                <td class="stp-cell-dim">200</td>
+                <td><span class="sp-status sp-status--operational">Passing</span></td>
+                <td><span class="stp-latency stp-latency--ok">42 ms</span></td>
+                <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm">Edit</button><button class="btn btn--danger btn--sm">Remove</button></td>
+            </tr>
+            <tr>
+                <td><div class="rs-name stp-endpoint">https://api.acme.io/v2/status</div></td>
+                <td><span class="stp-method stp-method--post">POST</span></td>
+                <td class="stp-cell-dim">60s</td>
+                <td class="stp-cell-dim">10s</td>
+                <td class="stp-cell-dim">200</td>
+                <td><span class="sp-status sp-status--operational">Passing</span></td>
+                <td><span class="stp-latency stp-latency--ok">118 ms</span></td>
+                <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm">Edit</button><button class="btn btn--danger btn--sm">Remove</button></td>
+            </tr>
+            <tr>
+                <td><div class="rs-name stp-endpoint">tcp://db-pg-prod.acme.io:5432</div></td>
+                <td><span class="stp-method stp-method--tcp">TCP</span></td>
+                <td class="stp-cell-dim">15s</td>
+                <td class="stp-cell-dim">3s</td>
+                <td class="stp-cell-dim">open</td>
+                <td><span class="sp-status sp-status--degraded">Slow</span></td>
+                <td><span class="stp-latency stp-latency--warn">890 ms</span></td>
+                <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm">Edit</button><button class="btn btn--danger btn--sm">Remove</button></td>
+            </tr>
+            <tr>
+                <td><div class="rs-name stp-endpoint">icmp://cdn-edge-fra.acme.io</div></td>
+                <td><span class="stp-method stp-method--icmp">ICMP</span></td>
+                <td class="stp-cell-dim">10s</td>
+                <td class="stp-cell-dim">2s</td>
+                <td class="stp-cell-dim">reply</td>
+                <td><span class="sp-status sp-status--operational">Passing</span></td>
+                <td><span class="stp-latency stp-latency--ok">8 ms</span></td>
+                <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm">Edit</button><button class="btn btn--danger btn--sm">Remove</button></td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Add Check modal -->
+<div class="modal-backdrop" id="newCheckModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-label="Add health check">
+    <div class="modal stp-modal--check" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Health Check</h2>
+            <button class="modal__close" onclick="document.getElementById('newCheckModal').hidden=true" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field"><label class="form-label">Endpoint URL <span class="form-req">*</span></label><input class="form-input" type="text" placeholder="https://api.example.com/health" aria-required="true"></div>
+            <div class="form-field stp-form-grid-2">
+                <div><label class="form-label">Method</label><select class="form-input" aria-label="HTTP method"><option>GET</option><option>POST</option><option>TCP</option><option>ICMP</option><option>DNS</option></select></div>
+                <div><label class="form-label">Expected status</label><input class="form-input" type="text" value="200" placeholder="200" aria-label="Expected status code"></div>
+            </div>
+            <div class="form-field stp-form-grid-2">
+                <div><label class="form-label">Check interval</label><select class="form-input" aria-label="Check interval"><option>10 seconds</option><option selected>30 seconds</option><option>60 seconds</option><option>5 minutes</option></select></div>
+                <div><label class="form-label">Timeout</label><select class="form-input" aria-label="Timeout"><option>2 seconds</option><option selected>5 seconds</option><option>10 seconds</option><option>30 seconds</option></select></div>
+            </div>
+            <div class="form-field"><label class="form-label">Link to component</label><select class="form-input" aria-label="Link to component"><option>None</option><option>API</option><option>Web Dashboard</option><option>Database Cluster</option><option>CDN</option><option>Email Delivery</option></select></div>
+            <div class="modal__footer"><button class="btn btn--ghost" onclick="document.getElementById('newCheckModal').hidden=true">Cancel</button><button class="btn btn--primary">Add Check</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Component modal -->
+<div class="modal-backdrop" id="newCompModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-label="Add component">
+    <div class="modal stp-modal--comp" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Component</h2>
+            <button class="modal__close" onclick="document.getElementById('newCompModal').hidden=true" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field"><label class="form-label">Name <span class="form-req">*</span></label><input class="form-input" type="text" placeholder="e.g. API" aria-required="true"></div>
+            <div class="form-field"><label class="form-label">Group</label><input class="form-input" type="text" placeholder="e.g. Core"></div>
+            <div class="form-field"><label class="form-label">Description</label><input class="form-input" type="text" placeholder="Optional description shown on status page"></div>
+            <div class="form-field"><label class="form-label">Initial status</label>
+                <select class="form-input" aria-label="Initial component status">
+                    <option>Operational</option>
+                    <option>Degraded performance</option>
+                    <option>Partial outage</option>
+                    <option>Major outage</option>
+                </select>
+            </div>
+            <div class="modal__footer"><button class="btn btn--ghost" onclick="document.getElementById('newCompModal').hidden=true">Cancel</button><button class="btn btn--primary">Add</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Live public-page preview -->
+<div class="stp-prev stp-fade" style="animation-delay:300ms" role="region" aria-label="Live status page preview">
+    <div class="stp-prev__head">
+        <div class="stp-prev__title">Live preview <span class="stp-prev__title-sub">— how visitors see your page</span></div>
+        <div class="stp-prev__actions"><span class="stp-prev__url">status.acme.io</span><button class="btn btn--ghost btn--sm" aria-label="Open status page in new tab">Open</button></div>
+    </div>
+    <div class="stp-prev__body">
+        <div class="stp-mock" role="img" aria-label="Mock preview of the public status page">
+            <div class="stp-mock__brand">
+                <div class="stp-mock__mark">A</div>
+                <div class="stp-mock__name">Acme Status</div>
+            </div>
+            <div class="stp-mock__pill">
+                <div class="stp-mock__pill-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div><div class="stp-mock__pill-title">All systems operational</div><div class="stp-mock__pill-sub">Updated just now</div></div>
+            </div>
+            <div class="stp-mock__cmp"><div><span class="stp-mock__dot"></span>API</div><div class="stp-mock__bars"><i></i><i></i><i></i><i></i><i></i><i class="d"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div class="stp-mock__cmp"><div><span class="stp-mock__dot"></span>Workspace dashboard</div><div class="stp-mock__bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div class="stp-mock__cmp"><div><span class="stp-mock__dot"></span>Database cluster</div><div class="stp-mock__bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="p"></i><i class="p"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div class="stp-mock__cmp"><div><span class="stp-mock__dot"></span>CDN · global</div><div class="stp-mock__bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Incident Communication Templates -->
+<div class="ds-panel stp-comm-panel stp-fade" style="animation-delay:360ms" role="region" aria-label="Incident communication templates">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">Incident Communication Templates</h2>
+        <button class="btn btn--primary btn--sm" aria-label="Create new incident template">+ New template</button>
+    </div>
+    <p class="stp-comm-desc">Pre-drafted messages for each incident phase ensure consistent, timely communication. Variables like <code class="stp-comm-code">{{"{{"}}component{{"}}"}}</code> and <code class="stp-comm-code">{{"{{"}}eta{{"}}"}}</code> are auto-filled from the incident record.</p>
+
+    <div class="stp-stat-card-grid" role="group" aria-label="Template statistics">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Templates available</div>
+            <div class="ds-stat-card__value">12</div>
+            <div class="ds-stat-card__sub stp-stat-sub--dim">4 phases × 3 severity levels</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Avg time-to-post</div>
+            <div class="ds-stat-card__value">47 s</div>
+            <div class="ds-stat-card__sub stp-stat-sub--green">vs 8 min freeform</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Incidents communicated (90 d)</div>
+            <div class="ds-stat-card__value">14</div>
+            <div class="ds-stat-card__sub stp-stat-sub--dim">100% used templates</div>
+        </div>
+    </div>
+
+    <!-- Template library -->
+    <div class="clients-table-wrap stp-table-wrap">
+        <table class="tenant-table" role="table" aria-label="Incident communication template library">
+            <thead>
+                <tr>
+                    <th>Phase</th>
+                    <th>Severity</th>
+                    <th>Template name</th>
+                    <th>Channels</th>
+                    <th>Last used</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge--danger stp-phase-badge">Investigating</span></td>
+                    <td>Major</td>
+                    <td>Service disruption — initial notice</td>
+                    <td>Status page, Email, Slack</td>
+                    <td class="stp-date-cell">Apr 12</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge--warning stp-phase-badge">Identified</span></td>
+                    <td>Major</td>
+                    <td>Root cause identified — ETA provided</td>
+                    <td>Status page, Email, Slack</td>
+                    <td class="stp-date-cell">Apr 12</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge--info stp-phase-badge">Monitoring</span></td>
+                    <td>Major</td>
+                    <td>Fix deployed — monitoring recovery</td>
+                    <td>Status page, Slack</td>
+                    <td class="stp-date-cell">Apr 12</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge--success stp-phase-badge">Resolved</span></td>
+                    <td>Major</td>
+                    <td>Incident resolved — post-mortem link</td>
+                    <td>Status page, Email, Slack</td>
+                    <td class="stp-date-cell">Apr 12</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge--warning stp-phase-badge">Identified</span></td>
+                    <td>Minor</td>
+                    <td>Degraded performance — workaround</td>
+                    <td>Status page</td>
+                    <td class="stp-date-cell">Apr 8</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge--danger stp-phase-badge">Investigating</span></td>
+                    <td>Critical</td>
+                    <td>Platform-wide outage — war room open</td>
+                    <td>Status page, Email, Slack, PagerDuty</td>
+                    <td class="stp-date-cell">Mar 21</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Notification channels -->
+    <div class="stp-channels-grid" role="group" aria-label="Notification channels and post-mortem settings">
+        <div class="stp-channel-card" role="region" aria-label="Notification channels">
+            <div class="stp-channel-card__title">Notification Channels</div>
+            <div class="stp-channel-list">
+                <div class="stp-channel-item">
+                    <span>Status page banner</span>
+                    <span class="stp-channel-status stp-channel-status--green">● Always</span>
+                </div>
+                <div class="stp-channel-item">
+                    <span>Email (142 subscribers)</span>
+                    <span class="stp-channel-status stp-channel-status--green">● Major + Critical</span>
+                </div>
+                <div class="stp-channel-item">
+                    <span>Slack webhook</span>
+                    <span class="stp-channel-status stp-channel-status--green">● All severities</span>
+                </div>
+                <div class="stp-channel-item">
+                    <span>PagerDuty integration</span>
+                    <span class="stp-channel-status stp-channel-status--yellow">● Critical only</span>
+                </div>
+            </div>
+        </div>
+        <div class="stp-channel-card" role="region" aria-label="Post-mortem settings">
+            <div class="stp-channel-card__title">Post-Mortem Settings</div>
+            <div class="stp-pm-list">
+                <div class="stp-pm-row">
+                    <span>Auto-create post-mortem on resolve</span>
+                    <span class="stp-pm-status--enabled">Enabled</span>
+                </div>
+                <div class="stp-pm-row">
+                    <span>Required for severity</span>
+                    <span>Major, Critical</span>
+                </div>
+                <div class="stp-pm-row">
+                    <span>Publish deadline</span>
+                    <span>72 hours after resolve</span>
+                </div>
+                <div class="stp-pm-row">
+                    <span>Public post-mortem page</span>
+                    <span class="stp-pm-status--enabled">Enabled</span>
+                </div>
+                <div class="stp-pm-row">
+                    <span>Blameless format enforced</span>
+                    <span class="stp-pm-status--enabled">Yes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{{end}}

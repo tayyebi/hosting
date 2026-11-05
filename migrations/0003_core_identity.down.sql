@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS user_workspace_invitations;
+DROP TABLE IF EXISTS user_personal_api_keys;
+DROP TABLE IF EXISTS user_security_2fa;
+DROP TABLE IF EXISTS user_preferences;
+DROP TABLE IF EXISTS system_logs;
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS password_reset_tokens;
+DROP TABLE IF EXISTS oauth_tokens;
+DROP TABLE IF EXISTS api_keys;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS user_tenant_memberships;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS tenants;
+DROP FUNCTION IF EXISTS public.create_monthly_partition(text, text, date);

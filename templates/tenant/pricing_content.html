@@ -1,0 +1,799 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Pricing page — scoped under .prc ── */
+.prc {
+  --prc-red:     #ef4444;
+  --prc-orange:  #f97316;
+  --prc-amber:   #f59e0b;
+  --prc-green:   #10b981;
+  --prc-blue:    #3b82f6;
+  --prc-indigo:  #6366f1;
+  --prc-violet:  #8b5cf6;
+  --prc-bg:       var(--c-surface, #fff);
+  --prc-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --prc-border:   var(--c-border, #e5e7eb);
+  --prc-border-s: var(--c-border-subtle, #eef0f3);
+  --prc-text:     var(--c-text, #111827);
+  --prc-text-2:   var(--c-text-dim, #6b7280);
+  --prc-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .prc {
+  --prc-bg:       #181a20;
+  --prc-bg-soft:  #13151b;
+  --prc-border:   #262932;
+  --prc-border-s: #1f2229;
+  --prc-text:     #e5e7eb;
+  --prc-text-2:   #9ca3af;
+  --prc-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes prcFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.prc-fade { animation: prcFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit span ── */
+.prc-kpi-unit {
+  font-size: 14px;
+  color: var(--prc-text-2);
+}
+
+/* ── Section subtitle ── */
+.prc-section-sub {
+  font-size: 12.5px;
+  color: var(--prc-text-2);
+  margin: -4px 0 14px;
+}
+[data-theme="dark"] .prc-section-sub {
+  color: var(--prc-text-2);
+}
+
+/* ── Toolbar ── */
+.prc-toolbar {
+  margin-bottom: 24px;
+}
+.prc-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── KPI grid spacing ── */
+.prc-kpi-wrap {
+  margin-bottom: 20px;
+}
+
+/* ── Table wrap spacing ── */
+.prc-table-wrap {
+  margin-bottom: 28px;
+}
+.prc-table-wrap--sm {
+  margin-bottom: 16px;
+}
+
+/* ── Draft status badge ── */
+.prc-status-draft {
+  background: rgba(107,114,128,.1);
+  color: #6b7280;
+}
+[data-theme="dark"] .prc-status-draft {
+  background: rgba(107,114,128,.15);
+  color: #9ca3af;
+}
+
+/* ── Commitment panel ── */
+.prc-commit-panel {
+  margin-top: 24px;
+}
+
+/* ── Commitment description ── */
+.prc-commit-desc {
+  font-size: 13px;
+  color: var(--prc-text-2);
+  margin: 0 0 16px;
+}
+[data-theme="dark"] .prc-commit-desc {
+  color: var(--prc-text-2);
+}
+
+/* ── Stat card grid ── */
+.prc-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Stat card sub-values ── */
+.prc-stat-sub--green { color: var(--prc-green); }
+.prc-stat-sub--amber { color: var(--prc-amber); }
+.prc-stat-sub--blue  { color: var(--prc-blue); }
+[data-theme="dark"] .prc-stat-sub--green { color: #6ee7b7; }
+[data-theme="dark"] .prc-stat-sub--amber { color: #fcd34d; }
+[data-theme="dark"] .prc-stat-sub--blue  { color: #93c5fd; }
+
+/* ── Savings plan table cells ── */
+.prc-plan-name {
+  font-weight: 500;
+}
+.prc-discount {
+  color: var(--prc-green);
+  font-weight: 500;
+}
+[data-theme="dark"] .prc-discount {
+  color: #6ee7b7;
+}
+.prc-badge-active {
+  font-size: 11px;
+}
+.prc-badge-draft {
+  font-size: 11px;
+  background: var(--prc-bg-soft);
+}
+[data-theme="dark"] .prc-badge-draft {
+  background: var(--prc-bg-soft);
+  color: var(--prc-text-2);
+}
+
+/* ── Two-column grid ── */
+.prc-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Panel (card) ── */
+.prc-panel {
+  border: 1px solid var(--prc-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+[data-theme="dark"] .prc-panel {
+  border-color: var(--prc-border);
+  background: var(--prc-bg);
+}
+
+/* ── Panel title ── */
+.prc-panel__title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--prc-text);
+}
+[data-theme="dark"] .prc-panel__title {
+  color: var(--prc-text);
+}
+
+/* ── Panel body stack ── */
+.prc-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Renewal item row ── */
+.prc-renewal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--prc-bg-soft);
+  font-size: 12px;
+  color: var(--prc-text);
+}
+[data-theme="dark"] .prc-renewal-item {
+  background: var(--prc-bg-soft);
+  color: var(--prc-text);
+}
+.prc-renewal-date--red {
+  color: var(--prc-red);
+  font-weight: 500;
+}
+.prc-renewal-date--amber {
+  color: var(--prc-amber);
+  font-weight: 500;
+}
+[data-theme="dark"] .prc-renewal-date--red   { color: #fca5a5; }
+[data-theme="dark"] .prc-renewal-date--amber { color: #fcd34d; }
+
+/* ── Utilization bar stack ── */
+.prc-util-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Utilization bar item ── */
+.prc-util-item__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: var(--prc-text);
+}
+[data-theme="dark"] .prc-util-item__header {
+  color: var(--prc-text);
+}
+.prc-util-item__pct {
+  font-weight: 500;
+}
+.prc-util-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--prc-bg-soft);
+  overflow: hidden;
+}
+[data-theme="dark"] .prc-util-bar {
+  background: var(--prc-border);
+}
+.prc-util-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.prc-util-bar__fill--green  { background: var(--prc-green); }
+.prc-util-bar__fill--blue   { background: var(--prc-blue); }
+.prc-util-bar__fill--violet { background: var(--prc-violet); }
+.prc-util-bar__fill--dim    { background: var(--prc-text-2); }
+
+/* ── Modal overrides ── */
+.prc-modal {
+  max-width: 480px;
+}
+.prc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.prc-textarea {
+  height: auto;
+  padding: 9px 12px;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .prc-two-col {
+    grid-template-columns: 1fr;
+  }
+  .prc-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .prc-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .prc-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .prc-toolbar__filters {
+    flex-direction: column;
+    width: 100%;
+  }
+  .prc-toolbar__filters select {
+    width: 100%;
+  }
+}
+@media (max-width: 380px) {
+  .prc-renewal-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .prc-util-item__header {
+    font-size: 11px;
+  }
+}
+</style>
+
+<div class="prc" role="main" aria-label="Pricing management">
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Pricing</h1>
+    <p class="ds-page-subtitle">Subscription SKUs, metered components and commercial performance.</p>
+</div>
+
+<!-- KPI row -- commercial signals -->
+<div class="ws-kpi-grid prc-kpi-wrap prc-fade" style="animation-delay:.05s" role="region" aria-label="Commercial performance metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 14V7M7 14V5M11 14v-6M15 14V3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">$7,842</div>
+            <div class="ws-kpi-card__label">MRR &middot; +6.4% MoM</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">$161</div>
+            <div class="ws-kpi-card__label">ARPU &middot; trailing 30 d</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 10c0-3 2.2-5 5-5h2l-1.5-1.5M15 8c0 3-2.2 5-5 5H8l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">18.3<span class="prc-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Free &rarr; paid conversion</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 6l6 6 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2.1<span class="prc-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Gross churn &middot; 30 d</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="clients-toolbar prc-toolbar prc-fade" style="animation-delay:.1s">
+    <div class="prc-toolbar__filters">
+        <select class="clients-filter" aria-label="Filter by plan status">
+            <option>All plans</option>
+            <option>Active</option>
+            <option>Draft</option>
+            <option>Archived</option>
+        </select>
+    </div>
+    <button class="btn btn--primary" onclick="document.getElementById('newPlanModal').hidden=false" aria-haspopup="dialog" aria-label="Create new pricing plan">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Plan
+    </button>
+</div>
+
+<!-- Plan cards grid -->
+<div class="pr-grid prc-fade" style="animation-delay:.15s" role="region" aria-label="Subscription plan catalog">
+
+    <!-- Starter -->
+    <div class="pr-card">
+        <div class="pr-card__head">
+            <div class="pr-card__name">Starter</div>
+            <span class="pr-badge pr-badge--active">Active</span>
+        </div>
+        <div class="pr-card__price">$29<span class="pr-card__period">/mo</span></div>
+        <div class="pr-card__clients">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 11c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            12 clients
+        </div>
+        <ul class="pr-features">
+            <li><span class="pr-feat-check">&#10003;</span> 1 workspace</li>
+            <li><span class="pr-feat-check">&#10003;</span> 2 vCPU / 4 GB RAM</li>
+            <li><span class="pr-feat-check">&#10003;</span> 80 GB NVMe storage</li>
+            <li><span class="pr-feat-check">&#10003;</span> 3 TB bandwidth</li>
+            <li><span class="pr-feat-check">&#10003;</span> Email support</li>
+            <li><span class="pr-feat-x">&#10007;</span> SLA guarantee</li>
+            <li><span class="pr-feat-x">&#10007;</span> Dedicated IP</li>
+        </ul>
+        <div class="pr-card__actions">
+            <button class="btn btn--ghost btn--sm" aria-label="Edit Starter plan">Edit</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Duplicate Starter plan">Duplicate</button>
+            <button class="btn btn--danger btn--sm" aria-label="Archive Starter plan">Archive</button>
+        </div>
+    </div>
+
+    <!-- Pro -->
+    <div class="pr-card pr-card--featured">
+        <div class="pr-card__head">
+            <div class="pr-card__name">Pro</div>
+            <span class="pr-badge pr-badge--active">Active</span>
+        </div>
+        <div class="pr-card__price">$89<span class="pr-card__period">/mo</span></div>
+        <div class="pr-card__clients">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 11c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            28 clients
+        </div>
+        <ul class="pr-features">
+            <li><span class="pr-feat-check">&#10003;</span> 3 workspaces</li>
+            <li><span class="pr-feat-check">&#10003;</span> 4 vCPU / 16 GB RAM</li>
+            <li><span class="pr-feat-check">&#10003;</span> 320 GB NVMe storage</li>
+            <li><span class="pr-feat-check">&#10003;</span> 10 TB bandwidth</li>
+            <li><span class="pr-feat-check">&#10003;</span> Priority support</li>
+            <li><span class="pr-feat-check">&#10003;</span> 99.5% SLA</li>
+            <li><span class="pr-feat-x">&#10007;</span> Dedicated IP</li>
+        </ul>
+        <div class="pr-card__actions">
+            <button class="btn btn--ghost btn--sm" aria-label="Edit Pro plan">Edit</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Duplicate Pro plan">Duplicate</button>
+            <button class="btn btn--danger btn--sm" aria-label="Archive Pro plan">Archive</button>
+        </div>
+    </div>
+
+    <!-- Business -->
+    <div class="pr-card">
+        <div class="pr-card__head">
+            <div class="pr-card__name">Business</div>
+            <span class="pr-badge pr-badge--active">Active</span>
+        </div>
+        <div class="pr-card__price">$199<span class="pr-card__period">/mo</span></div>
+        <div class="pr-card__clients">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 11c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            9 clients
+        </div>
+        <ul class="pr-features">
+            <li><span class="pr-feat-check">&#10003;</span> Unlimited workspaces</li>
+            <li><span class="pr-feat-check">&#10003;</span> 8 vCPU / 32 GB RAM</li>
+            <li><span class="pr-feat-check">&#10003;</span> 1 TB NVMe storage</li>
+            <li><span class="pr-feat-check">&#10003;</span> Unlimited bandwidth</li>
+            <li><span class="pr-feat-check">&#10003;</span> 24/7 phone support</li>
+            <li><span class="pr-feat-check">&#10003;</span> 99.9% SLA</li>
+            <li><span class="pr-feat-check">&#10003;</span> Dedicated IP</li>
+        </ul>
+        <div class="pr-card__actions">
+            <button class="btn btn--ghost btn--sm" aria-label="Edit Business plan">Edit</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Duplicate Business plan">Duplicate</button>
+            <button class="btn btn--danger btn--sm" aria-label="Archive Business plan">Archive</button>
+        </div>
+    </div>
+
+    <!-- Enterprise -->
+    <div class="pr-card">
+        <div class="pr-card__head">
+            <div class="pr-card__name">Enterprise</div>
+            <span class="pr-badge pr-badge--draft">Draft</span>
+        </div>
+        <div class="pr-card__price">Custom<span class="pr-card__period"> pricing</span></div>
+        <div class="pr-card__clients">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 11c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            0 clients
+        </div>
+        <ul class="pr-features">
+            <li><span class="pr-feat-check">&#10003;</span> Everything in Business</li>
+            <li><span class="pr-feat-check">&#10003;</span> Custom hardware</li>
+            <li><span class="pr-feat-check">&#10003;</span> Dedicated cluster</li>
+            <li><span class="pr-feat-check">&#10003;</span> MSA &amp; custom SLA</li>
+            <li><span class="pr-feat-check">&#10003;</span> Dedicated account manager</li>
+            <li><span class="pr-feat-check">&#10003;</span> Compliance reporting</li>
+            <li><span class="pr-feat-check">&#10003;</span> On-site support option</li>
+        </ul>
+        <div class="pr-card__actions">
+            <button class="btn btn--primary btn--sm" aria-label="Publish Enterprise plan">Publish</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Edit Enterprise plan">Edit</button>
+            <button class="btn btn--danger btn--sm" aria-label="Delete Enterprise plan">Delete</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Usage-based components -->
+<h2 class="pr-section-title prc-fade" style="animation-delay:.2s">Metered usage</h2>
+<p class="prc-section-sub prc-fade" style="animation-delay:.2s">Line-items billed on consumption above plan quota. Aggregated hourly, invoiced monthly in arrears.</p>
+<div class="clients-table-wrap prc-table-wrap prc-fade" style="animation-delay:.25s" role="region" aria-label="Metered usage components">
+<table class="tenant-table" role="table" aria-label="Usage-based pricing table">
+    <thead>
+        <tr>
+            <th scope="col">SKU</th>
+            <th scope="col">Unit</th>
+            <th scope="col">Unit price</th>
+            <th scope="col">Included (Pro)</th>
+            <th scope="col">Tiered pricing</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="tenant-table__name">egress.bandwidth</td>
+            <td class="tenant-table__domain">GB transferred</td>
+            <td>$0.012</td>
+            <td class="tenant-table__domain">10 TB / mo</td>
+            <td class="tenant-table__domain">Flat after 10 TB</td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit egress.bandwidth">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">object.storage</td>
+            <td class="tenant-table__domain">GB-month</td>
+            <td>$0.021</td>
+            <td class="tenant-table__domain">320 GB / mo</td>
+            <td class="tenant-table__domain">Volume, 3 tiers</td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit object.storage">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">api.requests</td>
+            <td class="tenant-table__domain">per 1M calls</td>
+            <td>$0.40</td>
+            <td class="tenant-table__domain">50M / mo</td>
+            <td class="tenant-table__domain">Graduated, 4 tiers</td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit api.requests">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">compute.gpu.a100</td>
+            <td class="tenant-table__domain">GPU-hour</td>
+            <td>$2.89</td>
+            <td class="tenant-table__domain">&mdash;</td>
+            <td class="tenant-table__domain">Flat &middot; on-demand</td>
+            <td><span class="tk-status prc-status-draft">Draft</span></td>
+            <td class="tenant-table__actions">
+                <button class="btn btn--ghost btn--sm" aria-label="Edit compute.gpu.a100">Edit</button>
+                <button class="btn btn--primary btn--sm" aria-label="Publish compute.gpu.a100">Publish</button>
+            </td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">logs.ingest</td>
+            <td class="tenant-table__domain">GB ingested</td>
+            <td>$0.50</td>
+            <td class="tenant-table__domain">50 GB / mo</td>
+            <td class="tenant-table__domain">30-day retention</td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit logs.ingest">Edit</button></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<!-- Add-ons section -->
+<h2 class="pr-section-title prc-fade" style="animation-delay:.3s">Add-ons</h2>
+<div class="clients-table-wrap prc-fade" style="animation-delay:.35s" role="region" aria-label="Add-on products">
+<table class="tenant-table" role="table" aria-label="Add-ons pricing table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Unit</th>
+            <th scope="col">Compatible plans</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="tenant-table__name">Extra IPv4</td>
+            <td>$3.00</td>
+            <td class="tenant-table__domain">per address / mo</td>
+            <td><span class="pr-compat">All</span></td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit Extra IPv4 add-on">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">Managed Backup</td>
+            <td>$15.00</td>
+            <td class="tenant-table__domain">per workspace / mo</td>
+            <td><span class="pr-compat">Pro</span> <span class="pr-compat">Business</span></td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit Managed Backup add-on">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">DDoS Protection</td>
+            <td>$25.00</td>
+            <td class="tenant-table__domain">per resource / mo</td>
+            <td><span class="pr-compat">All</span></td>
+            <td><span class="tk-status tk-status--resolved">Active</span></td>
+            <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit DDoS Protection add-on">Edit</button></td>
+        </tr>
+        <tr>
+            <td class="tenant-table__name">SSL Management</td>
+            <td>$8.00</td>
+            <td class="tenant-table__domain">per domain / mo</td>
+            <td><span class="pr-compat">Pro</span> <span class="pr-compat">Business</span> <span class="pr-compat">Enterprise</span></td>
+            <td><span class="tk-status prc-status-draft">Draft</span></td>
+            <td class="tenant-table__actions">
+                <button class="btn btn--ghost btn--sm" aria-label="Edit SSL Management add-on">Edit</button>
+                <button class="btn btn--primary btn--sm" aria-label="Publish SSL Management add-on">Publish</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<!-- New Plan modal -->
+<div class="modal-backdrop" id="newPlanModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-labelledby="newPlanModalTitle">
+    <div class="modal prc-modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="newPlanModalTitle">New Plan</h2>
+            <button class="modal__close" onclick="document.getElementById('newPlanModal').hidden=true" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Plan name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" placeholder="e.g. Growth" aria-required="true">
+            </div>
+            <div class="form-field prc-form-grid">
+                <div>
+                    <label class="form-label">Price</label>
+                    <input class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="form-label">Billing cycle</label>
+                    <select class="form-input">
+                        <option>Monthly</option>
+                        <option>Annual</option>
+                        <option>Custom</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Features (one per line)</label>
+                <textarea class="form-input prc-textarea" rows="5" placeholder="2 vCPU / 4 GB RAM&#10;80 GB NVMe&#10;Email support"></textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Status</label>
+                <select class="form-input">
+                    <option>Draft</option>
+                    <option>Active</option>
+                </select>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newPlanModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Create Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Commitment Discounts & Savings Plans ── -->
+<div class="ds-panel prc-commit-panel prc-fade" style="animation-delay:.4s" role="region" aria-label="Commitment discounts and savings plans">
+    <div class="ds-panel__header">
+        <h2 class="ds-panel__title">Commitment Discounts &amp; Savings Plans</h2>
+        <button class="btn btn--primary btn--sm" aria-label="Create new savings plan">+ New savings plan</button>
+    </div>
+    <p class="prc-commit-desc">Offer reserved-capacity pricing to incentivize longer commitments. Tenants lock in discounted rates for 1- or 3-year terms on compute, storage, and database resources.</p>
+
+    <div class="prc-stat-grid">
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Active commitments</div>
+            <div class="ds-stat-card__value">23</div>
+            <div class="ds-stat-card__sub prc-stat-sub--green">$41,200 / mo committed</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Avg savings vs on-demand</div>
+            <div class="ds-stat-card__value">34%</div>
+            <div class="ds-stat-card__sub prc-stat-sub--green">Weighted across all plans</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Utilization rate</div>
+            <div class="ds-stat-card__value">88.6%</div>
+            <div class="ds-stat-card__sub prc-stat-sub--amber">11.4% unused capacity</div>
+        </div>
+        <div class="ds-stat-card">
+            <div class="ds-stat-card__label">Expiring in 30 d</div>
+            <div class="ds-stat-card__value">4</div>
+            <div class="ds-stat-card__sub prc-stat-sub--blue">$6,800 / mo at risk</div>
+        </div>
+    </div>
+
+    <!-- Savings plan catalog -->
+    <div class="clients-table-wrap prc-table-wrap--sm">
+        <table class="tenant-table" role="table" aria-label="Savings plan catalog">
+            <thead>
+                <tr>
+                    <th scope="col">Plan name</th>
+                    <th scope="col">Resource type</th>
+                    <th scope="col">Term</th>
+                    <th scope="col">On-demand rate</th>
+                    <th scope="col">Committed rate</th>
+                    <th scope="col">Discount</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="prc-plan-name">Compute Saver 1Y</td>
+                    <td>vCPU + RAM</td>
+                    <td>12 months</td>
+                    <td>$0.042 / vCPU-hr</td>
+                    <td>$0.028 / vCPU-hr</td>
+                    <td><span class="prc-discount">33%</span></td>
+                    <td><span class="badge badge--success prc-badge-active">Active</span></td>
+                </tr>
+                <tr>
+                    <td class="prc-plan-name">Compute Saver 3Y</td>
+                    <td>vCPU + RAM</td>
+                    <td>36 months</td>
+                    <td>$0.042 / vCPU-hr</td>
+                    <td>$0.021 / vCPU-hr</td>
+                    <td><span class="prc-discount">50%</span></td>
+                    <td><span class="badge badge--success prc-badge-active">Active</span></td>
+                </tr>
+                <tr>
+                    <td class="prc-plan-name">NVMe Reserved</td>
+                    <td>Block storage</td>
+                    <td>12 months</td>
+                    <td>$0.10 / GB-mo</td>
+                    <td>$0.072 / GB-mo</td>
+                    <td><span class="prc-discount">28%</span></td>
+                    <td><span class="badge badge--success prc-badge-active">Active</span></td>
+                </tr>
+                <tr>
+                    <td class="prc-plan-name">Database Reserved</td>
+                    <td>Managed DB</td>
+                    <td>12 months</td>
+                    <td>$0.065 / vCPU-hr</td>
+                    <td>$0.044 / vCPU-hr</td>
+                    <td><span class="prc-discount">32%</span></td>
+                    <td><span class="badge prc-badge-draft">Draft</span></td>
+                </tr>
+                <tr>
+                    <td class="prc-plan-name">Egress Commit</td>
+                    <td>Bandwidth</td>
+                    <td>12 months</td>
+                    <td>$0.085 / GB</td>
+                    <td>$0.055 / GB</td>
+                    <td><span class="prc-discount">35%</span></td>
+                    <td><span class="badge badge--success prc-badge-active">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Renewal forecast + Utilization -->
+    <div class="prc-two-col prc-fade" style="animation-delay:.45s">
+        <div class="prc-panel" role="region" aria-label="Upcoming renewals">
+            <div class="prc-panel__title">Upcoming Renewals</div>
+            <div class="prc-panel__body">
+                <div class="prc-renewal-item">
+                    <span>Compute Saver 1Y &mdash; Tenant Alpha</span>
+                    <span class="prc-renewal-date--red">Expires May 2</span>
+                </div>
+                <div class="prc-renewal-item">
+                    <span>NVMe Reserved &mdash; Tenant Beta</span>
+                    <span class="prc-renewal-date--red">Expires May 8</span>
+                </div>
+                <div class="prc-renewal-item">
+                    <span>Egress Commit &mdash; Tenant Gamma</span>
+                    <span class="prc-renewal-date--amber">Expires May 14</span>
+                </div>
+                <div class="prc-renewal-item">
+                    <span>Compute Saver 1Y &mdash; Tenant Delta</span>
+                    <span class="prc-renewal-date--amber">Expires May 19</span>
+                </div>
+            </div>
+        </div>
+        <div class="prc-panel" role="region" aria-label="Utilization by resource type">
+            <div class="prc-panel__title">Utilization by Resource Type</div>
+            <div class="prc-util-stack">
+                <div>
+                    <div class="prc-util-item__header">
+                        <span>Compute (vCPU)</span>
+                        <span class="prc-util-item__pct">92.4%</span>
+                    </div>
+                    <div class="prc-util-bar">
+                        <div class="prc-util-bar__fill prc-util-bar__fill--green" style="width:92.4%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="prc-util-item__header">
+                        <span>Block storage (NVMe)</span>
+                        <span class="prc-util-item__pct">78.1%</span>
+                    </div>
+                    <div class="prc-util-bar">
+                        <div class="prc-util-bar__fill prc-util-bar__fill--blue" style="width:78.1%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="prc-util-item__header">
+                        <span>Bandwidth (egress)</span>
+                        <span class="prc-util-item__pct">86.9%</span>
+                    </div>
+                    <div class="prc-util-bar">
+                        <div class="prc-util-bar__fill prc-util-bar__fill--violet" style="width:86.9%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="prc-util-item__header">
+                        <span>Managed database</span>
+                        <span class="prc-util-item__pct">&mdash;</span>
+                    </div>
+                    <div class="prc-util-bar">
+                        <div class="prc-util-bar__fill prc-util-bar__fill--dim" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.prc -->
+{{end}}

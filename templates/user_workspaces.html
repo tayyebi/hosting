@@ -1,0 +1,896 @@
+{{define "user-workspaces"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspaces — Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <link rel="stylesheet" href="/static/css/additions.css" />
+    <script>
+        (function(){
+            var t = localStorage.getItem('platform_theme') || 'light';
+            var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+            document.documentElement.setAttribute('data-theme', r);
+        })();
+    </script>
+</head>
+<body class="dashboard-body">
+<div class="usr-settings-page usr-settings-page--wide">
+
+    <!-- Topbar -->
+    <header class="usr-topbar">
+        <div class="usr-topbar__left">
+            <a href="javascript:history.back()" class="usr-back-btn" title="Go back">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+            <div class="usr-breadcrumb">
+                <span class="usr-breadcrumb__root">{{.User.Name}}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="usr-breadcrumb__current">Workspaces</span>
+            </div>
+        </div>
+        <div class="usr-topbar__right">
+            <span class="usr-role-badge">{{.User.Role}}</span>
+            <div class="usr-topbar__avatar">{{slice .User.Name 0 1}}</div>
+        </div>
+    </header>
+
+    <!-- Body: same settings-layout as account settings -->
+    <div class="settings-layout">
+
+        <!-- Sidebar -->
+        <aside class="settings-sidebar">
+            <div class="settings-sidebar__title" id="sidebar-label">Workspaces</div>
+            <nav role="tablist" aria-labelledby="sidebar-label" aria-orientation="vertical" class="settings-sidebar__nav">
+                <button class="settings-nav__item settings-nav__item--active" id="tab-sec-workspaces" role="tab" aria-selected="true" aria-controls="sec-workspaces" onclick="switchSection(this,'sec-workspaces')">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M1.5 12.5V6L7.5 2l6 4v6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><rect x="5" y="8.5" width="5" height="4" rx="1" stroke="currentColor" stroke-width="1.0"/></svg>
+                    My Workspaces
+                </button>
+                <button class="settings-nav__item" id="tab-sec-teams" role="tab" aria-selected="false" aria-controls="sec-teams" onclick="switchSection(this,'sec-teams')">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="5.5" cy="5" r="2.3" stroke="currentColor" stroke-width="1.1"/><path d="M1 13c0-2.49 2.02-4.5 4.5-4.5S10 10.51 10 13" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="11.5" cy="5" r="1.8" stroke="currentColor" stroke-width="1.0"/><path d="M14 13c0-2.21-1.12-4-2.5-4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                    Teams
+                </button>
+                <button class="settings-nav__item" id="tab-sec-invitations" role="tab" aria-selected="false" aria-controls="sec-invitations" onclick="switchSection(this,'sec-invitations')">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="1.5" y="3.5" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M1.5 5l6 4 6-4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    Invitations
+                </button>
+                <button class="settings-nav__item" id="tab-sec-permissions" role="tab" aria-selected="false" aria-controls="sec-permissions" onclick="switchSection(this,'sec-permissions')">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 6V4.5a2.5 2.5 0 015 0V6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="7.5" cy="9.5" r="1" fill="currentColor"/></svg>
+                    Permissions
+                </button>
+            </nav>
+
+            <div class="settings-sidebar__footer">
+                <a href="/logout" class="settings-nav__item settings-nav__item--danger">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M5 2H3a1 1 0 00-1 1v9a1 1 0 001 1h2M10 10l3-2.5L10 5M13 7.5H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Sign out
+                </a>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <div class="settings-content">
+
+            <!-- ── My Workspaces ── -->
+            <section class="settings-section settings-section--active" id="sec-workspaces" role="tabpanel" aria-labelledby="tab-sec-workspaces">
+                <h2 class="settings-section__title">My Workspaces</h2>
+                <p class="settings-section__sub">Switch between workspaces, manage members, and configure access.</p>
+
+                <!-- Resource Usage KPI Strip -->
+                <div class="wm-kpi-strip">
+                    <div class="wm-kpi">
+                        <div class="wm-kpi__header">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M4 4l3-3 3 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="9" width="12" height="4" rx="1.5" stroke="currentColor" stroke-width="1.0"/></svg>
+                            <span class="wm-kpi__label">Total Compute Hours</span>
+                        </div>
+                        <div class="wm-kpi__row">
+                            <span class="wm-kpi__value">2,847 <small>hrs</small></span>
+                            <span class="wm-kpi__delta wm-kpi__delta--green">+12.4%</span>
+                        </div>
+                        <div class="wm-kpi__sub">vs. last billing cycle</div>
+                    </div>
+                    <div class="wm-kpi">
+                        <div class="wm-kpi__header">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M4 5.5h6M4 8h4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                            <span class="wm-kpi__label">Storage Used</span>
+                        </div>
+                        <div class="wm-kpi__row">
+                            <span class="wm-kpi__value">1.2 <small>TB</small></span>
+                            <span class="wm-kpi__limit">/ 5 TB</span>
+                        </div>
+                        <div class="wm-kpi__bar-track">
+                            <div class="wm-kpi__bar-fill" style="width:24%;"></div>
+                        </div>
+                    </div>
+                    <div class="wm-kpi">
+                        <div class="wm-kpi__header">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 10.5l3-4 2.5 2 3.5-5.5 2 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="wm-kpi__label">Bandwidth</span>
+                        </div>
+                        <div class="wm-kpi__row">
+                            <span class="wm-kpi__value">340 <small>GB</small></span>
+                            <span class="wm-kpi__delta wm-kpi__delta--blue">-3.1%</span>
+                        </div>
+                        <div class="wm-kpi__sub">this month</div>
+                    </div>
+                    <div class="wm-kpi">
+                        <div class="wm-kpi__header">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M7 4v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="wm-kpi__label">Monthly Cost</span>
+                        </div>
+                        <div class="wm-kpi__row">
+                            <span class="wm-kpi__value">$2,140</span>
+                            <span class="wm-kpi__delta wm-kpi__delta--amber">+8.2%</span>
+                        </div>
+                        <div class="wm-kpi__sub">billing estimate</div>
+                    </div>
+                </div>
+
+                <div class="wm-action-row">
+                    <button class="btn btn--primary btn--sm" onclick="document.getElementById('newWsModal').hidden=false">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        New Workspace
+                    </button>
+                </div>
+
+                <!-- Workspace cards -->
+                <div class="wm-ws-list wm-ws-list--spaced" role="listbox" aria-label="Workspaces">
+                    {{range $i, $ws := .Workspaces}}
+                    <div class="wm-ws-card{{if eq $i 0}} wm-ws-card--active{{end}}" role="option" aria-selected="{{if eq $i 0}}true{{else}}false{{end}}" tabindex="{{if eq $i 0}}0{{else}}-1{{end}}" onclick="wmSelect('{{$ws.Slug}}', this)">
+                        <div class="wm-ws-card__icon wm-ws-card__icon--{{wsColor $i}}">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 15V7l7-4.5L16 7v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.5" y="10" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+                        </div>
+                        <div class="wm-ws-card__body">
+                            <div class="wm-ws-card__name">{{$ws.Name}}</div>
+                            <div class="wm-ws-card__meta">{{$ws.TenantSlug}} · Created {{fmtDate $ws.CreatedAt}}</div>
+                        </div>
+                        <div class="wm-ws-card__badges">
+                            <span class="res-tag res-tag--ok">Active</span>
+                            <span class="res-tag">{{$ws.Role}}</span>
+                        </div>
+                    </div>
+                    {{else}}
+                    <p class="settings-section__sub">You are not a member of any workspace yet.</p>
+                    {{end}}
+                </div>
+
+                <!-- Resource Quotas -->
+                <div class="wm-quota-section">
+                    <div class="wm-section-hd"><span class="wm-section-title">Resource Quotas</span></div>
+                    <div class="wm-quota-grid">
+                        <div class="wm-quota-item">
+                            <div class="wm-quota-item__header">
+                                <span class="wm-quota-item__label">Workspaces</span>
+                                <span class="wm-quota-item__count">4 <small>/ 10</small></span>
+                            </div>
+                            <div class="wm-quota-item__bar-track">
+                                <div class="wm-quota-item__bar-fill wm-quota-item__bar-fill--ok" style="width:40%;"></div>
+                            </div>
+                            <div class="wm-quota-item__hint">6 remaining on current plan</div>
+                        </div>
+                        <div class="wm-quota-item">
+                            <div class="wm-quota-item__header">
+                                <span class="wm-quota-item__label">Members</span>
+                                <span class="wm-quota-item__count">15 <small>/ 50</small></span>
+                            </div>
+                            <div class="wm-quota-item__bar-track">
+                                <div class="wm-quota-item__bar-fill wm-quota-item__bar-fill--ok" style="width:30%;"></div>
+                            </div>
+                            <div class="wm-quota-item__hint">35 seats available</div>
+                        </div>
+                        <div class="wm-quota-item">
+                            <div class="wm-quota-item__header">
+                                <span class="wm-quota-item__label">Storage</span>
+                                <span class="wm-quota-item__count">1.2 TB <small>/ 5 TB</small></span>
+                            </div>
+                            <div class="wm-quota-item__bar-track">
+                                <div class="wm-quota-item__bar-fill wm-quota-item__bar-fill--ok" style="width:24%;"></div>
+                            </div>
+                            <div class="wm-quota-item__hint">3.8 TB free</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Workspace detail panels -->
+                <div id="wmDetail">
+                    {{range $i, $ws := .Workspaces}}
+                    <div class="wm-detail-panel" id="panel-{{$ws.Slug}}"{{if gt $i 0}} hidden{{end}}>
+                        <div class="wm-detail__hd">
+                            <div>
+                                <div class="wm-detail__name">{{$ws.Name}}</div>
+                                <div class="wm-detail__meta">Created {{fmtDate $ws.CreatedAt}} · Your role: {{$ws.Role}}</div>
+                            </div>
+                            <div class="wm-btn-group">
+                                <button class="btn btn--ghost btn--sm">Settings</button>
+                                <button class="btn btn--primary btn--sm" onclick="document.getElementById('inviteModal').hidden=false">Invite</button>
+                            </div>
+                        </div>
+                        {{if $ws.Description}}<p class="settings-section__sub" style="margin-bottom:16px;">{{$ws.Description}}</p>{{end}}
+                        <div class="wm-section-hd wm-section-hd--spaced"><span class="wm-section-title">Workspace Info</span></div>
+                        <div class="wm-quota-grid">
+                            <div class="wm-quota-item">
+                                <div class="wm-quota-item__header"><span class="wm-quota-item__label">Tenant</span></div>
+                                <div class="wm-quota-item__hint">{{$ws.TenantSlug}}</div>
+                            </div>
+                            <div class="wm-quota-item">
+                                <div class="wm-quota-item__header"><span class="wm-quota-item__label">Your Role</span></div>
+                                <div class="wm-quota-item__hint">{{$ws.Role}}</div>
+                            </div>
+                            <div class="wm-quota-item">
+                                <div class="wm-quota-item__header"><span class="wm-quota-item__label">Created</span></div>
+                                <div class="wm-quota-item__hint">{{fmtDate $ws.CreatedAt}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div><!-- /wmDetail -->
+            </section>
+
+            <!-- ── Teams ── -->
+            <section class="settings-section" id="sec-teams" role="tabpanel" aria-labelledby="tab-sec-teams">
+                <h2 class="settings-section__title">Teams</h2>
+                <p class="settings-section__sub">Group members into teams and control which workspaces each team can access.</p>
+
+                <div class="wm-action-row">
+                    <button class="btn btn--primary btn--sm" onclick="document.getElementById('newTeamModal').hidden=false">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        New Team
+                    </button>
+                </div>
+
+                <div class="wm-ws-list">
+                    <div class="wm-ws-card">
+                        <div class="wm-ws-card__icon wm-ws-card__icon--cyan">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 15c0-2.49 2.02-4.5 4.5-4.5s4.5 2.01 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M16.5 15c0-2.21-1.57-4-3.5-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="wm-ws-card__body">
+                            <div class="wm-ws-card__name">Engineering</div>
+                            <div class="wm-ws-card__meta">5 members · All workspaces</div>
+                        </div>
+                        <div class="wm-ws-card__badges"><button class="btn btn--ghost btn--sm">Manage</button></div>
+                    </div>
+                    <div class="wm-ws-card">
+                        <div class="wm-ws-card__icon wm-ws-card__icon--pink">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 15c0-2.49 2.02-4.5 4.5-4.5s4.5 2.01 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M16.5 15c0-2.21-1.57-4-3.5-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="wm-ws-card__body">
+                            <div class="wm-ws-card__name">Operations</div>
+                            <div class="wm-ws-card__meta">3 members · Production only</div>
+                        </div>
+                        <div class="wm-ws-card__badges"><button class="btn btn--ghost btn--sm">Manage</button></div>
+                    </div>
+                    <div class="wm-ws-card">
+                        <div class="wm-ws-card__icon wm-ws-card__icon--yellow">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 15c0-2.49 2.02-4.5 4.5-4.5s4.5 2.01 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M16.5 15c0-2.21-1.57-4-3.5-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="wm-ws-card__body">
+                            <div class="wm-ws-card__name">QA</div>
+                            <div class="wm-ws-card__meta">2 members · Staging only</div>
+                        </div>
+                        <div class="wm-ws-card__badges"><button class="btn btn--ghost btn--sm">Manage</button></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Invitations ── -->
+            <section class="settings-section" id="sec-invitations" role="tabpanel" aria-labelledby="tab-sec-invitations">
+                <h2 class="settings-section__title">Invitations</h2>
+                <p class="settings-section__sub">Pending workspace invitations sent to you.</p>
+
+                <div class="clients-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>From</th><th>Workspace</th><th>Role</th><th>Received</th><th>Expires</th><th></th></tr></thead>
+                    <tbody>
+                    {{range .Invitations}}
+                    <tr>
+                        <td class="res-name">{{.InviterEmail}}</td>
+                        <td>{{.TenantSlug}}</td>
+                        <td><span class="res-type-badge res-type-badge--ilo">{{.Role}}</span></td>
+                        <td class="res-region">{{fmtDate .CreatedAt}}</td>
+                        <td class="res-region">{{fmtDate .ExpiresAt}}</td>
+                        <td class="tenant-table__actions"><button class="btn btn--primary btn--sm">Accept</button><button class="btn btn--danger btn--sm">Decline</button></td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="6" style="text-align:center;color:var(--ds-text-secondary,#9ca3af);padding:20px 0;">No pending invitations.</td></tr>
+                    {{end}}
+                    </tbody>
+                </table>
+                </div>
+
+                <div class="st-btn-row wm-btn-row--spaced">
+                    <button class="btn btn--primary btn--sm" onclick="document.getElementById('inviteModal').hidden=false">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        New Invitation
+                    </button>
+                </div>
+            </section>
+
+            <!-- ── Permissions ── -->
+            <section class="settings-section" id="sec-permissions" role="tabpanel" aria-labelledby="tab-sec-permissions">
+                <h2 class="settings-section__title">Permissions</h2>
+                <p class="settings-section__sub">Role-based permission matrix applied across all workspaces.</p>
+
+                <div class="clients-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>Capability</th><th>Owner</th><th>Admin</th><th>Member</th><th>Viewer</th></tr></thead>
+                    <tbody>
+                    <tr><td>Manage workspace settings</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>Invite &amp; remove members</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>Create teams</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>Provision resources</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>Manage resources</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>View resources &amp; logs</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td></tr>
+                    <tr><td>Billing access</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    <tr><td>API key management</td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--yes">✓</span></td><td><span class="wm-perm wm-perm--no">—</span></td><td><span class="wm-perm wm-perm--no">—</span></td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </section>
+
+        </div><!-- /settings-content -->
+    </div><!-- /settings-layout -->
+</div><!-- /usr-settings-page -->
+
+<!-- ═══ Invite modal ═══ -->
+<div class="modal-backdrop" id="inviteModal" hidden onclick="this.hidden=true">
+    <div class="modal modal--md" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Invite to Workspace</h2>
+            <button class="modal__close" onclick="document.getElementById('inviteModal').hidden=true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" placeholder="colleague@company.com">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Role</label>
+                <select class="form-input">
+                    <option>Member — can use and manage resources</option>
+                    <option>Admin — can also invite and remove members</option>
+                    <option>Viewer — read-only access</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Team (optional)</label>
+                <select class="form-input">
+                    <option value="">— No team —</option>
+                    <option>Engineering</option>
+                    <option>Operations</option>
+                    <option>QA</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Personal message (optional)</label>
+                <textarea class="form-input" rows="2" placeholder="Hey, I'm inviting you to our workspace…"></textarea>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('inviteModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Send Invite</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ New Workspace modal ═══ -->
+<div class="modal-backdrop" id="newWsModal" hidden onclick="this.hidden=true">
+    <div class="modal modal--sm" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">New Workspace</h2>
+            <button class="modal__close" onclick="document.getElementById('newWsModal').hidden=true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Workspace name <span class="form-req">*</span></label>
+                <input class="form-input" id="newws-name" type="text" placeholder="e.g. Production, Dev Team, Sandbox">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Description</label>
+                <input class="form-input" id="newws-desc" type="text" placeholder="What is this workspace for?">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Visibility</label>
+                <select class="form-input" id="newws-visibility">
+                    <option value="private">Private — invite only</option>
+                    <option value="internal">Internal — visible to all org members</option>
+                </select>
+            </div>
+            <div id="newws-error" class="alert alert--error" hidden style="margin:0 0 12px;"></div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newWsModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary" id="newws-submit" onclick="createWorkspace(this)">Create Workspace</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ New Team modal ═══ -->
+<div class="modal-backdrop" id="newTeamModal" hidden onclick="this.hidden=true">
+    <div class="modal modal--sm" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">New Team</h2>
+            <button class="modal__close" onclick="document.getElementById('newTeamModal').hidden=true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Team name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" placeholder="e.g. Engineering, DevOps, QA">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Accessible workspaces</label>
+                <div class="wm-checkbox-list">
+                    <label class="perm-item"><input type="checkbox" checked class="perm-item__check"><span class="perm-item__label">Default</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">Staging</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">Production</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">Dev Team</span></label>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newTeamModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Create Team</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/dashboard.js"></script>
+<script>
+/* ── Tab switching with arrow-key support ── */
+function switchSection(btn, id) {
+    var tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+    tabs.forEach(function(b) {
+        b.classList.remove('settings-nav__item--active');
+        b.setAttribute('aria-selected', 'false');
+        b.setAttribute('tabindex', '-1');
+    });
+    document.querySelectorAll('.settings-section').forEach(function(s) {
+        s.classList.remove('settings-section--active');
+    });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-selected', 'true');
+    btn.setAttribute('tabindex', '0');
+    var panel = document.getElementById(id);
+    panel.classList.add('settings-section--active');
+    /* Re-trigger entry animation */
+    panel.style.animation = 'none';
+    panel.offsetHeight; /* reflow */
+    panel.style.animation = '';
+}
+
+/* Arrow-key navigation for sidebar tabs */
+document.addEventListener('DOMContentLoaded', function() {
+    var tablist = document.querySelector('[role="tablist"]');
+    if (!tablist) return;
+    tablist.addEventListener('keydown', function(e) {
+        var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+        var idx = tabs.indexOf(document.activeElement);
+        if (idx < 0) return;
+        var next = -1;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            next = (idx + 1) % tabs.length;
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            next = (idx - 1 + tabs.length) % tabs.length;
+        } else if (e.key === 'Home') {
+            next = 0;
+        } else if (e.key === 'End') {
+            next = tabs.length - 1;
+        }
+        if (next >= 0) {
+            e.preventDefault();
+            tabs[next].focus();
+            tabs[next].click();
+        }
+    });
+
+    /* Arrow-key navigation for workspace card list */
+    document.querySelectorAll('[role="listbox"]').forEach(function(list) {
+        list.addEventListener('keydown', function(e) {
+            var items = Array.from(list.querySelectorAll('[role="option"]'));
+            var idx = items.indexOf(document.activeElement);
+            if (idx < 0) return;
+            var next = -1;
+            if (e.key === 'ArrowDown') {
+                next = Math.min(idx + 1, items.length - 1);
+            } else if (e.key === 'ArrowUp') {
+                next = Math.max(idx - 1, 0);
+            } else if (e.key === 'Home') {
+                next = 0;
+            } else if (e.key === 'End') {
+                next = items.length - 1;
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                items[idx].click();
+                return;
+            }
+            if (next >= 0 && next !== idx) {
+                e.preventDefault();
+                items[next].focus();
+                items[next].click();
+            }
+        });
+    });
+
+    /* Set initial tabindex on first tab */
+    var firstTab = document.querySelector('[role="tab"][aria-selected="true"]');
+    if (firstTab) firstTab.setAttribute('tabindex', '0');
+    tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+    tabs.forEach(function(t) {
+        if (t.getAttribute('aria-selected') !== 'true') t.setAttribute('tabindex', '-1');
+    });
+});
+
+/* ── Workspace card selection ── */
+var _activeCard = null;
+var _panelIds = [{{range $i, $ws := .Workspaces}}{{if $i}},{{end}}'{{$ws.Slug}}'{{end}}];
+
+function wmSelect(id, card) {
+    var list = card.closest('[role="listbox"]');
+    if (list) {
+        list.querySelectorAll('[role="option"]').forEach(function(c) {
+            c.classList.remove('wm-ws-card--active');
+            c.setAttribute('aria-selected', 'false');
+            c.setAttribute('tabindex', '-1');
+        });
+    } else if (_activeCard) {
+        _activeCard.classList.remove('wm-ws-card--active');
+    }
+    card.classList.add('wm-ws-card--active');
+    card.setAttribute('aria-selected', 'true');
+    card.setAttribute('tabindex', '0');
+    _activeCard = card;
+    _panelIds.forEach(function(p) {
+        var el = document.getElementById('panel-' + p);
+        if (el) el.hidden = (p !== id);
+    });
+}
+
+/* ── Escape key closes modals ── */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modals = ['inviteModal', 'newWsModal', 'newTeamModal'];
+        modals.forEach(function(mid) {
+            var m = document.getElementById(mid);
+            if (m && !m.hidden) m.hidden = true;
+        });
+    }
+});
+
+function createWorkspace(btn) {
+    var name = document.getElementById('newws-name').value.trim();
+    var desc = document.getElementById('newws-desc').value.trim();
+    var vis  = document.getElementById('newws-visibility').value;
+    var errEl = document.getElementById('newws-error');
+    errEl.hidden = true;
+    if (!name) { errEl.textContent = 'Workspace name is required.'; errEl.hidden = false; return; }
+    var orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Creating\u2026';
+    fetch('/u/workspaces/create/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name, description: desc, visibility: vis})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        btn.disabled = false; btn.textContent = orig;
+        if (d.error) { errEl.textContent = d.error; errEl.hidden = false; }
+        else { window.location.reload(); }
+    }).catch(function() {
+        btn.disabled = false; btn.textContent = orig;
+        errEl.textContent = 'Network error. Please try again.'; errEl.hidden = false;
+    });
+}
+</script>
+
+<style>
+/* ── Entry animations ── */
+@keyframes wmFadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.settings-section--active {
+    animation: wmFadeSlideIn .25s ease-out;
+}
+.wm-ws-card {
+    animation: wmFadeSlideIn .2s ease-out both;
+}
+.wm-ws-card:nth-child(2) { animation-delay: .04s; }
+.wm-ws-card:nth-child(3) { animation-delay: .08s; }
+.wm-ws-card:nth-child(4) { animation-delay: .12s; }
+
+/* ── Focus-visible outlines ── */
+*:focus-visible {
+    outline: 2px solid var(--ds-accent, #4f46e5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.settings-nav__item:focus-visible {
+    outline-offset: -2px;
+}
+.wm-ws-card:focus-visible {
+    outline-offset: -1px;
+    border-radius: 10px;
+}
+
+/* ── Utility classes replacing inline styles ── */
+.settings-sidebar__footer {
+    margin-top: auto;
+    padding-top: 24px;
+}
+.settings-sidebar__nav {
+    display: flex;
+    flex-direction: column;
+}
+.wm-action-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+.wm-ws-list--spaced {
+    margin-bottom: 24px;
+}
+.wm-btn-group {
+    display: flex;
+    gap: 8px;
+}
+.wm-section-hd--spaced {
+    margin-top: 20px;
+}
+.wm-member-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.wm-invite-banner__action {
+    margin-left: auto;
+}
+.wm-btn-row--spaced {
+    margin-top: 16px;
+}
+.wm-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+}
+.res-tag--sm {
+    font-size: 10px;
+}
+
+/* ── Modal size variants ── */
+.modal--md { max-width: 460px; }
+.modal--sm { max-width: 440px; }
+
+/* ── Workspace card icon color variants ── */
+.wm-ws-card__icon--accent { background: rgba(79,70,229,.12); color: var(--ds-accent); }
+.wm-ws-card__icon--amber  { background: rgba(245,158,11,.1); color: #b45309; }
+.wm-ws-card__icon--green  { background: rgba(16,185,129,.1);  color: #059669; }
+.wm-ws-card__icon--indigo { background: rgba(99,102,241,.1);  color: #6366f1; }
+.wm-ws-card__icon--cyan   { background: rgba(6,182,212,.1);   color: #0e7490; }
+.wm-ws-card__icon--pink   { background: rgba(236,72,153,.1);  color: #9d174d; }
+.wm-ws-card__icon--yellow { background: rgba(234,179,8,.1);   color: #854d0e; }
+
+/* ── Avatar color variants ── */
+.wm-avatar--green  { background: rgba(16,185,129,.15); color: #059669; }
+.wm-avatar--amber  { background: rgba(245,158,11,.12); color: #b45309; }
+.wm-avatar--red    { background: rgba(239,68,68,.1);   color: #dc2626; }
+.wm-avatar--indigo { background: rgba(99,102,241,.1);  color: #6366f1; }
+.wm-avatar--cyan   { background: rgba(6,182,212,.1);   color: #0e7490; }
+
+/* ── KPI Strip ── */
+.wm-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.wm-kpi {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--topbar-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px 16px 12px;
+}
+.wm-kpi__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--topbar-text, #6b7280);
+    margin-bottom: 8px;
+}
+.wm-kpi__label {
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .01em;
+}
+.wm-kpi__row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.wm-kpi__value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--topbar-text-dark, #111827);
+    line-height: 1.1;
+}
+.wm-kpi__value small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--topbar-text, #6b7280);
+}
+.wm-kpi__limit {
+    font-size: 12px;
+    color: var(--topbar-text, #6b7280);
+}
+.wm-kpi__delta {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+.wm-kpi__delta--green {
+    background: rgba(16,185,129,.1);
+    color: #059669;
+}
+.wm-kpi__delta--blue {
+    background: rgba(59,130,246,.1);
+    color: #2563eb;
+}
+.wm-kpi__delta--amber {
+    background: rgba(245,158,11,.1);
+    color: #b45309;
+}
+.wm-kpi__sub {
+    font-size: 10.5px;
+    color: var(--topbar-text, #6b7280);
+    margin-top: 4px;
+}
+.wm-kpi__bar-track {
+    height: 5px;
+    background: var(--topbar-border, #e5e7eb);
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.wm-kpi__bar-fill {
+    height: 100%;
+    background: var(--ds-accent, #4f46e5);
+    border-radius: 3px;
+    transition: width .4s ease;
+}
+
+/* ── Sparkline inside workspace cards ── */
+.wm-ws-sparkline {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    opacity: .55;
+    transition: opacity .2s ease;
+}
+.wm-ws-card:hover .wm-ws-sparkline,
+.wm-ws-card:focus-within .wm-ws-sparkline {
+    opacity: 1;
+}
+
+/* ── Resource Quotas ── */
+.wm-quota-section {
+    margin-bottom: 20px;
+}
+.wm-quota-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 12px;
+}
+.wm-quota-item {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--topbar-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px 16px 12px;
+}
+.wm-quota-item__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+.wm-quota-item__label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--topbar-text-dark, #111827);
+}
+.wm-quota-item__count {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--topbar-text-dark, #111827);
+}
+.wm-quota-item__count small {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--topbar-text, #6b7280);
+}
+.wm-quota-item__bar-track {
+    height: 6px;
+    background: var(--topbar-border, #e5e7eb);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.wm-quota-item__bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .4s ease;
+}
+.wm-quota-item__bar-fill--ok {
+    background: #10b981;
+}
+.wm-quota-item__bar-fill--warn {
+    background: #f59e0b;
+}
+.wm-quota-item__bar-fill--danger {
+    background: #ef4444;
+}
+.wm-quota-item__hint {
+    font-size: 10.5px;
+    color: var(--topbar-text, #6b7280);
+    margin-top: 6px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 820px) {
+    .wm-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .wm-quota-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    /* Sidebar stacks below content on narrow screens (layout handled in dashboard.css) */
+    .settings-sidebar__nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .settings-sidebar__nav [role="tab"] {
+        flex: 0 1 auto;
+    }
+    .settings-sidebar__footer {
+        margin-top: 12px;
+        padding-top: 0;
+    }
+    /* Member tables scroll horizontally */
+    .clients-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .clients-table-wrap .inv-table {
+        min-width: 540px;
+    }
+    /* Workspace cards stack vertically (already flex-column, ensure full width) */
+    .wm-ws-card__badges { margin-top: 4px; }
+    .wm-ws-sparkline { display: none; }
+}
+@media (max-width: 520px) {
+    .wm-kpi-strip { grid-template-columns: 1fr; }
+    /* Stack card content vertically on very narrow */
+    .wm-ws-card {
+        flex-wrap: wrap;
+    }
+}
+
+/* ── Reduced-motion preference ── */
+@media (prefers-reduced-motion: reduce) {
+    .settings-section--active,
+    .wm-ws-card {
+        animation: none;
+    }
+    .wm-kpi__bar-fill,
+    .wm-quota-item__bar-fill {
+        transition: none;
+    }
+}
+</style>
+</body>
+</html>
+{{end}}

@@ -1,0 +1,972 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Monitoring page — scoped under .mon ── */
+.mon {
+  --mon-green:  #10b981;
+  --mon-yellow: #f59e0b;
+  --mon-red:    #ef4444;
+  --mon-blue:   #3b82f6;
+  --mon-purple: #8b5cf6;
+  --mon-indigo: #6366f1;
+  --mon-bg:      var(--surface, #fff);
+  --mon-bg-soft: var(--bg-soft, #f7f8fa);
+  --mon-border:  var(--border, #e5e7eb);
+  --mon-border-s:var(--border-subtle, #eef0f3);
+  --mon-text:    var(--text, #111827);
+  --mon-text-2:  var(--text-muted, #6b7280);
+  --mon-text-3:  var(--text-faint, #9ca3af);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+}
+[data-theme="dark"] .mon {
+  --mon-bg:       #181a20;
+  --mon-bg-soft:  #13151b;
+  --mon-border:   #262932;
+  --mon-border-s: #1f2229;
+  --mon-text:     #e5e7eb;
+  --mon-text-2:   #9ca3af;
+  --mon-text-3:   #6b7280;
+}
+
+@keyframes monFade { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none} }
+.mon-fade { animation: monFade .45s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Animation-delay modifiers (stagger fade-in) ── */
+.mon-fade--1  { animation-delay:  40ms; }
+.mon-fade--2  { animation-delay:  80ms; }
+.mon-fade--3  { animation-delay: 120ms; }
+.mon-fade--4  { animation-delay: 160ms; }
+.mon-fade--5  { animation-delay: 200ms; }
+.mon-fade--6  { animation-delay: 240ms; }
+.mon-fade--7  { animation-delay: 260ms; }
+.mon-fade--8  { animation-delay: 280ms; }
+.mon-fade--9  { animation-delay: 290ms; }
+.mon-fade--10 { animation-delay: 330ms; }
+.mon-fade--11 { animation-delay: 350ms; }
+.mon-fade--12 { animation-delay: 380ms; }
+.mon-fade--13 { animation-delay: 410ms; }
+
+/* ── Topbar with time range ── */
+.mon-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 18px; flex-wrap: wrap;
+}
+.mon-toolbar__left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.mon-toolbar__title { font-size: 13px; font-weight: 600; color: var(--mon-text); }
+.mon-live {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(16,185,129,.1); color: var(--mon-green);
+}
+.mon-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--mon-green);
+  animation: monPulse 2s ease-in-out infinite;
+}
+@keyframes monPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
+  50%     { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+.mon-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 11px;
+  border: 1px solid var(--mon-border-s);
+  border-radius: 6px; background: var(--mon-bg);
+  color: var(--mon-text-2); font-size: 11.5px; font-weight: 500;
+  cursor: pointer; transition: all .12s;
+}
+.mon-btn:hover { border-color: var(--mon-border); color: var(--mon-text); background: var(--mon-bg-soft); }
+.mon-btn--active {
+  background: var(--mon-text); color: var(--mon-bg);
+  border-color: var(--mon-text);
+}
+.mon-btn--active:hover { background: var(--mon-text-2); border-color: var(--mon-text-2); }
+.mon-range-group { display: flex; gap: 2px; }
+
+/* ── KPI strip ── */
+.mon-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.mon-kpi {
+  background: var(--mon-bg);
+  border: 1px solid var(--mon-border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.mon-kpi__label {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--mon-text-2); margin-bottom: 5px;
+}
+.mon-kpi__value {
+  font-size: 22px; font-weight: 700; letter-spacing: -.02em;
+  color: var(--mon-text);
+}
+.mon-kpi__value--ok   { color: var(--mon-green); }
+.mon-kpi__value--warn { color: var(--mon-yellow); }
+.mon-kpi__value--crit { color: var(--mon-red); }
+.mon-kpi__sub { font-size: 11px; color: var(--mon-text-3); margin-top: 3px; }
+.mon-kpi__bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  border-radius: 0 0 10px 10px;
+}
+.mon-kpi__spark {
+  position: absolute; bottom: 8px; right: 8px; opacity: .35;
+}
+
+/* ── KPI bar gradient modifiers ── */
+.mon-kpi__bar--green  { background: linear-gradient(90deg, #10b981, #34d399); }
+.mon-kpi__bar--blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.mon-kpi__bar--purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.mon-kpi__bar--cyan   { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
+.mon-kpi__bar--amber  { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+.mon-kpi__bar--indigo { background: linear-gradient(90deg, #10b981, #6366f1); }
+
+/* ── KPI unit span ── */
+.mon-kpi__unit { font-size: 14px; font-weight: 500; }
+
+/* ── SLO posture strip ── */
+.mon-slos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.mon-slo {
+  background: var(--mon-bg);
+  border: 1px solid var(--mon-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.mon-slo__head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.mon-slo__name { font-size: 12px; font-weight: 600; color: var(--mon-text); }
+.mon-slo__target { font-size: 10.5px; color: var(--mon-text-3); }
+.mon-slo__bar {
+  height: 4px; border-radius: 999px;
+  background: var(--mon-border); overflow: hidden;
+  margin-bottom: 6px;
+}
+.mon-slo__fill { height: 100%; border-radius: 999px; transition: width .3s; }
+.mon-slo__fill--ok   { background: var(--mon-green); }
+.mon-slo__fill--warn { background: var(--mon-yellow); }
+.mon-slo__fill--crit { background: var(--mon-red); }
+.mon-slo__foot {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--mon-text-3);
+}
+.mon-slo__burn { font-weight: 600; }
+.mon-slo__burn--ok   { color: var(--mon-green); }
+.mon-slo__burn--warn { color: var(--mon-yellow); }
+.mon-slo__burn--crit { color: var(--mon-red); }
+
+/* ── Two-column layout ── */
+.mon-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.mon-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Card ── */
+.mon-card {
+  background: var(--mon-bg);
+  border: 1px solid var(--mon-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.mon-card__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mon-border-s);
+}
+.mon-card__title {
+  font-size: 12.5px; font-weight: 600; color: var(--mon-text);
+  display: flex; align-items: center; gap: 7px;
+}
+.mon-card__meta { font-size: 11px; color: var(--mon-text-3); }
+.mon-card__actions { display: flex; gap: 5px; }
+
+/* ── Chart area ── */
+.mon-chart-wrap {
+  padding: 12px 16px 8px;
+  position: relative;
+}
+.mon-chart-labels {
+  display: flex; justify-content: space-between;
+  padding: 0 16px 10px;
+  font-size: 10.5px; color: var(--mon-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.mon-chart-legend {
+  display: flex; gap: 14px; padding: 0 16px 12px;
+}
+.mon-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--mon-text-2);
+}
+.mon-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+/* ── Canvas blocks ── */
+.mon-canvas { width: 100%; display: block; }
+
+/* ── Legend dot colour modifiers ── */
+.mon-legend-dot--blue   { background: #3b82f6; }
+.mon-legend-dot--purple { background: #8b5cf6; }
+.mon-legend-dot--green  { background: #10b981; }
+.mon-legend-dot--red    { background: #ef4444; }
+
+/* ── Scrollable table wrapper ── */
+.mon-table-scroll { overflow-x: auto; }
+
+/* ── Resource health table ── */
+.mon-table { width: 100%; border-collapse: collapse; }
+.mon-table th {
+  text-align: left; padding: 9px 14px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--mon-text-3);
+  background: var(--mon-bg-soft);
+  border-bottom: 1px solid var(--mon-border-s);
+}
+.mon-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--mon-border-s);
+  font-size: 12.5px; color: var(--mon-text);
+  vertical-align: middle;
+}
+.mon-table tr:last-child td { border-bottom: 0; }
+.mon-table tbody tr { transition: background .1s; }
+.mon-table tbody tr:hover td { background: var(--mon-bg-soft); }
+
+/* ── Resource name cell ── */
+.mon-res-name { font-weight: 500; }
+
+.mon-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.mon-status--up      { color: var(--mon-green);  background: rgba(16,185,129,.1); }
+.mon-status--degraded{ color: var(--mon-yellow);  background: rgba(245,158,11,.12); }
+.mon-status--down    { color: var(--mon-red);     background: rgba(239,68,68,.1); }
+.mon-status--unknown { color: var(--mon-text-3);  background: var(--mon-bg-soft); border: 1px solid var(--mon-border-s); }
+[data-theme="dark"] .mon-status--up       { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .mon-status--degraded { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .mon-status--down     { background: rgba(239,68,68,.15); }
+
+.mon-bar-cell { width: 80px; }
+.mon-uptime-bar {
+  height: 5px; border-radius: 999px;
+  background: var(--mon-border); overflow: hidden;
+}
+.mon-uptime-fill { height: 100%; border-radius: 999px; }
+
+/* ── Uptime fill colour modifiers ── */
+.mon-uptime-fill--green  { background: var(--mon-green); }
+.mon-uptime-fill--yellow { background: var(--mon-yellow); }
+
+/* ── Uptime percentage label ── */
+.mon-uptime-pct {
+  font-size: 10.5px; color: var(--mon-text-3); margin-top: 2px;
+}
+
+.mon-mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; color: var(--mon-text-2); }
+
+/* ── Mini sparkline bars ── */
+.mon-spark {
+  display: inline-flex; align-items: flex-end; gap: 1.5px;
+  height: 20px; vertical-align: middle;
+}
+.mon-spark__bar {
+  width: 3px; border-radius: 1px;
+  background: var(--mon-blue); opacity: .6;
+  transition: opacity .1s;
+}
+.mon-spark__bar:hover { opacity: 1; }
+
+/* ── Alert feed ── */
+.mon-alerts { padding: 4px 0; }
+.mon-alert {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mon-border-s);
+  font-size: 12.5px;
+  transition: background .1s;
+}
+.mon-alert:last-child { border-bottom: 0; }
+.mon-alert:hover { background: var(--mon-bg-soft); }
+.mon-alert__icon {
+  flex-shrink: 0; margin-top: 1px;
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mon-alert__icon--crit { background: rgba(239,68,68,.1);    color: var(--mon-red); }
+.mon-alert__icon--warn { background: rgba(245,158,11,.1);   color: var(--mon-yellow); }
+.mon-alert__icon--info { background: rgba(59,130,246,.1);   color: var(--mon-blue); }
+.mon-alert__icon--ok   { background: rgba(16,185,129,.1);   color: var(--mon-green); }
+[data-theme="dark"] .mon-alert__icon--crit { background: rgba(239,68,68,.15); }
+[data-theme="dark"] .mon-alert__icon--warn { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .mon-alert__icon--info { background: rgba(59,130,246,.15); }
+[data-theme="dark"] .mon-alert__icon--ok   { background: rgba(16,185,129,.15); }
+.mon-alert__body { flex: 1; min-width: 0; }
+.mon-alert__msg  { color: var(--mon-text); line-height: 1.4; }
+.mon-alert__meta { font-size: 11px; color: var(--mon-text-3); margin-top: 2px; }
+.mon-alert__time { flex-shrink: 0; font-size: 11px; color: var(--mon-text-3); padding-top: 2px; }
+
+/* ── Uptime summary heatmap ── */
+.mon-heatmap {
+  padding: 12px 16px 14px;
+}
+.mon-heatmap__row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.mon-heatmap__label {
+  width: 110px; font-size: 11.5px; color: var(--mon-text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
+}
+.mon-heatmap__cells { display: flex; gap: 2px; flex: 1; }
+.mon-heatmap__cell {
+  flex: 1; height: 16px; border-radius: 2px; cursor: default;
+  transition: opacity .1s;
+}
+.mon-heatmap__cell:hover { opacity: .75; }
+.mon-heatmap__cell--up       { background: var(--mon-green); }
+.mon-heatmap__cell--degraded { background: var(--mon-yellow); }
+.mon-heatmap__cell--down     { background: var(--mon-red); }
+.mon-heatmap__cell--none     { background: var(--mon-border); }
+.mon-heatmap__pct {
+  width: 42px; text-align: right; flex-shrink: 0;
+  font-size: 11.5px; font-weight: 600; color: var(--mon-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.mon-heatmap__legend {
+  display: flex; gap: 14px; margin-top: 10px;
+  font-size: 10.5px; color: var(--mon-text-3);
+}
+.mon-heatmap__legend-item { display: flex; align-items: center; gap: 4px; }
+.mon-heatmap__legend-swatch {
+  width: 10px; height: 10px; border-radius: 2px;
+}
+
+/* ── Heatmap legend swatch colour modifiers ── */
+.mon-heatmap__legend-swatch--green  { background: var(--mon-green); }
+.mon-heatmap__legend-swatch--yellow { background: var(--mon-yellow); }
+.mon-heatmap__legend-swatch--red    { background: var(--mon-red); }
+
+/* ── Check list ── */
+.mon-checks { padding: 4px 0; }
+.mon-check {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mon-border-s);
+  font-size: 12.5px;
+  transition: background .1s;
+  cursor: pointer;
+}
+.mon-check:last-child { border-bottom: 0; }
+.mon-check:hover { background: var(--mon-bg-soft); }
+.mon-check__dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.mon-check__dot--up       { background: var(--mon-green); box-shadow: 0 0 0 2px rgba(16,185,129,.2); }
+.mon-check__dot--degraded { background: var(--mon-yellow); box-shadow: 0 0 0 2px rgba(245,158,11,.2); }
+.mon-check__dot--down     { background: var(--mon-red);   box-shadow: 0 0 0 2px rgba(239,68,68,.2); }
+.mon-check__name { flex: 1; font-weight: 500; color: var(--mon-text); }
+.mon-check__latency { font-size: 12px; color: var(--mon-text-2); font-variant-numeric: tabular-nums; }
+.mon-check__region { font-size: 11px; color: var(--mon-text-3); }
+
+/* ── Modal footer (add-check) ── */
+.mon-modal-foot {
+  margin: 4px -22px -20px;
+  padding: 14px 22px;
+}
+
+@media (max-width: 1180px) {
+  .mon-kpis { grid-template-columns: repeat(3, 1fr); }
+  .mon-grid  { grid-template-columns: 1fr; }
+  .mon-slos  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 660px) {
+  .mon-kpis { grid-template-columns: 1fr 1fr; }
+  .mon-slos { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="mon" role="main" aria-label="Infrastructure monitoring dashboard">
+
+  <!-- Toolbar -->
+  <div class="mon-toolbar mon-fade" role="toolbar" aria-label="Monitoring controls">
+    <div class="mon-toolbar__left">
+      <h1 class="mon-toolbar__title">Infrastructure Monitoring</h1>
+      <span class="mon-live" role="status" aria-live="polite" aria-label="Live monitoring active"><span class="mon-live-dot" aria-hidden="true"></span>Live</span>
+    </div>
+    <div class="mon-range-group" role="group" aria-label="Time range selector">
+      <button class="mon-btn" onclick="monSetRange(this,'1h')" aria-pressed="false">1h</button>
+      <button class="mon-btn mon-btn--active" onclick="monSetRange(this,'6h')" aria-pressed="true">6h</button>
+      <button class="mon-btn" onclick="monSetRange(this,'24h')" aria-pressed="false">24h</button>
+      <button class="mon-btn" onclick="monSetRange(this,'7d')" aria-pressed="false">7d</button>
+      <button class="mon-btn" onclick="monSetRange(this,'30d')" aria-pressed="false">30d</button>
+    </div>
+    <button class="mon-btn" aria-label="Open filters">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M1.5 5.5h8M1.5 2.5h8M1.5 8.5h5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+      Filters
+    </button>
+    <button class="mon-btn" aria-label="View alerts">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.0"/><path d="M5.5 3.5v2l1.5 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+      Alerts
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="mon-kpis" role="region" aria-label="Key performance indicators">
+    <div class="mon-kpi mon-fade mon-fade--1" aria-label="Services Up: 34 of 36">
+      <div class="mon-kpi__bar mon-kpi__bar--green" aria-hidden="true"></div>
+      <div class="mon-kpi__label">Services Up</div>
+      <div class="mon-kpi__value mon-kpi__value--ok">34/36</div>
+      <div class="mon-kpi__sub">2 degraded · 0 down</div>
+    </div>
+    <div class="mon-kpi mon-fade mon-fade--2" aria-label="Average CPU: 41%">
+      <div class="mon-kpi__bar mon-kpi__bar--blue" aria-hidden="true"></div>
+      <div class="mon-kpi__label">Avg CPU</div>
+      <div class="mon-kpi__value">41%</div>
+      <div class="mon-kpi__sub">↓ 3pp vs 1h ago</div>
+    </div>
+    <div class="mon-kpi mon-fade mon-fade--3" aria-label="Average Memory: 62%">
+      <div class="mon-kpi__bar mon-kpi__bar--purple" aria-hidden="true"></div>
+      <div class="mon-kpi__label">Avg Memory</div>
+      <div class="mon-kpi__value">62%</div>
+      <div class="mon-kpi__sub">68 GB / 110 GB used</div>
+    </div>
+    <div class="mon-kpi mon-fade mon-fade--4" aria-label="Average Latency: 38 milliseconds">
+      <div class="mon-kpi__bar mon-kpi__bar--cyan" aria-hidden="true"></div>
+      <div class="mon-kpi__label">Avg Latency</div>
+      <div class="mon-kpi__value">38<span class="mon-kpi__unit">ms</span></div>
+      <div class="mon-kpi__sub">p95: 112ms · p99: 290ms</div>
+    </div>
+    <div class="mon-kpi mon-fade mon-fade--5" aria-label="Error Rate: 1.4%">
+      <div class="mon-kpi__bar mon-kpi__bar--amber" aria-hidden="true"></div>
+      <div class="mon-kpi__label">Error Rate</div>
+      <div class="mon-kpi__value mon-kpi__value--warn">1.4%</div>
+      <div class="mon-kpi__sub">↑ 0.6pp last 30 min</div>
+    </div>
+    <div class="mon-kpi mon-fade mon-fade--6" aria-label="30-day Uptime: 99.91%">
+      <div class="mon-kpi__bar mon-kpi__bar--indigo" aria-hidden="true"></div>
+      <div class="mon-kpi__label">30-day Uptime</div>
+      <div class="mon-kpi__value mon-kpi__value--ok">99.91%</div>
+      <div class="mon-kpi__sub">39 min downtime this month</div>
+    </div>
+  </div>
+
+  <!-- SLO posture strip -->
+  <div class="mon-slos mon-fade mon-fade--7" role="region" aria-label="Service level objectives">
+    <div class="mon-slo" aria-label="api.availability SLO budget at 78%">
+      <div class="mon-slo__head">
+        <span class="mon-slo__name">api.availability</span>
+        <span class="mon-slo__target">SLO 99.9% / 28 d</span>
+      </div>
+      <div class="mon-slo__bar" role="meter" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100" aria-label="Budget remaining"><div class="mon-slo__fill mon-slo__fill--ok" style="width:78%"></div></div>
+      <div class="mon-slo__foot"><span>Budget 78%</span><span class="mon-slo__burn mon-slo__burn--ok">burn 0.4×</span></div>
+    </div>
+    <div class="mon-slo" aria-label="api.latency.p99 SLO budget at 34%">
+      <div class="mon-slo__head">
+        <span class="mon-slo__name">api.latency.p99 &lt; 350ms</span>
+        <span class="mon-slo__target">SLO 99% / 28 d</span>
+      </div>
+      <div class="mon-slo__bar" role="meter" aria-valuenow="34" aria-valuemin="0" aria-valuemax="100" aria-label="Budget remaining"><div class="mon-slo__fill mon-slo__fill--warn" style="width:34%"></div></div>
+      <div class="mon-slo__foot"><span>Budget 34%</span><span class="mon-slo__burn mon-slo__burn--warn">burn 2.1× · page</span></div>
+    </div>
+    <div class="mon-slo" aria-label="webhook.delivery SLO budget at 52%">
+      <div class="mon-slo__head">
+        <span class="mon-slo__name">webhook.delivery &lt; 60s</span>
+        <span class="mon-slo__target">SLO 99% / 28 d</span>
+      </div>
+      <div class="mon-slo__bar" role="meter" aria-valuenow="52" aria-valuemin="0" aria-valuemax="100" aria-label="Budget remaining"><div class="mon-slo__fill mon-slo__fill--warn" style="width:52%"></div></div>
+      <div class="mon-slo__foot"><span>Budget 52%</span><span class="mon-slo__burn mon-slo__burn--ok">burn 0.9×</span></div>
+    </div>
+    <div class="mon-slo" aria-label="dashboard.availability SLO budget at 88%">
+      <div class="mon-slo__head">
+        <span class="mon-slo__name">dashboard.availability</span>
+        <span class="mon-slo__target">SLO 99.5% / 28 d</span>
+      </div>
+      <div class="mon-slo__bar" role="meter" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100" aria-label="Budget remaining"><div class="mon-slo__fill mon-slo__fill--ok" style="width:88%"></div></div>
+      <div class="mon-slo__foot"><span>Budget 88%</span><span class="mon-slo__burn mon-slo__burn--ok">burn 0.2×</span></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="mon-grid">
+
+    <!-- Left column -->
+    <div class="mon-col">
+
+      <!-- CPU + Memory chart -->
+      <div class="mon-card mon-fade mon-fade--8" role="region" aria-label="CPU and Memory chart">
+        <div class="mon-card__head">
+          <div class="mon-card__title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="1" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M3 9l2-3 2 2 2-4 2 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            CPU &amp; Memory
+          </div>
+          <div class="mon-card__actions">
+            <button class="mon-btn" aria-label="View per host breakdown">Per host</button>
+          </div>
+        </div>
+        <div class="mon-chart-wrap">
+          <canvas id="monCpuChart" class="mon-canvas" height="90" role="img" aria-label="CPU and Memory usage chart over time"></canvas>
+        </div>
+        <div class="mon-chart-labels" id="monCpuLabels" aria-hidden="true"></div>
+        <div class="mon-chart-legend" role="list" aria-label="Chart legend">
+          <div class="mon-legend-item" role="listitem"><span class="mon-legend-dot mon-legend-dot--blue" aria-hidden="true"></span>CPU</div>
+          <div class="mon-legend-item" role="listitem"><span class="mon-legend-dot mon-legend-dot--purple" aria-hidden="true"></span>Memory</div>
+        </div>
+      </div>
+
+      <!-- Request rate + error rate chart -->
+      <div class="mon-card mon-fade mon-fade--10" role="region" aria-label="Request rate and errors chart">
+        <div class="mon-card__head">
+          <div class="mon-card__title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><polyline points="1,9 3,6 5.5,7.5 8,3 10,5 12,3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Request Rate &amp; Errors
+          </div>
+          <div class="mon-card__actions">
+            <button class="mon-btn" aria-label="View by service breakdown">By service</button>
+          </div>
+        </div>
+        <div class="mon-chart-wrap">
+          <canvas id="monReqChart" class="mon-canvas" height="90" role="img" aria-label="Request rate and error rate chart over time"></canvas>
+        </div>
+        <div class="mon-chart-labels" id="monReqLabels" aria-hidden="true"></div>
+        <div class="mon-chart-legend" role="list" aria-label="Chart legend">
+          <div class="mon-legend-item" role="listitem"><span class="mon-legend-dot mon-legend-dot--green" aria-hidden="true"></span>Req/s</div>
+          <div class="mon-legend-item" role="listitem"><span class="mon-legend-dot mon-legend-dot--red" aria-hidden="true"></span>Errors/s</div>
+        </div>
+      </div>
+
+      <!-- Resource health table -->
+      <div class="mon-card mon-fade mon-fade--12" role="region" aria-label="Resource health table">
+        <div class="mon-card__head">
+          <div class="mon-card__title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M4 3V2M9 3V2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Resource Health
+          </div>
+          <span class="mon-card__meta">36 resources</span>
+        </div>
+        <div class="mon-table-scroll">
+        <table class="mon-table" aria-label="Resource health details">
+          <thead>
+            <tr>
+              <th scope="col">Resource</th>
+              <th scope="col">Type</th>
+              <th scope="col">Status</th>
+              <th scope="col">CPU</th>
+              <th scope="col">Mem</th>
+              <th scope="col">Latency</th>
+              <th scope="col">Uptime 30d</th>
+              <th scope="col">Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Checks}}
+            <tr>
+              <td class="mon-res-name">{{.Name}}<div style="font-size:10px;color:var(--text-2)">{{.Target}}</div></td>
+              <td class="mon-mono">{{.CheckType}}</td>
+              <td>
+                {{if eq .Status "up"}}<span class="mon-status mon-status--up">Up</span>
+                {{else if eq .Status "degraded"}}<span class="mon-status mon-status--degraded">Degraded</span>
+                {{else if eq .Status "down"}}<span class="mon-status mon-status--down">Down</span>
+                {{else if eq .Status "paused"}}<span class="mon-status mon-status--paused">Paused</span>
+                {{else}}<span class="mon-status">{{.Status}}</span>
+                {{end}}
+              </td>
+              <td class="mon-mono">—</td>
+              <td class="mon-mono">—</td>
+              <td class="mon-mono">{{if gt .LatencyMs 0}}{{.LatencyMs}}ms{{else}}—{{end}}</td>
+              <td>
+                <div class="mon-bar-cell">
+                  <div class="mon-uptime-bar" role="meter" aria-label="Uptime"><div class="mon-uptime-fill {{if ge .Uptime30d "99.9"}}mon-uptime-fill--green{{else if ge .Uptime30d "98"}}mon-uptime-fill--yellow{{else}}mon-uptime-fill--red{{end}}" style="width:{{.Uptime30d}}%"></div></div>
+                  <div class="mon-uptime-pct">{{.Uptime30d}}%</div>
+                </div>
+              </td>
+              <td>
+                <form method="POST" action="/t/{{$.TenantSlug}}/monitoring/{{.ID}}/delete/" style="display:inline">
+                  <button class="btn btn--danger btn--sm" type="submit" onclick="return confirm('Remove check?')">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-2)">No monitoring checks found.</td></tr>
+            {{end}}
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- Right sidebar -->
+    <div class="mon-col">
+
+      <!-- Active alerts -->
+      <div class="mon-card mon-fade mon-fade--9" role="region" aria-label="Active alerts">
+        <div class="mon-card__head">
+          <div class="mon-card__title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1L1 11h11L6.5 1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/><path d="M6.5 5.5v2.5M6.5 9.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Active Alerts
+          </div>
+          <span class="mon-card__meta">4 open</span>
+        </div>
+        <div class="mon-alerts" role="log" aria-label="Alert feed" aria-live="polite">
+          <div class="mon-alert" role="article" aria-label="Warning: High CPU on worker-queue-1">
+            <div class="mon-alert__icon mon-alert__icon--warn" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/><path d="M6 5v2M6 8.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            </div>
+            <div class="mon-alert__body">
+              <div class="mon-alert__msg"><strong>High CPU</strong> — worker-queue-1</div>
+              <div class="mon-alert__meta">CPU sustained &gt;85% for 12 min</div>
+            </div>
+            <div class="mon-alert__time">12m</div>
+          </div>
+          <div class="mon-alert" role="article" aria-label="Warning: Elevated Latency on api-gateway">
+            <div class="mon-alert__icon mon-alert__icon--warn" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/><path d="M6 5v2M6 8.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            </div>
+            <div class="mon-alert__body">
+              <div class="mon-alert__msg"><strong>Elevated Latency</strong> — api-gateway</div>
+              <div class="mon-alert__meta">p95 latency &gt;100ms threshold</div>
+            </div>
+            <div class="mon-alert__time">28m</div>
+          </div>
+          <div class="mon-alert" role="article" aria-label="Critical: Error Rate Spike on api-gateway">
+            <div class="mon-alert__icon mon-alert__icon--crit" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.0"/><path d="M6 3.5v3M6 8h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            </div>
+            <div class="mon-alert__body">
+              <div class="mon-alert__msg"><strong>Error Rate Spike</strong> — api-gateway</div>
+              <div class="mon-alert__meta">5xx rate 4.1% (threshold: 2%)</div>
+            </div>
+            <div class="mon-alert__time">31m</div>
+          </div>
+          <div class="mon-alert" role="article" aria-label="Info: Disk 78% on db-primary">
+            <div class="mon-alert__icon mon-alert__icon--info" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.0"/><path d="M6 5.5v3M6 3.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            </div>
+            <div class="mon-alert__body">
+              <div class="mon-alert__msg"><strong>Disk 78%</strong> — db-primary</div>
+              <div class="mon-alert__meta">Approaching 80% warn threshold</div>
+            </div>
+            <div class="mon-alert__time">1h</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Endpoint checks -->
+      <div class="mon-card mon-fade mon-fade--11" role="region" aria-label="Endpoint health checks">
+        <div class="mon-card__head">
+          <div class="mon-card__title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M6.5 3v3.5l2 2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Endpoint Checks
+          </div>
+          <button class="mon-btn" onclick="document.getElementById('monAddCheckModal').classList.add('open')" aria-label="Add endpoint check">+ Add</button>
+        </div>
+        <div class="mon-checks" role="list" aria-label="Monitored endpoints">
+          <div class="mon-check" role="listitem" aria-label="{{.Tenant.Slug}}.io is up, latency 34ms">
+            <span class="mon-check__dot mon-check__dot--up" aria-hidden="true"></span>
+            <span class="mon-check__name">{{.Tenant.Slug}}.io</span>
+            <span class="mon-check__latency">34ms</span>
+            <span class="mon-check__region">us-east</span>
+          </div>
+          <div class="mon-check" role="listitem" aria-label="api health endpoint is up, latency 22ms">
+            <span class="mon-check__dot mon-check__dot--up" aria-hidden="true"></span>
+            <span class="mon-check__name">api.{{.Tenant.Slug}}.io/health</span>
+            <span class="mon-check__latency">22ms</span>
+            <span class="mon-check__region">us-east</span>
+          </div>
+          <div class="mon-check" role="listitem" aria-label="graphql endpoint is degraded, latency 148ms">
+            <span class="mon-check__dot mon-check__dot--degraded" aria-hidden="true"></span>
+            <span class="mon-check__name">api.{{.Tenant.Slug}}.io/graphql</span>
+            <span class="mon-check__latency">148ms</span>
+            <span class="mon-check__region">us-east</span>
+          </div>
+          <div class="mon-check" role="listitem" aria-label="auth endpoint is up, latency 41ms">
+            <span class="mon-check__dot mon-check__dot--up" aria-hidden="true"></span>
+            <span class="mon-check__name">auth.{{.Tenant.Slug}}.io</span>
+            <span class="mon-check__latency">41ms</span>
+            <span class="mon-check__region">eu-west</span>
+          </div>
+          <div class="mon-check" role="listitem" aria-label="CDN endpoint is up, latency 11ms">
+            <span class="mon-check__dot mon-check__dot--up" aria-hidden="true"></span>
+            <span class="mon-check__name">cdn.{{.Tenant.Slug}}.io</span>
+            <span class="mon-check__latency">11ms</span>
+            <span class="mon-check__region">global</span>
+          </div>
+          <div class="mon-check" role="listitem" aria-label="WebSocket endpoint is up, latency 28ms">
+            <span class="mon-check__dot mon-check__dot--up" aria-hidden="true"></span>
+            <span class="mon-check__name">ws.{{.Tenant.Slug}}.io</span>
+            <span class="mon-check__latency">28ms</span>
+            <span class="mon-check__region">us-east</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 30-day uptime heatmap -->
+      <div class="mon-card mon-fade mon-fade--13" role="region" aria-label="30-day uptime heatmap">
+        <div class="mon-card__head">
+          <div class="mon-card__title">30-day Uptime</div>
+          <span class="mon-card__meta">per service</span>
+        </div>
+        <div class="mon-heatmap" id="monHeatmap" aria-label="Uptime heatmap by service">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /mon-grid -->
+
+</div>
+
+<!-- Add check modal -->
+<div class="jm-modal-back" id="monAddCheckModal" onclick="if(event.target===this)this.classList.remove('open')" role="dialog" aria-modal="true" aria-labelledby="monAddCheckTitle">
+  <div class="jm-modal">
+    <div class="jm-modal__head">
+      <span class="jm-modal__title" id="monAddCheckTitle">Add Endpoint Check</span>
+      <button class="jm-modal__close" onclick="document.getElementById('monAddCheckModal').classList.remove('open')" aria-label="Close dialog">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <form class="jm-modal__form" onsubmit="monAddCheck(event)">
+      <div class="jm-field">
+        <label class="jm-field__label" for="monCheckURL">URL</label>
+        <input class="jm-field__input" id="monCheckURL" type="url" name="url" placeholder="https://example.com/health" required />
+      </div>
+      <div class="jm-field">
+        <label class="jm-field__label" for="monCheckInterval">Check interval</label>
+        <select class="jm-field__select" id="monCheckInterval" name="interval">
+          <option value="30s">Every 30 seconds</option>
+          <option value="1m" selected>Every 1 minute</option>
+          <option value="5m">Every 5 minutes</option>
+          <option value="15m">Every 15 minutes</option>
+        </select>
+      </div>
+      <div class="jm-field">
+        <label class="jm-field__label" for="monCheckRegion">Region</label>
+        <select class="jm-field__select" id="monCheckRegion" name="region">
+          <option value="us-east">US East</option>
+          <option value="us-west">US West</option>
+          <option value="eu-west">EU West</option>
+          <option value="ap-south">AP South</option>
+          <option value="global">All regions</option>
+        </select>
+      </div>
+      <div class="jm-modal__foot jm-field--full mon-modal-foot">
+        <button type="button" class="jm-mbtn jm-mbtn--ghost" onclick="document.getElementById('monAddCheckModal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="jm-mbtn jm-mbtn--primary">Add Check</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+
+/* ── Range selector ── */
+function monSetRange(btn, range) {
+  btn.closest('.mon-range-group').querySelectorAll('.mon-btn').forEach(function(b){
+    b.classList.remove('mon-btn--active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  btn.classList.add('mon-btn--active');
+  btn.setAttribute('aria-pressed', 'true');
+  renderCharts(range);
+}
+window.monSetRange = monSetRange;
+
+/* ── Helpers ── */
+function hexToRgba(hex, a) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+/* ── Tiny chart renderer (canvas-based, no deps) ── */
+function renderLineChart(canvasId, labelsId, series, range) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var W = canvas.offsetWidth; var H = canvas.offsetHeight || 90;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  var pts = rangePoints(range);
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var gridCol = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.04)';
+  var textCol = isDark ? '#6b7280' : '#9ca3af';
+
+  // grid
+  ctx.strokeStyle = gridCol; ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75].forEach(function(y){
+    ctx.beginPath(); ctx.moveTo(0, H * y); ctx.lineTo(W, H * y); ctx.stroke();
+  });
+
+  // series
+  series.forEach(function(s){
+    var data = genData(s.seed, pts, s.min, s.max);
+    ctx.beginPath();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.8;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    data.forEach(function(v, i){
+      var x = (i / (pts - 1)) * W;
+      var y = H - ((v - 0) / 100) * H;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // fill
+    ctx.save();
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, hexToRgba(s.color, 0.18));
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    data.forEach(function(v, i){
+      var x = (i / (pts - 1)) * W;
+      var y = H - ((v - 0) / 100) * H;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // labels
+  var lblEl = document.getElementById(labelsId);
+  if (lblEl) {
+    var labels = genLabels(range, 6);
+    lblEl.innerHTML = labels.map(function(l){ return '<span>'+l+'</span>'; }).join('');
+  }
+}
+
+function rangePoints(r){ var m={'1h':12,'6h':24,'24h':24,'7d':28,'30d':30}; return m[r]||24; }
+function genData(seed, n, lo, hi) {
+  var out = []; var v = lo + (hi-lo)/2;
+  for (var i=0;i<n;i++){
+    v += ((Math.sin(seed*i*0.7+seed)*0.5+Math.cos(seed*i*0.3)*0.5)) * (hi-lo)*0.15;
+    v = Math.max(lo, Math.min(hi, v));
+    out.push(Math.round(v));
+  }
+  return out;
+}
+function genLabels(range, n) {
+  var now = new Date(); var out = [];
+  var steps = {'1h':60,'6h':360,'24h':1440,'7d':10080,'30d':43200};
+  var totalMin = steps[range] || 360;
+  for (var i=0;i<n;i++){
+    var d = new Date(now - (totalMin - (totalMin/n)*i)*60000);
+    if (range === '7d' || range === '30d') {
+      out.push(d.toLocaleDateString('en',{month:'short',day:'numeric'}));
+    } else {
+      out.push(d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:false}));
+    }
+  }
+  return out;
+}
+
+function renderCharts(range) {
+  renderLineChart('monCpuChart','monCpuLabels',[
+    {seed:3, color:'#3b82f6', min:25, max:75},
+    {seed:7, color:'#8b5cf6', min:45, max:82},
+  ], range);
+  renderLineChart('monReqChart','monReqLabels',[
+    {seed:2, color:'#10b981', min:30, max:85},
+    {seed:5, color:'#ef4444', min:0,  max:20},
+  ], range);
+}
+
+/* ── Sparklines ── */
+function renderSparkline(id, vals, color) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var max = Math.max.apply(null, vals) || 1;
+  el.innerHTML = vals.map(function(v){
+    return '<span class="mon-spark__bar" style="height:'+(Math.round((v/max)*18)+2)+'px;background:'+color+'" aria-hidden="true"></span>';
+  }).join('');
+}
+var sparks = [
+  {id:'spark-web1',  vals:[30,32,35,33,38,36,38,38], color:'#3b82f6'},
+  {id:'spark-web2',  vals:[28,31,34,32,39,37,40,41], color:'#3b82f6'},
+  {id:'spark-api',   vals:[42,48,55,60,72,68,65,67], color:'#f59e0b'},
+  {id:'spark-db',    vals:[18,19,21,20,22,21,23,22], color:'#3b82f6'},
+  {id:'spark-dbrep', vals:[16,17,19,18,20,19,21,18], color:'#3b82f6'},
+  {id:'spark-redis', vals:[6,7,8,7,8,8,9,8],         color:'#3b82f6'},
+  {id:'spark-worker',vals:[60,70,75,82,88,85,88,88], color:'#f59e0b'},
+  {id:'spark-cdn',   vals:[9,10,11,10,11,12,11,11],  color:'#3b82f6'},
+];
+sparks.forEach(function(s){ renderSparkline(s.id, s.vals, s.color); });
+
+/* ── Uptime heatmap ── */
+var hmServices = [
+  {label:'api-gateway',    days:function(){ return rndDays(0.05,0.02,0.93); }},
+  {label:'web-prod-01',    days:function(){ return rndDays(0,0,1); }},
+  {label:'web-prod-02',    days:function(){ return rndDays(0,0,1); }},
+  {label:'db-primary',     days:function(){ return rndDays(0,0,1); }},
+  {label:'worker-queue-1', days:function(){ return rndDays(0.02,0.05,0.93); }},
+  {label:'cdn-edge-us',    days:function(){ return rndDays(0,0,1); }},
+];
+function rndDays(pDown,pDeg,pUp){
+  var arr=[];
+  for(var i=0;i<30;i++){
+    var r=Math.random();
+    arr.push(r<pDown?'down':r<pDown+pDeg?'degraded':'up');
+  }
+  return arr;
+}
+function pctFor(days){
+  var up=days.filter(function(d){return d==='up';}).length;
+  return ((up/days.length)*100).toFixed(2)+'%';
+}
+var hm = document.getElementById('monHeatmap');
+if(hm){
+  var html = hmServices.map(function(svc){
+    var days=svc.days();
+    return '<div class="mon-heatmap__row" aria-label="'+svc.label+' uptime: '+pctFor(days)+'">'
+      +'<div class="mon-heatmap__label">'+svc.label+'</div>'
+      +'<div class="mon-heatmap__cells" role="img" aria-label="30-day status for '+svc.label+'">'
+      +days.map(function(d){
+        return '<div class="mon-heatmap__cell mon-heatmap__cell--'+d+'" title="'+d+'"></div>';
+      }).join('')
+      +'</div>'
+      +'<div class="mon-heatmap__pct">'+pctFor(days)+'</div>'
+      +'</div>';
+  }).join('');
+  html += '<div class="mon-heatmap__legend" role="list" aria-label="Heatmap legend">'
+    +'<div class="mon-heatmap__legend-item" role="listitem"><div class="mon-heatmap__legend-swatch mon-heatmap__legend-swatch--green" aria-hidden="true"></div>Up</div>'
+    +'<div class="mon-heatmap__legend-item" role="listitem"><div class="mon-heatmap__legend-swatch mon-heatmap__legend-swatch--yellow" aria-hidden="true"></div>Degraded</div>'
+    +'<div class="mon-heatmap__legend-item" role="listitem"><div class="mon-heatmap__legend-swatch mon-heatmap__legend-swatch--red" aria-hidden="true"></div>Down</div>'
+    +'</div>';
+  hm.innerHTML = html;
+}
+
+/* initial render */
+renderCharts('6h');
+
+/* ── Add check modal ── */
+window.monAddCheck = function(e){
+  e.preventDefault();
+  document.getElementById('monAddCheckModal').classList.remove('open');
+  window.mockToast('Health check added.');
+};
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') document.getElementById('monAddCheckModal').classList.remove('open');
+});
+
+})();
+</script>
+{{end}}

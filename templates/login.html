@@ -1,0 +1,251 @@
+{{define "title"}}Sign In — Platform{{end}}
+
+{{define "body"}}
+<div class="auth-layout login-page">
+
+    <!-- Left panel: branding -->
+    <aside class="auth-brand">
+        <div class="auth-brand__inner">
+            <div class="brand-logo">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                    <path d="M10 18L16 12L22 18L28 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 24L16 18L22 24L28 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+                </svg>
+                <span class="brand-name">Platform</span>
+            </div>
+
+            <div class="brand-content">
+                <h1 class="brand-headline">Infrastructure<br/>at your fingertips.</h1>
+                <p class="brand-sub">Manage cloud resources, monitor performance, and scale with confidence — all from one place.</p>
+            </div>
+
+            <ul class="brand-features">
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Real-time monitoring &amp; alerts
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    One-click deployments
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    SOC 2 Type II certified
+                </li>
+            </ul>
+
+            <div class="brand-footer">
+                <div class="brand-stats">
+                    <div class="stat">
+                        <span class="stat-value">99.99%</span>
+                        <span class="stat-label">Uptime SLA</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">180+</span>
+                        <span class="stat-label">Edge locations</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">50k+</span>
+                        <span class="stat-label">Customers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right panel: form -->
+    <main class="auth-form-panel">
+        <div class="auth-form-container login-form-anim">
+
+            <div class="auth-form-header">
+                <h2 class="auth-form-title">Welcome back</h2>
+                <p class="auth-form-subtitle">Sign in to your account to continue</p>
+            </div>
+
+            {{if .Error}}
+            <div class="alert alert--error" role="alert">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
+                {{.Error}}
+            </div>
+            {{end}}
+
+            <form class="auth-form {{if .Error}}login-shake{{end}}" id="loginForm" action="/login" method="POST" novalidate>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <div class="input-wrapper login-input-wrap">
+                        <span class="input-icon">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        </span>
+                        <input
+                            class="form-input {{if .Error}}form-input--error{{end}}"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{.Email}}"
+                            placeholder="you@company.com"
+                            autocomplete="email"
+                            required
+                        />
+                        <span class="login-valid-pill" id="emailValidPill" aria-hidden="true">
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5.2L4.2 7.3 8.2 2.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label" for="password">Password</label>
+                        <a href="/forgot-password" class="form-link">Forgot password?</a>
+                    </div>
+                    <div class="input-wrapper login-input-wrap">
+                        <span class="input-icon">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 7V5a3 3 0 116 0v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        </span>
+                        <input
+                            class="form-input {{if .Error}}form-input--error{{end}}"
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required
+                        />
+                        <button type="button" class="input-toggle" aria-label="Toggle password visibility" onclick="togglePassword()">
+                            <svg id="eye-show" width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6.5" ry="4" stroke="currentColor" stroke-width="1.1"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.1"/></svg>
+                            <svg id="eye-hide" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none"><path d="M2 2l12 12M6.5 6.6A2 2 0 0010 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M4.2 4.3C2.8 5.2 1.5 6.5 1.5 8c0 0 2 4 6.5 4a7 7 0 002.8-.6M7 4.1A6.5 6.5 0 0114.5 8s-.7 1.7-2.2 2.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        </button>
+                        <span class="login-caps-warn" id="capsWarn" role="status" hidden>
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L1.5 5h1.8v3.5h3.4V5h1.8L5 1.5z" fill="currentColor"/></svg>
+                            Caps Lock is on
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember" class="checkbox-input" />
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">Remember me for 30 days</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--full login-submit-btn" id="loginSubmit">
+                    <span class="btn-text">Sign in</span>
+                    <svg class="btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+
+                <div class="auth-divider">
+                    <span>or continue with</span>
+                </div>
+
+                <div class="sso-grid sso-grid--social">
+
+                    <button type="button" class="sso-btn" title="Google">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M19 10.2c0-.7-.1-1.4-.2-2H10v3.8h5a4.3 4.3 0 01-1.9 2.8v2.3h3c1.8-1.7 2.9-4.1 2.9-6.9z" fill="#4285F4"/><path d="M10 20c2.5 0 4.7-.8 6.2-2.2l-3-2.3c-.8.6-1.9.9-3.2.9-2.5 0-4.6-1.7-5.3-3.9H1.6v2.4A9.5 9.5 0 0010 20z" fill="#34A853"/><path d="M4.7 12.5A5.6 5.6 0 014.5 11c0-.5.1-1 .2-1.5V7.1H1.6A9.5 9.5 0 001 11c0 1.5.4 3 1 4.3l3-2.3-.3-.5z" fill="#FBBC04"/><path d="M10 4.6c1.4 0 2.6.5 3.6 1.4l2.7-2.7A9.5 9.5 0 0010 .5 9.5 9.5 0 001.6 5.6l3 2.4C5.4 5.7 7.5 4.6 10 4.6z" fill="#EA4335"/></svg>
+                        <span>Google</span>
+                    </button>
+
+                    <button type="button" class="sso-btn" title="GitHub">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 1a9 9 0 00-2.8 17.5c.4.1.6-.2.6-.4v-1.5c-2.5.5-3-1.2-3-1.2-.4-1-.9-1.3-1-1.3-.8-.5.1-.5.1-.5.9.1 1.3.9 1.3.9.7 1.3 2 .9 2.4.7.1-.5.3-.9.5-1.1-1.9-.2-3.9-1-3.9-4.3 0-1 .4-1.8.9-2.4-.1-.2-.4-1.2.1-2.4 0 0 .7-.2 2.4.9a8.3 8.3 0 014.2 0c1.6-1.1 2.4-.9 2.4-.9.5 1.2.2 2.2.1 2.4.5.6.9 1.4.9 2.4 0 3.4-2 4.1-4 4.3.3.3.6.8.6 1.7v2.5c0 .2.1.5.6.4A9 9 0 0010 1z" fill="currentColor"/></svg>
+                        <span>GitHub</span>
+                    </button>
+
+                    <button type="button" class="sso-btn" title="Microsoft">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1.5" y="1.5" width="8" height="8" fill="#F25022"/><rect x="10.5" y="1.5" width="8" height="8" fill="#7FBA00"/><rect x="1.5" y="10.5" width="8" height="8" fill="#00A4EF"/><rect x="10.5" y="10.5" width="8" height="8" fill="#FFB900"/></svg>
+                        <span>Microsoft</span>
+                    </button>
+
+                    <button type="button" class="sso-btn" title="GitLab">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 18.5l3.7-11.4H6.3L10 18.5z" fill="#E24329"/><path d="M10 18.5L6.3 7.1H1.9L10 18.5z" fill="#FC6D26"/><path d="M1.9 7.1L.6 11a.9.9 0 00.3 1L10 18.5 1.9 7.1z" fill="#FCA326"/><path d="M1.9 7.1h4.4L4.1 2a.45.45 0 00-.85 0L1.9 7.1z" fill="#E24329"/><path d="M10 18.5l3.7-11.4h4.4L10 18.5z" fill="#FC6D26"/><path d="M18.1 7.1l1.3 3.9a.9.9 0 01-.3 1L10 18.5l8.1-11.4z" fill="#FCA326"/><path d="M18.1 7.1h-4.4l2.2-5.1a.45.45 0 01.85 0l1.35 5.1z" fill="#E24329"/></svg>
+                        <span>GitLab</span>
+                    </button>
+
+                </div>
+
+            </form>
+
+            <p class="auth-form-footer">
+                Building an integration?
+                <a href="/sso-guide" class="form-link form-link--bold">SSO developer guide</a>
+            </p>
+
+        </div>
+
+        <footer class="page-footer">
+            <a href="/status">Status</a>
+            <span>&copy; 2026 Platform, Inc.</span>
+        </footer>
+    </main>
+
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+/* ── Form submit loading state ── */
+(function () {
+    var btn = document.getElementById('loginSubmit');
+    if (!btn) return;
+    document.getElementById('loginForm').addEventListener('submit', function () {
+        btn.classList.add('login-submit-btn--loading');
+        btn.disabled = true;
+    });
+})();
+
+/* ── Live email validation pill ── */
+(function () {
+    var email = document.getElementById('email');
+    var pill  = document.getElementById('emailValidPill');
+    if (!email || !pill) return;
+    var rx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function check() {
+        if (rx.test(email.value.trim())) pill.classList.add('is-valid');
+        else                             pill.classList.remove('is-valid');
+    }
+    email.addEventListener('input', check);
+    email.addEventListener('blur',  check);
+    check();
+})();
+
+/* ── Caps Lock warning ── */
+(function () {
+    var pw   = document.getElementById('password');
+    var warn = document.getElementById('capsWarn');
+    if (!pw || !warn) return;
+    function check(e) {
+        if (e.getModifierState && e.getModifierState('CapsLock')) warn.removeAttribute('hidden');
+        else                                                       warn.setAttribute('hidden', '');
+    }
+    pw.addEventListener('keydown', check);
+    pw.addEventListener('keyup',   check);
+    pw.addEventListener('blur', function () { warn.setAttribute('hidden', ''); });
+})();
+
+/* ── Shake cleanup (remove class after animation so it can replay) ── */
+(function () {
+    var f = document.getElementById('loginForm');
+    if (!f || !f.classList.contains('login-shake')) return;
+    setTimeout(function () { f.classList.remove('login-shake'); }, 700);
+})();
+
+/* ── Password toggle ── */
+function togglePassword() {
+    var f = document.getElementById('password');
+    var s = document.getElementById('eye-show');
+    var h = document.getElementById('eye-hide');
+    if (f.type === 'password') { f.type = 'text';     s.style.display = 'none'; h.style.display = ''; }
+    else                       { f.type = 'password'; s.style.display = '';     h.style.display = 'none'; }
+}
+
+</script>
+{{end}}

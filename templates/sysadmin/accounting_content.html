@@ -1,0 +1,458 @@
+{{define "sysadmin-accounting-content"}}
+
+<style>
+.acct-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.acct-kpi-card{border:1px solid var(--ds-border);border-radius:10px;padding:18px 20px;background:var(--ds-surface,transparent);position:relative}
+.acct-kpi-card__label{font:500 12px/1 var(--ds-font,sans-serif);color:var(--ds-text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.acct-kpi-card__value{font:600 24px/1.2 var(--ds-font,sans-serif);color:var(--ds-text)}
+.acct-kpi-card__delta{display:inline-flex;align-items:center;gap:4px;font:500 12px/1 var(--ds-font,sans-serif);margin-top:6px}
+.acct-kpi-card__delta--up{color:#22c55e}
+.acct-kpi-card__delta--down{color:#ef4444}
+.acct-kpi-card__delta--neutral{color:var(--ds-text-muted)}
+.acct-kpi-trend{display:inline-block;width:32px;height:14px;position:relative;vertical-align:middle;margin-left:2px}
+.acct-kpi-trend svg{position:absolute;top:0;left:0}
+@media(max-width:860px){.acct-kpi-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.acct-kpi-strip{grid-template-columns:1fr}}
+.acct-status-inline{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ds-text);padding:6px 12px;border:1px solid var(--ds-border);border-radius:8px;background:var(--ds-surface,transparent);margin-bottom:16px}
+.acct-status-inline .acct-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.acct-status-inline--connected .acct-status-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.acct-status-inline--testing .acct-status-dot{background:#f59e0b;animation:acctPulse .8s infinite}
+.acct-status-inline .acct-test-btn{margin-left:8px;padding:3px 10px;border:1px solid var(--ds-border);border-radius:6px;background:transparent;color:var(--ds-text-muted);font-size:12px;cursor:pointer}
+.acct-status-inline .acct-test-btn:hover{border-color:var(--ds-text-muted)}
+@keyframes acctPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.acct-wh-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.acct-wh-table th{text-align:left;padding:8px 10px;font:500 11px/1 var(--ds-font,sans-serif);color:var(--ds-text-muted);border-bottom:1px solid var(--ds-border);text-transform:uppercase;letter-spacing:.04em}
+.acct-wh-table td{padding:10px;border-bottom:1px solid var(--ds-border);color:var(--ds-text);vertical-align:middle}
+.acct-wh-table tr:last-child td{border-bottom:none}
+.acct-wh-badge{display:inline-block;padding:2px 8px;border-radius:6px;font:600 11px/1.6 var(--ds-font,sans-serif)}
+.acct-wh-badge--active{background:rgba(34,197,94,.12);color:#16a34a}
+.acct-wh-endpoint{font-family:var(--ds-font-mono,monospace);font-size:12px;word-break:break-all}
+.acct-wh-events{font-size:12px;color:var(--ds-text-muted)}
+.acct-wh-delivery{font-size:12px;font-weight:500}
+.acct-wh-last-delivery{font-size:12px;color:var(--ds-text-muted)}
+.acct-wh-btn-row{display:flex;gap:10px;margin-top:18px}
+.settings-section{display:none;opacity:0;transition:opacity .2s ease}
+.settings-section--active{display:block;opacity:1}
+</style>
+
+<div class="acct-kpi-strip">
+    <div class="acct-kpi-card">
+        <div class="acct-kpi-card__label">Monthly Recurring Revenue</div>
+        <div class="acct-kpi-card__value">$24,680</div>
+        <div class="acct-kpi-card__delta acct-kpi-card__delta--up">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="currentColor"/></svg>
+            +8.2%
+            <span class="acct-kpi-trend"><svg width="32" height="14" viewBox="0 0 32 14"><polyline points="0,12 8,10 16,8 24,5 32,2" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+    </div>
+    <div class="acct-kpi-card">
+        <div class="acct-kpi-card__label">Active Subscriptions</div>
+        <div class="acct-kpi-card__value">47</div>
+        <div class="acct-kpi-card__delta acct-kpi-card__delta--up">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="currentColor"/></svg>
+            +3 net
+            <span class="acct-kpi-trend"><svg width="32" height="14" viewBox="0 0 32 14"><polyline points="0,10 8,10 16,8 24,6 32,4" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+    </div>
+    <div class="acct-kpi-card">
+        <div class="acct-kpi-card__label">Outstanding Invoices</div>
+        <div class="acct-kpi-card__value">$3,420</div>
+        <div class="acct-kpi-card__delta acct-kpi-card__delta--down">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 8L8 4H2Z" fill="currentColor"/></svg>
+            4 overdue
+            <span class="acct-kpi-trend"><svg width="32" height="14" viewBox="0 0 32 14"><polyline points="0,4 8,5 16,7 24,10 32,12" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+    </div>
+    <div class="acct-kpi-card">
+        <div class="acct-kpi-card__label">Collections Rate</div>
+        <div class="acct-kpi-card__value">97.3%</div>
+        <div class="acct-kpi-card__delta acct-kpi-card__delta--down">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 8L8 4H2Z" fill="currentColor"/></svg>
+            -0.4%
+            <span class="acct-kpi-trend"><svg width="32" height="14" viewBox="0 0 32 14"><polyline points="0,4 8,4 16,5 24,7 32,8" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+    </div>
+</div>
+
+<p class="ds-page-subtitle acct-subtitle">Connect to a Billing-as-a-Service provider and monitor live API activity.</p>
+
+<div class="settings-layout">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">Accounting</div>
+        <div role="tablist">
+        <button class="settings-nav__item settings-nav__item--active" role="tab" aria-selected="true" onclick="switchSection(this,'acct-connection')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5v12M5 4.5h5c1.1 0 2 .9 2 2s-.9 2-2 2H5M5 8.5h4c1.1 0 2 .9 2 2s-.9 2-2 2H5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Connection
+        </button>
+        <button class="settings-nav__item" role="tab" aria-selected="false" onclick="switchSection(this,'acct-logs')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="1.5" width="11" height="12" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M5 4.5h5M5 7h5M5 9.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><path d="M2 4.5h1M2 7h1M2 9.5h1" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/></svg>
+            API Logs
+        </button>
+        <button class="settings-nav__item" role="tab" aria-selected="false" onclick="switchSection(this,'acct-webhooks')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5c-.7 0-1.3.3-1.7.8-.4.5-.6 1.1-.6 1.7 0 1.2.9 2.2 2 2.4v1.6" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 1.5c.7 0 1.3.3 1.7.8.4.5.6 1.1.6 1.7 0 1.2-.9 2.2-2 2.4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8h4l-1.5 2.5h2L6.5 14l1-3H5.5z" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Webhooks
+        </button>
+        </div>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- Connection -->
+        <section class="settings-section settings-section--active" id="acct-connection" role="tabpanel">
+            <h2 class="settings-section__title">Connection</h2>
+            <p class="settings-section__sub">Configure the Billing-as-a-Service endpoint and credentials.</p>
+
+            <!-- Compact inline status -->
+            <div class="acct-status-inline acct-status-inline--connected" id="acctStatusBanner">
+                <span class="acct-status-dot" id="acctStatusDot"></span>
+                <span id="acctStatusText">Connected — last call <strong>8 s ago</strong></span>
+                <button class="acct-test-btn" onclick="testConnection()" id="acctTestBtn">Test</button>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="st-group">
+                <label class="st-label" for="acctUrl">API base URL</label>
+                <input class="st-input" type="url" id="acctUrl" placeholder="https://api.billing-provider.com/v1" value="https://api.billingpro.io/v2" required aria-describedby="acctUrlHint">
+                <small id="acctUrlHint" style="font-size:11px;color:var(--ds-text-muted);margin-top:2px;display:block">Must be a valid HTTPS URL</small>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label" for="acctKey">API key</label>
+                <div class="acct-secret-wrap">
+                    <input class="st-input acct-secret-input" type="password" id="acctKey" value="bpk_live_4a9f2e8bc1d3f70122ab" autocomplete="off">
+                    <button class="acct-secret-toggle" type="button" onclick="toggleApiKey()" aria-label="Show / hide API key">
+                        <svg id="acctEyeShow" width="15" height="15" viewBox="0 0 15 15" fill="none"><ellipse cx="7.5" cy="7.5" rx="6" ry="3.5" stroke="currentColor" stroke-width="1.0"/><circle cx="7.5" cy="7.5" r="1.8" stroke="currentColor" stroke-width="1.0"/></svg>
+                        <svg id="acctEyeHide" width="15" height="15" viewBox="0 0 15 15" fill="none" hidden><path d="M2 2l11 11M5.5 5.7A3.5 3.5 0 0010 10" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><path d="M3.5 3.8C2.2 4.8 1.5 6 1.5 7.5c0 0 2 4 6 4a6.5 6.5 0 002.5-.5M7 3.6A6.5 6.5 0 0113.5 7.5s-.8 2-3 3.2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Options</h3>
+
+            <div class="st-group">
+                <label class="st-label">Timeout</label>
+                <select class="st-input">
+                    <option>5 seconds</option>
+                    <option selected>10 seconds</option>
+                    <option>30 seconds</option>
+                </select>
+            </div>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Retry on failure</div>
+                    <div class="st-toggle-sub">Automatically retry failed requests up to 3 times</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Log all requests</div>
+                    <div class="st-toggle-sub">Store request and response bodies in API Logs</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row" style="margin-top:24px;">
+                <button class="st-btn-primary">Save</button>
+                <button class="st-btn-secondary">Reset to defaults</button>
+            </div>
+        </section>
+
+        <!-- API Logs -->
+        <section class="settings-section" id="acct-logs" role="tabpanel">
+            <h2 class="settings-section__title">API Logs</h2>
+            <p class="settings-section__sub">Latest requests sent to and responses received from the billing provider.</p>
+
+            <div class="acct-logs-toolbar">
+                <div class="acct-logs-filters">
+                    <select class="st-input acct-logs-select" onchange="filterLogs(this.value)">
+                        <option value="">All statuses</option>
+                        <option value="2xx">2xx Success</option>
+                        <option value="4xx">4xx Client error</option>
+                        <option value="5xx">5xx Server error</option>
+                    </select>
+                    <select class="st-input acct-logs-select">
+                        <option>Last 1 hour</option>
+                        <option selected>Last 24 hours</option>
+                        <option>Last 7 days</option>
+                    </select>
+                </div>
+                <button class="st-btn-secondary acct-logs-refresh" onclick="refreshLogs()">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 6.5a5 5 0 019-3M11.5 6.5a5 5 0 01-9 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M10 3.5l.5 2-2 .5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 9.5l-.5-2 2-.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Refresh
+                </button>
+            </div>
+
+            <div class="acct-log-list" id="acctLogList">
+
+                <div class="acct-log-row" data-status="2xx" aria-expanded="false">
+                    <div class="acct-log-row__head" role="button" tabindex="0" onclick="toggleLog(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLog(this)}">
+                        <span class="acct-log-badge acct-log-badge--ok">200</span>
+                        <span class="acct-log-method">POST</span>
+                        <span class="acct-log-path">/invoices</span>
+                        <span class="acct-log-meta">tenant_xk92 · 142 ms</span>
+                        <span class="acct-log-time">2 min ago</span>
+                        <svg class="acct-log-caret" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="acct-log-row__body" hidden>
+                        <div class="acct-log-panes">
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Request</div>
+                                <pre class="acct-log-code">POST /invoices HTTP/1.1
+Host: api.billingpro.io
+Authorization: Bearer bpk_live_***
+Content-Type: application/json
+
+{
+  "tenant_id":   "tenant_xk92",
+  "amount":      4900,
+  "currency":    "USD",
+  "description": "Pro plan — April 2026",
+  "due_date":    "2026-04-30"
+}</pre>
+                            </div>
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Response <span class="acct-log-badge acct-log-badge--ok">200 OK</span></div>
+                                <pre class="acct-log-code">{
+  "id":         "inv_7f3a1c",
+  "status":     "issued",
+  "tenant_id":  "tenant_xk92",
+  "amount":     4900,
+  "currency":   "USD",
+  "due_date":   "2026-04-30",
+  "created_at": "2026-04-14T10:21:07Z"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acct-log-row" data-status="2xx" aria-expanded="false">
+                    <div class="acct-log-row__head" role="button" tabindex="0" onclick="toggleLog(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLog(this)}">
+                        <span class="acct-log-badge acct-log-badge--ok">201</span>
+                        <span class="acct-log-method">POST</span>
+                        <span class="acct-log-path">/charges</span>
+                        <span class="acct-log-meta">tenant_p1m4 · 210 ms</span>
+                        <span class="acct-log-time">11 min ago</span>
+                        <svg class="acct-log-caret" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="acct-log-row__body" hidden>
+                        <div class="acct-log-panes">
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Request</div>
+                                <pre class="acct-log-code">POST /charges HTTP/1.1
+Host: api.billingpro.io
+Authorization: Bearer bpk_live_***
+Content-Type: application/json
+
+{
+  "tenant_id":       "tenant_p1m4",
+  "amount":          9900,
+  "currency":        "USD",
+  "payment_method":  "pm_card_visa_4242",
+  "description":     "Business plan — April 2026"
+}</pre>
+                            </div>
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Response <span class="acct-log-badge acct-log-badge--ok">201 Created</span></div>
+                                <pre class="acct-log-code">{
+  "id":       "ch_9e1b3f",
+  "status":   "succeeded",
+  "amount":   9900,
+  "currency": "USD",
+  "captured": true,
+  "created":  "2026-04-14T10:11:43Z"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acct-log-row" data-status="4xx" aria-expanded="false">
+                    <div class="acct-log-row__head" role="button" tabindex="0" onclick="toggleLog(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLog(this)}">
+                        <span class="acct-log-badge acct-log-badge--warn">422</span>
+                        <span class="acct-log-method">POST</span>
+                        <span class="acct-log-path">/invoices</span>
+                        <span class="acct-log-meta">tenant_br07 · 95 ms</span>
+                        <span class="acct-log-time">34 min ago</span>
+                        <svg class="acct-log-caret" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="acct-log-row__body" hidden>
+                        <div class="acct-log-panes">
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Request</div>
+                                <pre class="acct-log-code">POST /invoices HTTP/1.1
+Host: api.billingpro.io
+Authorization: Bearer bpk_live_***
+Content-Type: application/json
+
+{
+  "tenant_id":   "tenant_br07",
+  "amount":      -100,
+  "currency":    "USD",
+  "description": "Refund test"
+}</pre>
+                            </div>
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Response <span class="acct-log-badge acct-log-badge--warn">422 Unprocessable Entity</span></div>
+                                <pre class="acct-log-code">{
+  "error": {
+    "code":    "invalid_amount",
+    "message": "amount must be a positive integer",
+    "param":   "amount"
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acct-log-row" data-status="5xx" aria-expanded="false">
+                    <div class="acct-log-row__head" role="button" tabindex="0" onclick="toggleLog(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLog(this)}">
+                        <span class="acct-log-badge acct-log-badge--err">503</span>
+                        <span class="acct-log-method">GET</span>
+                        <span class="acct-log-path">/health</span>
+                        <span class="acct-log-meta">system · 10004 ms</span>
+                        <span class="acct-log-time">1 hr ago</span>
+                        <svg class="acct-log-caret" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="acct-log-row__body" hidden>
+                        <div class="acct-log-panes">
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Request</div>
+                                <pre class="acct-log-code">GET /health HTTP/1.1
+Host: api.billingpro.io
+Authorization: Bearer bpk_live_***</pre>
+                            </div>
+                            <div class="acct-log-pane">
+                                <div class="acct-log-pane__label">Response <span class="acct-log-badge acct-log-badge--err">503 Service Unavailable</span></div>
+                                <pre class="acct-log-code">{
+  "error": {
+    "code":    "service_unavailable",
+    "message": "Upstream dependency unreachable. Retry after 60s."
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Webhooks -->
+        <section class="settings-section" id="acct-webhooks" role="tabpanel">
+            <h2 class="settings-section__title">Webhooks</h2>
+            <p class="settings-section__sub">Configure HTTP endpoints to receive real-time billing event notifications.</p>
+
+            <table class="acct-wh-table">
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Events</th>
+                        <th>Status</th>
+                        <th>Delivery rate</th>
+                        <th>Last delivery</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="acct-wh-endpoint">https://hooks.slack.com/...c3f</td>
+                        <td class="acct-wh-events">invoice.created, payment.succeeded</td>
+                        <td><span class="acct-wh-badge acct-wh-badge--active">Active</span></td>
+                        <td class="acct-wh-delivery">99.8%</td>
+                        <td class="acct-wh-last-delivery">3 min ago</td>
+                    </tr>
+                    <tr>
+                        <td class="acct-wh-endpoint">https://api.internal/billing-events</td>
+                        <td class="acct-wh-events">all events</td>
+                        <td><span class="acct-wh-badge acct-wh-badge--active">Active</span></td>
+                        <td class="acct-wh-delivery">100%</td>
+                        <td class="acct-wh-last-delivery">3 min ago</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="acct-wh-btn-row">
+                <button class="st-btn-primary">+ Add webhook</button>
+                <button class="st-btn-secondary" onclick="testWebhook()">Test webhook</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(b => { b.classList.remove('settings-nav__item--active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-selected','true');
+    var sections = document.querySelectorAll('.settings-section');
+    sections.forEach(s => { s.classList.remove('settings-section--active'); });
+    // Brief delay to allow opacity:0 to render before fading in the new section
+    setTimeout(function() { document.getElementById(id).classList.add('settings-section--active'); }, 30);
+}
+
+function toggleApiKey() {
+    const inp = document.getElementById('acctKey');
+    const show = document.getElementById('acctEyeShow');
+    const hide = document.getElementById('acctEyeHide');
+    if (inp.type === 'password') {
+        inp.type = 'text'; show.hidden = true; hide.hidden = false;
+    } else {
+        inp.type = 'password'; show.hidden = false; hide.hidden = true;
+    }
+}
+
+function testConnection() {
+    const banner = document.getElementById('acctStatusBanner');
+    const text   = document.getElementById('acctStatusText');
+    const btn    = document.getElementById('acctTestBtn');
+
+    banner.className = 'acct-status-inline acct-status-inline--testing';
+    text.textContent = 'Testing\u2026';
+    btn.disabled     = true;
+
+    setTimeout(() => {
+        banner.className = 'acct-status-inline acct-status-inline--connected';
+        text.innerHTML   = 'Connected \u2014 last call <strong>just now</strong>';
+        btn.disabled     = false;
+        banner.style.borderColor = '#22c55e';
+        setTimeout(() => { banner.style.borderColor = ''; }, 1500);
+    }, 1800);
+}
+
+function toggleLog(head) {
+    const row  = head.closest('.acct-log-row');
+    const body = row.querySelector('.acct-log-row__body');
+    const open = !body.hidden;
+    body.hidden = open;
+    row.classList.toggle('acct-log-row--open', !open);
+    row.setAttribute('aria-expanded', String(!open));
+}
+
+function filterLogs(status) {
+    document.querySelectorAll('.acct-log-row').forEach(row => {
+        row.hidden = status && row.dataset.status !== status;
+    });
+}
+
+function refreshLogs() {
+    const list = document.getElementById('acctLogList');
+    list.style.opacity = '0.4';
+    setTimeout(() => { list.style.opacity = '1'; }, 600);
+}
+
+function testWebhook() {
+    const btn = event.currentTarget;
+    const orig = btn.textContent;
+    btn.textContent = 'Sending test event\u2026';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = 'Test delivered'; setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500); }, 1200);
+}
+</script>
+{{end}}

@@ -1,0 +1,653 @@
+{{define "sysadmin-sso-content"}}
+
+<style>
+/* SSO page — scoped styles */
+.sso-toggle-row--lead{margin-bottom:8px}
+.sso-clients-toolbar{display:flex;align-items:center;justify-content:flex-end;margin-bottom:16px}
+.sso-tokens-filter{margin-bottom:20px}
+.sso-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -2px;padding:0 2px}
+.sso-cors-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--ds-surface-raised,#f9fafb);border:1px solid var(--ds-border);border-radius:8px;transition:border-color .15s ease,box-shadow .15s ease}
+.sso-cors-item:hover{border-color:var(--ds-border-strong,rgba(0,0,0,.14));box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sso-cors-item span{font-size:13px;color:var(--ds-text);word-break:break-all}
+.sso-cors-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.sso-cors-add{display:flex;gap:8px;align-items:flex-end}
+.sso-cors-add .st-group{flex:1;margin-bottom:0}
+
+/* Section enter animation */
+@keyframes ssoSectionEnter{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.settings-section{display:none;opacity:0}
+.settings-section--active{display:block;opacity:1;animation:ssoSectionEnter .25s cubic-bezier(.2,.7,.3,1) both}
+
+/* Table hover states */
+.sso-table-scroll .tenant-table tbody tr{transition:background .12s ease}
+.sso-table-scroll .tenant-table tbody tr:hover{background:var(--ds-hover,rgba(0,0,0,.03))}
+
+/* Responsive — tablet and below */
+@media(max-width:768px){
+  .sso-clients-toolbar{justify-content:stretch}
+  .sso-clients-toolbar .st-btn-primary{width:100%}
+  .sso-cors-add{flex-direction:column;align-items:stretch}
+  .sso-cors-add .st-btn-primary{width:100%;height:38px}
+}
+@media(max-width:480px){
+  .sso-cors-item{flex-direction:column;align-items:flex-start;gap:8px}
+  .sso-cors-item .btn{align-self:flex-end}
+}
+</style>
+
+<p class="ds-page-subtitle sso-page-subtitle">Use this platform's authentication system as an identity provider for external applications.</p>
+
+<div class="settings-layout">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">SSO</div>
+        <div role="tablist" aria-label="SSO settings sections">
+        <button id="tab-sso-general" class="settings-nav__item settings-nav__item--active" role="tab" aria-selected="true" aria-controls="sso-general" onclick="switchSection(this,'sso-general')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.0"/><path d="M2 13.5c0-3.04 2.46-5.5 5.5-5.5s5.5 2.46 5.5 5.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            General
+        </button>
+        <button id="tab-sso-oauth2" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-oauth2" onclick="switchSection(this,'sso-oauth2')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="5" width="12" height="7" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M5 5V3.5a2.5 2.5 0 015 0V5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><circle cx="7.5" cy="8.5" r="1" fill="currentColor"/></svg>
+            OAuth 2.0
+        </button>
+        <button id="tab-sso-oidc" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-oidc" onclick="switchSection(this,'sso-oidc')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 4.5v3l2 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            OIDC
+        </button>
+        <button id="tab-sso-saml" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-saml" onclick="switchSection(this,'sso-saml')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.0"/><rect x="8.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.0"/><rect x="5" y="8.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.0"/><path d="M4 4.5H11.5M7.5 6.5v2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            SAML 2.0
+        </button>
+        <button id="tab-sso-clients" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-clients" onclick="switchSection(this,'sso-clients')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.0"/><path d="M4.5 7.5h6M7.5 4.5v6" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Clients
+        </button>
+        <button id="tab-sso-tokens" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-tokens" onclick="switchSection(this,'sso-tokens')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8.5 5l2.5 2.5L8.5 10" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Tokens
+        </button>
+        <button id="tab-sso-security" class="settings-nav__item" role="tab" aria-selected="false" aria-controls="sso-security" onclick="switchSection(this,'sso-security')" onkeydown="ssoTabKey(event)">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5L2.5 4v3.5c0 3.5 2.1 6.2 5 7 2.9-.8 5-3.5 5-7V4L7.5 1.5z" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 7.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Security
+        </button>
+        </div>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- General -->
+        <section class="settings-section settings-section--active" id="sso-general" role="tabpanel" aria-labelledby="tab-sso-general">
+            <h2 class="settings-section__title">General</h2>
+            <p class="settings-section__sub">Enable or disable SSO and configure the provider identity.</p>
+
+            <div class="st-toggle-row sso-toggle-row--lead">
+                <div>
+                    <div class="st-toggle-label">SSO enabled</div>
+                    <div class="st-toggle-sub">Allow external applications to authenticate users via this platform</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.Enabled}}checked{{end}} name="enabled"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Provider name</label>
+                <input class="st-input" type="text" value="{{.Config.ProviderName}}" name="provider_name">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Issuer URL</label>
+                <input class="st-input" type="text" value="{{if .Config.IssuerURL}}{{.Config.IssuerURL}}{{else}}https://platform.internal/sso{{end}}" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Session lifetime</label>
+                <select class="st-input st-select" name="session_lifetime_h">
+                    <option value="1" {{if eq .Config.SessionLifetimeH 1}}selected{{end}}>1 hour</option>
+                    <option value="8" {{if eq .Config.SessionLifetimeH 8}}selected{{end}}>8 hours</option>
+                    <option value="24" {{if eq .Config.SessionLifetimeH 24}}selected{{end}}>24 hours</option>
+                    <option value="168" {{if eq .Config.SessionLifetimeH 168}}selected{{end}}>7 days</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Supported protocols</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">OAuth 2.0</div>
+                    <div class="st-toggle-sub">Token-based authorization framework</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.OAuth2Enabled}}checked{{end}} name="oauth2_enabled"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">OpenID Connect (OIDC)</div>
+                    <div class="st-toggle-sub">Identity layer on top of OAuth 2.0</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.OIDCEnabled}}checked{{end}} name="oidc_enabled"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">SAML 2.0</div>
+                    <div class="st-toggle-sub">XML-based authentication and authorization</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.SAMLEnabled}}checked{{end}} name="saml_enabled"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" onclick="ssoSaveSection(this)">Save</button>
+            </div>
+        </section>
+
+        <!-- OAuth 2.0 -->
+        <section class="settings-section" id="sso-oauth2" role="tabpanel" aria-labelledby="tab-sso-oauth2">
+            <h2 class="settings-section__title">OAuth 2.0</h2>
+            <p class="settings-section__sub">Authorization server settings for OAuth 2.0 flows.</p>
+
+            <div class="st-group">
+                <label class="st-label">Authorization endpoint</label>
+                <input class="st-input" type="text" value="/sso/oauth2/authorize" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Token endpoint</label>
+                <input class="st-input" type="text" value="/sso/oauth2/token" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Revocation endpoint</label>
+                <input class="st-input" type="text" value="/sso/oauth2/revoke" readonly>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Supported grant types</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Authorization code</div>
+                    <div class="st-toggle-sub">Recommended for server-side apps</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.GrantAuthCode}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">PKCE (code + challenge)</div>
+                    <div class="st-toggle-sub">Recommended for SPAs and mobile apps</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.GrantPKCE}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Client credentials</div>
+                    <div class="st-toggle-sub">Machine-to-machine authentication</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.GrantClientCreds}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Refresh token</div>
+                    <div class="st-toggle-sub">Allow clients to refresh access tokens</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.GrantRefreshToken}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Device code</div>
+                    <div class="st-toggle-sub">For input-constrained devices (TV, CLI)</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.GrantDeviceCode}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Token lifetimes</h3>
+            <div class="st-group">
+                <label class="st-label">Access token TTL</label>
+                <select class="st-input st-select">
+                    <option value="0">15 minutes</option>
+                    <option value="1" {{if eq .Config.AccessTokenTTLH 1}}selected{{end}}>1 hour</option>
+                    <option value="4" {{if eq .Config.AccessTokenTTLH 4}}selected{{end}}>4 hours</option>
+                    <option value="24" {{if eq .Config.AccessTokenTTLH 24}}selected{{end}}>24 hours</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Refresh token TTL</label>
+                <select class="st-input st-select">
+                    <option value="1">1 day</option>
+                    <option value="30" {{if eq .Config.RefreshTokenTTLD 30}}selected{{end}}>30 days</option>
+                    <option value="90" {{if eq .Config.RefreshTokenTTLD 90}}selected{{end}}>90 days</option>
+                    <option value="0">Never</option>
+                </select>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" onclick="ssoSaveSection(this)">Save</button>
+            </div>
+        </section>
+
+        <!-- OIDC -->
+        <section class="settings-section" id="sso-oidc" role="tabpanel" aria-labelledby="tab-sso-oidc">
+            <h2 class="settings-section__title">OpenID Connect</h2>
+            <p class="settings-section__sub">Identity layer configuration for OIDC-compliant relying parties.</p>
+
+            <div class="st-group">
+                <label class="st-label">Discovery document</label>
+                <input class="st-input" type="text" value="/sso/.well-known/openid-configuration" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">JWKS endpoint</label>
+                <input class="st-input" type="text" value="/sso/.well-known/jwks.json" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">UserInfo endpoint</label>
+                <input class="st-input" type="text" value="/sso/oidc/userinfo" readonly>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Signing</h3>
+            <div class="st-group">
+                <label class="st-label">ID token signing algorithm</label>
+                <select class="st-input st-select">
+                    <option {{if eq .Config.OIDCSigningAlgo "RS256"}}selected{{end}}>RS256</option>
+                    <option {{if eq .Config.OIDCSigningAlgo "ES256"}}selected{{end}}>ES256</option>
+                    <option {{if eq .Config.OIDCSigningAlgo "HS256"}}selected{{end}}>HS256</option>
+                </select>
+            </div>
+            <div class="st-group">
+                <label class="st-label">ID token TTL</label>
+                <select class="st-input st-select">
+                    <option value="1" {{if eq .Config.IDTokenTTLH 1}}selected{{end}}>1 hour</option>
+                    <option value="4" {{if eq .Config.IDTokenTTLH 4}}selected{{end}}>4 hours</option>
+                    <option value="24" {{if eq .Config.IDTokenTTLH 24}}selected{{end}}>24 hours</option>
+                </select>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Claims</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Include email</div>
+                    <div class="st-toggle-sub">Expose user email in ID token and UserInfo</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.ClaimEmail}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Include roles</div>
+                    <div class="st-toggle-sub">Expose platform roles as a custom claim</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.ClaimRoles}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Include tenant</div>
+                    <div class="st-toggle-sub">Expose tenant identifier as a custom claim</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.ClaimTenant}}checked{{end}}><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" onclick="ssoSaveSection(this)">Save</button>
+            </div>
+        </section>
+
+        <!-- SAML 2.0 -->
+        <section class="settings-section" id="sso-saml" role="tabpanel" aria-labelledby="tab-sso-saml">
+            <h2 class="settings-section__title">SAML 2.0</h2>
+            <p class="settings-section__sub">Configure this platform as a SAML identity provider.</p>
+
+            <div class="st-toggle-row sso-toggle-row--lead">
+                <div>
+                    <div class="st-toggle-label">SAML 2.0 enabled</div>
+                    <div class="st-toggle-sub">Accept SAML authentication requests from service providers</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.SAMLEnabled}}checked{{end}} name="saml_enabled"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Entity ID (IdP)</label>
+                <input class="st-input" type="text" value="https://platform.internal/sso/saml" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">SSO service URL</label>
+                <input class="st-input" type="text" value="/sso/saml/sso" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">SLO service URL</label>
+                <input class="st-input" type="text" value="/sso/saml/slo" readonly>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Metadata URL</label>
+                <input class="st-input" type="text" value="/sso/saml/metadata" readonly>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Signing &amp; encryption</h3>
+            <div class="st-group">
+                <label class="st-label">Assertion signing algorithm</label>
+                <select class="st-input st-select" name="saml_signing_algo">
+                    <option {{if eq .Config.SAMLSigningAlgo "RSA-SHA256"}}selected{{end}}>RSA-SHA256</option>
+                    <option {{if eq .Config.SAMLSigningAlgo "RSA-SHA512"}}selected{{end}}>RSA-SHA512</option>
+                </select>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Sign assertions</div>
+                    <div class="st-toggle-sub">Cryptographically sign SAML assertions</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.SAMLSignAssert}}checked{{end}} name="saml_sign_assert"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Encrypt assertions</div>
+                    <div class="st-toggle-sub">Encrypt assertion payloads sent to SPs</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.SAMLEncAssert}}checked{{end}} name="saml_enc_assert"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" onclick="ssoSaveSection(this)">Save</button>
+            </div>
+        </section>
+
+        <!-- Clients -->
+        <section class="settings-section" id="sso-clients" role="tabpanel" aria-labelledby="tab-sso-clients">
+            <h2 class="settings-section__title">Clients</h2>
+            <p class="settings-section__sub">Registered applications allowed to use this platform as an identity provider.</p>
+
+            <div class="sso-clients-toolbar">
+                <button class="st-btn-primary" onclick="ssoRegisterClient()">+ Register client</button>
+            </div>
+
+            <div class="sso-table-scroll">
+            <table class="tenant-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Client ID</th>
+                        <th>Protocol</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Clients}}
+                    <tr>
+                        <td>{{.Name}}</td>
+                        <td><span class="tenant-slug">{{.ClientID}}</span></td>
+                        <td>{{.Protocol}}</td>
+                        <td>{{if eq .Status "active"}}<span class="st-apikey__badge st-apikey__badge--active">Active</span>{{else}}<span class="st-apikey__badge st-apikey__badge--revoked">Disabled</span>{{end}}</td>
+                        <td class="tenant-table__actions"><button class="btn btn--sm btn--danger" onclick="ssoDeleteClient({{.ID}},this)">Delete</button></td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="5" style="text-align:center;color:var(--ds-text-secondary);padding:20px;">No clients registered yet.</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+        <!-- Tokens -->
+        <section class="settings-section" id="sso-tokens" role="tabpanel" aria-labelledby="tab-sso-tokens">
+            <h2 class="settings-section__title">Tokens</h2>
+            <p class="settings-section__sub">Active and recently issued SSO tokens across all registered clients.</p>
+
+            <div class="st-group sso-tokens-filter">
+                <label class="st-label">Filter by client</label>
+                <select class="st-input">
+                    <option>All clients</option>
+                    <option>Internal Dashboard</option>
+                    <option>CI Pipeline</option>
+                </select>
+            </div>
+
+            <div class="sso-table-scroll">
+            <table class="tenant-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Client</th>
+                        <th>Type</th>
+                        <th>Issued</th>
+                        <th>Expires</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>alice@example.com</td>
+                        <td>Internal Dashboard</td>
+                        <td>Access</td>
+                        <td>2 min ago</td>
+                        <td>58 min</td>
+                        <td class="tenant-table__actions"><button class="btn btn--sm btn--danger">Revoke</button></td>
+                    </tr>
+                    <tr>
+                        <td>bob@example.com</td>
+                        <td>CI Pipeline</td>
+                        <td>Access</td>
+                        <td>14 min ago</td>
+                        <td>46 min</td>
+                        <td class="tenant-table__actions"><button class="btn btn--sm btn--danger">Revoke</button></td>
+                    </tr>
+                    <tr>
+                        <td>alice@example.com</td>
+                        <td>Internal Dashboard</td>
+                        <td>Refresh</td>
+                        <td>2 min ago</td>
+                        <td>29 days</td>
+                        <td class="tenant-table__actions"><button class="btn btn--sm btn--danger">Revoke</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+        <!-- Security -->
+        <section class="settings-section" id="sso-security" role="tabpanel" aria-labelledby="tab-sso-security">
+            <h2 class="settings-section__title">Security Policies</h2>
+            <p class="settings-section__sub">Rate limiting, brute force protection, and access control for SSO endpoints.</p>
+
+            <h3 class="st-subheading">Brute force protection</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Enable brute force protection</div>
+                    <div class="st-toggle-sub">Lock accounts after repeated failed login attempts</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.BruteForceEnabled}}checked{{end}} name="brute_force_enabled"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Max failed attempts</label>
+                <input class="st-input" type="number" name="max_failed_attempts" value="{{.Config.MaxFailedAttempts}}">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Lockout duration (minutes)</label>
+                <input class="st-input" type="number" name="lockout_duration_m" value="{{.Config.LockoutDurationM}}">
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Notify on lockout</div>
+                    <div class="st-toggle-sub">Send an email alert when an account is locked</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.NotifyOnLockout}}checked{{end}} name="notify_on_lockout"><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <h3 class="st-subheading">Rate limiting</h3>
+            <div class="st-group">
+                <label class="st-label">Token endpoint</label>
+                <input class="st-input" type="text" value="100 req/min per client">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Authorize endpoint</label>
+                <input class="st-input" type="text" value="30 req/min per IP">
+            </div>
+            <div class="st-group">
+                <label class="st-label">UserInfo endpoint</label>
+                <input class="st-input" type="text" value="60 req/min per token">
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <h3 class="st-subheading">IP Allowlist</h3>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Restrict SSO access by IP</div>
+                    <div class="st-toggle-sub">Only allow SSO requests from specified CIDR ranges</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" {{if .Config.IPRestrict}}checked{{end}} name="ip_restrict"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-group">
+                <label class="st-label">Allowed CIDRs</label>
+                <textarea class="st-input" rows="4" name="allowed_cidrs" placeholder="10.0.0.0/8&#10;172.16.0.0/12" style="resize:vertical;">{{.Config.AllowedCIDRs}}</textarea>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <h3 class="st-subheading">CORS origins</h3>
+            <p class="settings-section__sub" style="margin-bottom:12px;">Origins allowed to make cross-origin requests to SSO endpoints.</p>
+            <div class="sso-cors-list" id="sso-cors-list">
+                {{range .CORS}}
+                <div class="sso-cors-item" data-cors-id="{{.ID}}">
+                    <span>{{.Origin}}</span>
+                    <button class="btn btn--sm btn--danger" onclick="ssoDeleteCORS({{.ID}},this)">Remove</button>
+                </div>
+                {{else}}
+                <p style="font-size:13px;color:var(--ds-text-secondary);">No CORS origins configured.</p>
+                {{end}}
+            </div>
+            <div class="sso-cors-add">
+                <div class="st-group">
+                    <label class="st-label">New origin</label>
+                    <input class="st-input" type="text" id="sso-cors-input" placeholder="https://example.com">
+                </div>
+                <button class="st-btn-primary" style="height:38px;" onclick="ssoAddCORS()">Add origin</button>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="st-btn-row">
+                <button class="st-btn-primary" onclick="ssoSaveSection(this)">Save</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(function(b) {
+        b.classList.remove('settings-nav__item--active');
+        b.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.settings-section').forEach(function(s) {
+        s.classList.remove('settings-section--active');
+    });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-selected', 'true');
+    setTimeout(function() {
+        document.getElementById(id).classList.add('settings-section--active');
+    }, 30);
+}
+
+function ssoSaveSection(btn) {
+    var section = btn.closest('section');
+    var payload = {};
+    section.querySelectorAll('[name]').forEach(function(el) {
+        if (el.type === 'checkbox') {
+            payload[el.name] = el.checked;
+        } else if (el.type === 'number') {
+            payload[el.name] = parseInt(el.value, 10) || 0;
+        } else {
+            payload[el.name] = el.value;
+        }
+    });
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving\u2026';
+    fetch('/api/sysadmin/sso', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        btn.disabled = false;
+        btn.textContent = d.error ? 'Error' : 'Saved';
+        setTimeout(function() { btn.textContent = orig; }, 2000);
+    }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Error';
+        setTimeout(function() { btn.textContent = orig; }, 2000);
+    });
+}
+
+function ssoDeleteClient(id, btn) {
+    if (!confirm('Delete this client? This cannot be undone.')) return;
+    btn.disabled = true;
+    fetch('/api/sysadmin/sso/clients/' + id, {method: 'DELETE'})
+        .then(function(r) { if (r.ok) btn.closest('tr').remove(); else btn.disabled = false; })
+        .catch(function() { btn.disabled = false; });
+}
+
+function ssoRegisterClient() {
+    var name = prompt('Client name:');
+    if (!name) return;
+    var protocol = prompt('Protocol (OAuth2, OIDC, SAML):', 'OAuth2');
+    if (!protocol) return;
+    fetch('/api/sysadmin/sso/clients', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name, protocol: protocol})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert(d.error); return; }
+        location.reload();
+    });
+}
+
+function ssoAddCORS() {
+    var inp = document.getElementById('sso-cors-input');
+    var origin = (inp.value || '').trim();
+    if (!origin) return;
+    fetch('/api/sysadmin/sso/cors', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({origin: origin})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert(d.error); return; }
+        inp.value = '';
+        location.reload();
+    });
+}
+
+function ssoDeleteCORS(id, btn) {
+    btn.disabled = true;
+    fetch('/api/sysadmin/sso/cors/' + id, {method: 'DELETE'})
+        .then(function(r) { if (r.ok) btn.closest('.sso-cors-item').remove(); else btn.disabled = false; })
+        .catch(function() { btn.disabled = false; });
+}
+
+function ssoTabKey(e) {
+    var tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+    var idx = tabs.indexOf(e.target);
+    var next;
+    switch (e.key) {
+        case 'ArrowDown':
+        case 'ArrowRight':
+            e.preventDefault();
+            next = tabs[(idx + 1) % tabs.length];
+            break;
+        case 'ArrowUp':
+        case 'ArrowLeft':
+            e.preventDefault();
+            next = tabs[(idx - 1 + tabs.length) % tabs.length];
+            break;
+        case 'Home':
+            e.preventDefault();
+            next = tabs[0];
+            break;
+        case 'End':
+            e.preventDefault();
+            next = tabs[tabs.length - 1];
+            break;
+        default:
+            return;
+    }
+    next.focus();
+    next.click();
+}
+</script>
+{{end}}

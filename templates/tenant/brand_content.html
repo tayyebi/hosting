@@ -1,0 +1,723 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Brand page — scoped under .brd ── */
+.brd {
+  --brd-indigo:  #6366f1;
+  --brd-emerald: #10b981;
+  --brd-amber:   #f59e0b;
+  --brd-red:     #ef4444;
+  --brd-violet:  #8b5cf6;
+  --brd-blue:    #3b82f6;
+  --brd-bg:       var(--c-surface, #fff);
+  --brd-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --brd-border:   var(--c-border, #e5e7eb);
+  --brd-text:     var(--c-text, #111827);
+  --brd-text-2:   var(--c-text-dim, #6b7280);
+  --brd-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .brd {
+  --brd-bg:       #181a20;
+  --brd-bg-soft:  #13151b;
+  --brd-border:   #262932;
+  --brd-text:     #e5e7eb;
+  --brd-text-2:   #9ca3af;
+  --brd-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes brdFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.brd-fade { animation: brdFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Two-column grid (DNS + Email) ── */
+.brd-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+/* ── Panel (card) ── */
+.brd-panel {
+  margin-bottom: 0;
+}
+.brd-panel--spaced {
+  margin-bottom: 24px;
+}
+.brd-panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--brd-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brd-panel__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brd-text);
+}
+.brd-panel__subtitle {
+  font-size: 11.5px;
+  color: var(--brd-text-2);
+  font-weight: 300;
+}
+.brd-panel__body {
+  padding: 16px 18px;
+}
+.brd-panel__body--flush {
+  padding: 0;
+}
+[data-theme="dark"] .brd-panel {
+  background: var(--brd-bg);
+  border-color: var(--brd-border);
+}
+[data-theme="dark"] .brd-panel__header {
+  border-color: var(--brd-border);
+}
+[data-theme="dark"] .brd-panel__title {
+  color: var(--brd-text);
+}
+[data-theme="dark"] .brd-panel__subtitle {
+  color: var(--brd-text-2);
+}
+
+/* ── Domain rows (White-Label DNS) ── */
+.brd-domain-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--brd-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brd-domain-row:last-child {
+  border-bottom: none;
+}
+[data-theme="dark"] .brd-domain-row {
+  border-color: var(--brd-border);
+}
+.brd-domain-info {
+  flex: 1;
+  min-width: 0;
+}
+.brd-domain-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--brd-text);
+}
+.brd-domain-desc {
+  font-size: 11px;
+  color: var(--brd-text-2);
+  font-weight: 300;
+}
+[data-theme="dark"] .brd-domain-name {
+  color: var(--brd-text);
+}
+[data-theme="dark"] .brd-domain-desc {
+  color: var(--brd-text-2);
+}
+
+/* ── Domain status icons ── */
+.brd-domain-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.brd-domain-icon--ok {
+  background: rgba(16,185,129,.08);
+}
+.brd-domain-icon--warn {
+  background: rgba(245,158,11,.08);
+}
+[data-theme="dark"] .brd-domain-icon--ok {
+  background: rgba(16,185,129,.15);
+}
+[data-theme="dark"] .brd-domain-icon--warn {
+  background: rgba(245,158,11,.15);
+}
+
+/* ── Domain verification badges ── */
+.brd-domain-badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.brd-domain-badge--verified {
+  background: rgba(16,185,129,.08);
+  color: #059669;
+}
+.brd-domain-badge--pending {
+  background: rgba(245,158,11,.08);
+  color: #b45309;
+}
+[data-theme="dark"] .brd-domain-badge--verified {
+  background: rgba(16,185,129,.15);
+  color: #6ee7b7;
+}
+[data-theme="dark"] .brd-domain-badge--pending {
+  background: rgba(245,158,11,.15);
+  color: #fcd34d;
+}
+
+/* ── Email template rows ── */
+.brd-tpl-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--brd-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brd-tpl-row:last-child {
+  border-bottom: none;
+}
+[data-theme="dark"] .brd-tpl-row {
+  border-color: var(--brd-border);
+}
+.brd-tpl-info {
+  flex: 1;
+  min-width: 0;
+}
+.brd-tpl-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--brd-text);
+}
+.brd-tpl-desc {
+  font-size: 11px;
+  color: var(--brd-text-2);
+  font-weight: 300;
+}
+[data-theme="dark"] .brd-tpl-name {
+  color: var(--brd-text);
+}
+[data-theme="dark"] .brd-tpl-desc {
+  color: var(--brd-text-2);
+}
+
+/* ── Template type icons ── */
+.brd-tpl-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.brd-tpl-icon--indigo  { background: rgba(99,102,241,.08); }
+.brd-tpl-icon--emerald { background: rgba(16,185,129,.08); }
+.brd-tpl-icon--amber   { background: rgba(245,158,11,.08); }
+.brd-tpl-icon--red     { background: rgba(239,68,68,.08); }
+.brd-tpl-icon--violet  { background: rgba(139,92,246,.08); }
+[data-theme="dark"] .brd-tpl-icon--indigo  { background: rgba(99,102,241,.15); }
+[data-theme="dark"] .brd-tpl-icon--emerald { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .brd-tpl-icon--amber   { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .brd-tpl-icon--red     { background: rgba(239,68,68,.15); }
+[data-theme="dark"] .brd-tpl-icon--violet  { background: rgba(139,92,246,.15); }
+
+/* ── Hint text (Developer Portal) ── */
+.brd-hint {
+  font-size: 11px;
+  color: var(--brd-text-2);
+  margin-top: 4px;
+}
+[data-theme="dark"] .brd-hint {
+  color: var(--brd-text-2);
+}
+
+/* ── Color swatch border (Surface swatch) ── */
+.brd-swatch-border {
+  border: 1px solid var(--brd-border);
+}
+[data-theme="dark"] .brd-swatch-border {
+  border-color: var(--brd-border);
+}
+
+/* ── Edit button (template rows) ── */
+.brd-tpl-edit {
+  flex-shrink: 0;
+}
+
+/* ── Live preview — scoped under .bp-* ── */
+.bp-wrap{margin-top:24px;border:1px solid var(--brd-border);border-radius:12px;background:var(--brd-bg);overflow:hidden}
+.bp-head{padding:14px 20px;border-bottom:1px solid var(--brd-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.bp-title{font-size:15px;font-weight:500;color:var(--brd-text)}
+.bp-title small{color:var(--brd-text-2);font-weight:400;margin-left:8px}
+.bp-tabs{display:flex;gap:4px;padding:4px;background:var(--brd-bg-soft);border-radius:8px}
+.bp-tab{padding:6px 12px;border-radius:6px;border:none;background:transparent;font-size:12px;color:var(--brd-text-2);cursor:pointer;font-family:inherit;font-weight:400}
+.bp-tab.on{background:var(--brd-bg);color:var(--brd-text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bp-canvas{padding:24px;display:grid;place-items:center;background:linear-gradient(135deg,#f7f8fa,#eef0f6);min-height:340px}
+[data-theme="dark"] .bp-canvas{background:linear-gradient(135deg,#0f1118,#161a26)}
+[data-theme="dark"] .bp-tab.on{background:rgba(255,255,255,.08)}
+.bp-preview{width:100%;max-width:520px;background:var(--bp-bg,#fff);border-radius:14px;box-shadow:0 30px 60px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.06);padding:32px 28px;border:1px solid rgba(0,0,0,.06)}
+.bp-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.bp-logo__m{width:36px;height:36px;border-radius:9px;background:var(--bp-accent,#7c5cff);color:#fff;display:grid;place-items:center;font-weight:600;letter-spacing:-.02em}
+.bp-logo__t{font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--bp-text,#111)}
+.bp-h{font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--bp-text,#111);margin-bottom:6px}
+.bp-s{font-size:14px;color:var(--bp-text-dim,#6b7280);font-weight:300;margin-bottom:18px;line-height:1.55}
+.bp-input{width:100%;padding:11px 13px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;margin-bottom:10px;font-family:inherit;background:#fafbfc}
+.bp-btn{width:100%;padding:11px 13px;border:none;border-radius:8px;background:var(--bp-accent,#7c5cff);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:filter .12s}
+.bp-btn:hover{filter:brightness(1.08)}
+.bp-foot{display:flex;gap:12px;margin-top:18px;justify-content:center;color:var(--bp-text-dim,#9ca3af);font-size:12px;font-weight:400}
+.bp-actions{padding:14px 20px;border-top:1px solid var(--brd-border);background:var(--brd-bg-soft);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bp-actions__h{font-size:12px;color:var(--brd-text-2)}
+.bp-actions__h kbd{padding:1px 6px;background:var(--brd-bg);border:1px solid var(--brd-border);border-radius:4px;font-size:11px;font-family:'JetBrains Mono',monospace;margin:0 2px}
+.bp-actions__btns{display:flex;gap:8px}
+[data-theme="dark"] .bp-wrap{background:var(--brd-bg);border-color:var(--brd-border)}
+[data-theme="dark"] .bp-head{border-color:var(--brd-border)}
+[data-theme="dark"] .bp-title{color:var(--brd-text)}
+[data-theme="dark"] .bp-title small{color:var(--brd-text-2)}
+[data-theme="dark"] .bp-actions{background:rgba(255,255,255,.04);border-color:var(--brd-border)}
+[data-theme="dark"] .bp-actions__h{color:var(--brd-text-2)}
+[data-theme="dark"] .bp-actions__h kbd{background:rgba(255,255,255,.06);border-color:var(--brd-border);color:var(--brd-text)}
+[data-theme="dark"] .bp-tab{color:var(--brd-text-2)}
+.bp-pal{display:flex;gap:6px;margin-bottom:18px;justify-content:flex-start}
+.bp-pal__c{width:24px;height:24px;border-radius:6px;border:1px solid rgba(0,0,0,.08);cursor:pointer;transition:transform .12s}
+.bp-pal__c.on{transform:scale(1.15);box-shadow:0 0 0 2px var(--bp-accent,#7c5cff)}
+[data-theme="dark"] .bp-pal__c{border-color:rgba(255,255,255,.12)}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .brd-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .brd-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .bp-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bp-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bp-actions__btns {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 380px) {
+  .brd-domain-row,
+  .brd-tpl-row {
+    flex-wrap: wrap;
+  }
+  .brd-domain-badge {
+    margin-left: auto;
+  }
+  .bp-tabs {
+    width: 100%;
+  }
+  .bp-tab {
+    flex: 1;
+    text-align: center;
+  }
+}
+</style>
+
+<div class="brd" role="main" aria-label="Brand management">
+
+<div class="ds-page-header brd-fade" style="animation-delay:.05s">
+    <h1 class="ds-page-title">Brand</h1>
+    <p class="ds-page-subtitle">Identity, visual settings and developer-facing surfaces for your cloud platform.</p>
+</div>
+
+<div class="settings-layout brd-fade" style="animation-delay:.1s" role="region" aria-label="Brand settings">
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar__title">Brand</div>
+        <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'brand-identity')" aria-label="Identity settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1l1.4 4.2H13l-3.6 2.6 1.4 4.2-3.8-2.7-3.8 2.7 1.4-4.2L1 5.2h4.1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/></svg>
+            Identity
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'brand-colors')" aria-label="Colour settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/><circle cx="10" cy="6" r="1.2" fill="currentColor"/><circle cx="7.5" cy="10" r="1.2" fill="currentColor"/></svg>
+            Colours
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'brand-social')" aria-label="Social link settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="3" cy="7.5" r="1.8" stroke="currentColor" stroke-width="1.0"/><circle cx="12" cy="3" r="1.8" stroke="currentColor" stroke-width="1.0"/><circle cx="12" cy="12" r="1.8" stroke="currentColor" stroke-width="1.0"/><path d="M4.7 6.6L10.3 4M4.7 8.4l5.6 2.6" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Social
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'brand-devportal')" aria-label="Developer portal settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M4.5 4L1.5 7.5 4.5 11M10.5 4l3 3.5-3 3.5M8.5 2l-2 11" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Developer Portal
+        </button>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- Identity -->
+        <section class="settings-section settings-section--active" id="brand-identity" role="region" aria-label="Identity settings">
+            <h2 class="settings-section__title">Identity</h2>
+            <p class="settings-section__sub">Your organisation's name, tagline and logo.</p>
+
+            <div class="st-avatar-row">
+                <div class="brand-logo-placeholder">
+                    <svg width="28" height="28" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 11L8 7L12 11L16 7" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15L8 11L12 15L16 11" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/></svg>
+                </div>
+                <div class="st-avatar-meta">
+                    <div class="st-avatar-name">{{.Tenant.Name}}</div>
+                    <div class="st-avatar-hint">SVG, PNG or WebP · Recommended 256×256</div>
+                </div>
+                <button class="st-btn-secondary" aria-label="Upload brand logo">Upload logo</button>
+            </div>
+
+            <div class="st-group">
+                <label class="st-label">Company name</label>
+                <input class="st-input" type="text" value="{{.Tenant.Name}}">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Tagline</label>
+                <input class="st-input" type="text" value="Reliable cloud infrastructure for everyone.">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Website</label>
+                <input class="st-input" type="url" value="{{if .Tenant.Domain}}https://{{.Tenant.Domain}}{{end}}" placeholder="https://example.com">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Support email</label>
+                <input class="st-input" type="email" value="support@{{if .Tenant.Domain}}{{.Tenant.Domain}}{{else}}example.com{{end}}">
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save identity settings">Save identity</button>
+            </div>
+        </section>
+
+        <!-- Colours -->
+        <section class="settings-section" id="brand-colors" role="region" aria-label="Colour settings">
+            <h2 class="settings-section__title">Colours</h2>
+            <p class="settings-section__sub">Define your brand palette used across customer-facing surfaces.</p>
+
+            <div class="brand-color-grid">
+                <div class="brand-color-item">
+                    <div class="brand-color-swatch" style="background:#6366f1"></div>
+                    <div class="brand-color-info">
+                        <div class="brand-color-label">Primary</div>
+                        <div class="brand-color-hex">#6366F1</div>
+                    </div>
+                    <button class="st-btn-secondary brand-color-edit" aria-label="Change primary colour">Change</button>
+                </div>
+                <div class="brand-color-item">
+                    <div class="brand-color-swatch" style="background:#0f1117"></div>
+                    <div class="brand-color-info">
+                        <div class="brand-color-label">Background</div>
+                        <div class="brand-color-hex">#0F1117</div>
+                    </div>
+                    <button class="st-btn-secondary brand-color-edit" aria-label="Change background colour">Change</button>
+                </div>
+                <div class="brand-color-item">
+                    <div class="brand-color-swatch brd-swatch-border" style="background:#ffffff"></div>
+                    <div class="brand-color-info">
+                        <div class="brand-color-label">Surface</div>
+                        <div class="brand-color-hex">#FFFFFF</div>
+                    </div>
+                    <button class="st-btn-secondary brand-color-edit" aria-label="Change surface colour">Change</button>
+                </div>
+                <div class="brand-color-item">
+                    <div class="brand-color-swatch" style="background:#22c55e"></div>
+                    <div class="brand-color-info">
+                        <div class="brand-color-label">Accent</div>
+                        <div class="brand-color-hex">#22C55E</div>
+                    </div>
+                    <button class="st-btn-secondary brand-color-edit" aria-label="Change accent colour">Change</button>
+                </div>
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save colour settings">Save colours</button>
+            </div>
+        </section>
+
+        <!-- Social -->
+        <section class="settings-section" id="brand-social" role="region" aria-label="Social link settings">
+            <h2 class="settings-section__title">Social</h2>
+            <p class="settings-section__sub">Links shown in customer-facing pages and emails.</p>
+
+            <div class="st-group">
+                <label class="st-label">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M13 1L8 6M13 1H9M13 1V5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 2H2a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1V8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                    Twitter / X
+                </label>
+                <input class="st-input" type="url" value="https://twitter.com/{{.Tenant.Slug}}" placeholder="https://twitter.com/yourhandle">
+            </div>
+            <div class="st-group">
+                <label class="st-label">LinkedIn</label>
+                <input class="st-input" type="url" value="https://linkedin.com/company/{{.Tenant.Slug}}" placeholder="https://linkedin.com/company/yourcompany">
+            </div>
+            <div class="st-group">
+                <label class="st-label">GitHub</label>
+                <input class="st-input" type="url" placeholder="https://github.com/yourorg">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Discord</label>
+                <input class="st-input" type="url" placeholder="https://discord.gg/yourinvite">
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save social links">Save social links</button>
+            </div>
+        </section>
+
+        <!-- Developer Portal -->
+        <section class="settings-section" id="brand-devportal" role="region" aria-label="Developer portal settings">
+            <h2 class="settings-section__title">Developer Portal</h2>
+            <p class="settings-section__sub">Branding and URLs for your API documentation and SDK presence.</p>
+
+            <div class="st-group">
+                <label class="st-label">API docs URL</label>
+                <input class="st-input" type="url" value="https://docs.{{if .Tenant.Domain}}{{.Tenant.Domain}}{{else}}example.com{{end}}" placeholder="https://docs.example.com">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Developer hub URL</label>
+                <input class="st-input" type="url" value="https://developers.{{if .Tenant.Domain}}{{.Tenant.Domain}}{{else}}example.com{{end}}" placeholder="https://developers.example.com">
+            </div>
+            <div class="st-group">
+                <label class="st-label">SDK package namespace</label>
+                <input class="st-input" type="text" value="@{{.Tenant.Slug}}/sdk" placeholder="@yourorg/sdk">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Changelog URL</label>
+                <input class="st-input" type="url" placeholder="https://changelog.example.com">
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">API branding</h3>
+            <div class="st-group">
+                <label class="st-label">Custom API base URL</label>
+                <input class="st-input" type="url" value="https://api.{{if .Tenant.Domain}}{{.Tenant.Domain}}{{else}}example.com{{end}}" placeholder="https://api.example.com">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Webhook signing key prefix</label>
+                <input class="st-input" type="text" value="whsec_" placeholder="whsec_">
+                <div class="brd-hint">Shown in webhook configuration docs. Actual keys are generated per-endpoint.</div>
+            </div>
+            <div class="st-group">
+                <label class="st-label">API response server header</label>
+                <input class="st-input" type="text" value="{{.Tenant.Name}}-API" placeholder="MyCloud-API">
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary" aria-label="Save developer portal settings">Save developer portal</button>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- ── White-Label DNS & Email Template Config ── -->
+<div class="brd-two-col brd-fade" style="animation-delay:.15s" role="region" aria-label="DNS and email configuration">
+
+    <!-- White-label DNS -->
+    <div class="clients-table-wrap brd-panel">
+        <div class="brd-panel__header">
+            <div>
+                <div class="brd-panel__title">White-Label DNS</div>
+                <div class="brd-panel__subtitle">Custom domains for client-facing services and API endpoints</div>
+            </div>
+            <button class="btn btn--ghost btn--sm" aria-label="Add a new custom domain">Add Domain</button>
+        </div>
+        <div class="brd-panel__body--flush">
+            <div class="brd-domain-row">
+                <div class="brd-domain-icon brd-domain-icon--ok">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="brd-domain-info">
+                    <div class="brd-domain-name">dashboard.{{.Tenant.Domain}}</div>
+                    <div class="brd-domain-desc">CNAME → dash.platform.io · SSL auto-renewed</div>
+                </div>
+                <span class="brd-domain-badge brd-domain-badge--verified">Verified</span>
+            </div>
+            <div class="brd-domain-row">
+                <div class="brd-domain-icon brd-domain-icon--ok">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="brd-domain-info">
+                    <div class="brd-domain-name">api.{{.Tenant.Domain}}</div>
+                    <div class="brd-domain-desc">CNAME → api.platform.io · mTLS optional</div>
+                </div>
+                <span class="brd-domain-badge brd-domain-badge--verified">Verified</span>
+            </div>
+            <div class="brd-domain-row">
+                <div class="brd-domain-icon brd-domain-icon--warn">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 3v5M7 10h.01" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="brd-domain-info">
+                    <div class="brd-domain-name">status.{{.Tenant.Domain}}</div>
+                    <div class="brd-domain-desc">CNAME → status.platform.io · awaiting DNS propagation</div>
+                </div>
+                <span class="brd-domain-badge brd-domain-badge--pending">Pending</span>
+            </div>
+            <div class="brd-domain-row">
+                <div class="brd-domain-icon brd-domain-icon--ok">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="brd-domain-info">
+                    <div class="brd-domain-name">mail.{{.Tenant.Domain}}</div>
+                    <div class="brd-domain-desc">SPF + DKIM + DMARC verified · sending domain</div>
+                </div>
+                <span class="brd-domain-badge brd-domain-badge--verified">Verified</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email templates -->
+    <div class="clients-table-wrap brd-panel">
+        <div class="brd-panel__header">
+            <div>
+                <div class="brd-panel__title">Transactional Email Templates</div>
+                <div class="brd-panel__subtitle">Branded templates for automated client communications</div>
+            </div>
+        </div>
+        <div class="brd-panel__body--flush">
+            <div class="brd-tpl-row">
+                <div class="brd-tpl-icon brd-tpl-icon--indigo">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1.5" y="3" width="11" height="8" rx="1.5" stroke="#6366f1" stroke-width="1.1"/><path d="M1.5 4.5l5.5 3.5 5.5-3.5" stroke="#6366f1" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="brd-tpl-info">
+                    <div class="brd-tpl-name">Welcome &amp; onboarding</div>
+                    <div class="brd-tpl-desc">Sent on registration · includes API key and workspace URL</div>
+                </div>
+                <button class="btn btn--ghost btn--sm brd-tpl-edit" aria-label="Edit welcome and onboarding template">Edit</button>
+            </div>
+            <div class="brd-tpl-row">
+                <div class="brd-tpl-icon brd-tpl-icon--emerald">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#10b981" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="brd-tpl-info">
+                    <div class="brd-tpl-name">Invoice &amp; payment receipt</div>
+                    <div class="brd-tpl-desc">Monthly charge confirmation · PDF attachment</div>
+                </div>
+                <button class="btn btn--ghost btn--sm brd-tpl-edit" aria-label="Edit invoice and payment receipt template">Edit</button>
+            </div>
+            <div class="brd-tpl-row">
+                <div class="brd-tpl-icon brd-tpl-icon--amber">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 2a4 4 0 014 4v2l1.5 2H1.5L3 8V6a4 4 0 014-4z" stroke="#f59e0b" stroke-width="1.1" stroke-linejoin="round"/><path d="M5.5 11a1.5 1.5 0 003 0" stroke="#f59e0b" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="brd-tpl-info">
+                    <div class="brd-tpl-name">Maintenance notification</div>
+                    <div class="brd-tpl-desc">Advance notice · start · completion · post-mortem</div>
+                </div>
+                <button class="btn btn--ghost btn--sm brd-tpl-edit" aria-label="Edit maintenance notification template">Edit</button>
+            </div>
+            <div class="brd-tpl-row">
+                <div class="brd-tpl-icon brd-tpl-icon--red">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 2l5.5 10H1.5L7 2z" stroke="#ef4444" stroke-width="1.1" stroke-linejoin="round"/><path d="M7 6v3M7 10.5h.01" stroke="#ef4444" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="brd-tpl-info">
+                    <div class="brd-tpl-name">Payment failure &amp; dunning</div>
+                    <div class="brd-tpl-desc">Card declined · retry notice · suspension warning</div>
+                </div>
+                <button class="btn btn--ghost btn--sm brd-tpl-edit" aria-label="Edit payment failure and dunning template">Edit</button>
+            </div>
+            <div class="brd-tpl-row">
+                <div class="brd-tpl-icon brd-tpl-icon--violet">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="2" y="5" width="10" height="7" rx="1.5" stroke="#8b5cf6" stroke-width="1.1"/><path d="M5 5V3.5a2 2 0 014 0V5" stroke="#8b5cf6" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="brd-tpl-info">
+                    <div class="brd-tpl-name">Security alerts</div>
+                    <div class="brd-tpl-desc">Password reset · new device login · API key rotation</div>
+                </div>
+                <button class="btn btn--ghost btn--sm brd-tpl-edit" aria-label="Edit security alerts template">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live brand preview -->
+<div class="bp-wrap brd-fade" style="animation-delay:.2s" role="region" aria-label="Live brand preview">
+    <div class="bp-head">
+        <div class="bp-title">Live preview <small>see how the login page looks to your customers</small></div>
+        <div class="bp-tabs" id="bpTabs" role="tablist" aria-label="Preview view switcher">
+            <button class="bp-tab on" data-view="login" role="tab" aria-selected="true" aria-label="Login page preview">Login</button>
+            <button class="bp-tab" data-view="email" role="tab" aria-selected="false" aria-label="Email preview">Email</button>
+            <button class="bp-tab" data-view="invoice" role="tab" aria-selected="false" aria-label="Invoice preview">Invoice</button>
+        </div>
+    </div>
+    <div class="bp-canvas">
+        <div class="bp-preview" id="bpPreview">
+            <div class="bp-logo">
+                <div class="bp-logo__m" id="bpMark">A</div>
+                <div class="bp-logo__t" id="bpName">Acme Cloud</div>
+            </div>
+            <div class="bp-pal" role="group" aria-label="Accent colour picker">
+                <span class="bp-pal__c on" data-c="#7c5cff" style="background:#7c5cff" role="radio" aria-checked="true" aria-label="Purple accent"></span>
+                <span class="bp-pal__c" data-c="#10b981" style="background:#10b981" role="radio" aria-checked="false" aria-label="Green accent"></span>
+                <span class="bp-pal__c" data-c="#f59e0b" style="background:#f59e0b" role="radio" aria-checked="false" aria-label="Amber accent"></span>
+                <span class="bp-pal__c" data-c="#ef4444" style="background:#ef4444" role="radio" aria-checked="false" aria-label="Red accent"></span>
+                <span class="bp-pal__c" data-c="#3b82f6" style="background:#3b82f6" role="radio" aria-checked="false" aria-label="Blue accent"></span>
+                <span class="bp-pal__c" data-c="#000000" style="background:#000" role="radio" aria-checked="false" aria-label="Black accent"></span>
+            </div>
+            <div id="bpView">
+                <h2 class="bp-h">Welcome back</h2>
+                <p class="bp-s">Sign in to your account to continue building.</p>
+                <input class="bp-input" type="email" placeholder="you@example.com">
+                <input class="bp-input" type="password" placeholder="Password">
+                <button class="bp-btn">Sign in</button>
+                <div class="bp-foot"><span>Privacy</span> · <span>Terms</span> · <span>Status</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="bp-actions">
+        <div class="bp-actions__h">Tip — press <kbd>⌘</kbd>+<kbd>S</kbd> to save and publish to all customer-facing pages.</div>
+        <div class="bp-actions__btns">
+            <button class="btn btn--ghost btn--sm" aria-label="Reset brand preview">Reset</button>
+            <button class="btn btn--ghost btn--sm" aria-label="Open preview in new tab">Open in new tab</button>
+            <button class="btn btn--primary btn--sm" aria-label="Publish brand changes">Publish changes</button>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.brd -->
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('settings-section--active'));
+    btn.classList.add('settings-nav__item--active');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+
+(function(){
+  // Palette swatches → updates accent live
+  document.querySelectorAll('.bp-pal__c').forEach(function(s){
+    s.addEventListener('click',function(){
+      document.querySelectorAll('.bp-pal__c').forEach(function(x){
+        x.classList.remove('on');
+        x.setAttribute('aria-checked','false');
+      });
+      s.classList.add('on');
+      s.setAttribute('aria-checked','true');
+      document.getElementById('bpPreview').style.setProperty('--bp-accent',s.dataset.c);
+    });
+  });
+  // Preview tabs
+  var views={
+    login:'<h2 class="bp-h">Welcome back</h2><p class="bp-s">Sign in to your account to continue building.</p><input class="bp-input" type="email" placeholder="you@example.com"><input class="bp-input" type="password" placeholder="Password"><button class="bp-btn">Sign in</button><div class="bp-foot"><span>Privacy</span> · <span>Terms</span> · <span>Status</span></div>',
+    email:'<h2 class="bp-h">Welcome to Acme Cloud</h2><p class="bp-s">Hi James,<br><br>Thanks for signing up. Your API key is ready and your first workspace is provisioned. Click below to log in for the first time and start exploring.</p><button class="bp-btn">Open my workspace →</button><div class="bp-foot" style="margin-top:24px">Sent by Acme Cloud · <span>Unsubscribe</span></div>',
+    invoice:'<h2 class="bp-h">Invoice INV-1092</h2><p class="bp-s">Pro plan — Nov 2026 · $98.00<br>Add-on (extra IPs) · $15.00<br>Total · <b style="color:var(--bp-text,#111)">$113.00</b></p><button class="bp-btn">Pay now</button><div class="bp-foot">Acme Cloud · 1 Market St, San Francisco</div>'
+  };
+  document.querySelectorAll('.bp-tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.bp-tab').forEach(function(x){
+        x.classList.remove('on');
+        x.setAttribute('aria-selected','false');
+      });
+      t.classList.add('on');
+      t.setAttribute('aria-selected','true');
+      document.getElementById('bpView').innerHTML=views[t.dataset.view]||views.login;
+    });
+  });
+  // ⌘+S save handler
+  document.addEventListener('keydown',function(e){
+    if((e.metaKey||e.ctrlKey)&&e.key==='s'){
+      e.preventDefault();
+      if(window.mockToast)window.mockToast('Brand saved & published to customer-facing pages');
+    }
+  });
+})();
+</script>
+{{end}}

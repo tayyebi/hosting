@@ -1,0 +1,998 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Tickets page — scoped under .tk-* ── */
+
+/* Category tags */
+.tk-cat {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.tk-cat--compute  { background: rgba(99,102,241,.08);  color: #6366f1; }
+.tk-cat--network  { background: rgba(59,130,246,.08);   color: #3b82f6; }
+.tk-cat--billing  { background: rgba(245,158,11,.08);   color: #d97706; }
+.tk-cat--storage  { background: rgba(139,92,246,.08);    color: #8b5cf6; }
+.tk-cat--access   { background: rgba(16,185,129,.08);    color: #10b981; }
+.tk-cat--auth     { background: rgba(107,114,128,.08);   color: #6b7280; }
+.tk-cat--dns      { background: rgba(14,165,233,.08);    color: #0ea5e9; }
+.tk-cat--database { background: rgba(236,72,153,.08);    color: #ec4899; }
+.tk-cat--other    { background: rgba(107,114,128,.08);   color: #6b7280; }
+
+/* Triage panel */
+.tk-panel {
+    margin-top: 24px;
+    background: var(--c-surface, #fff);
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.tk-panel__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.tk-panel__title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--c-text, #111);
+    letter-spacing: -0.01em;
+}
+.tk-panel__subtitle {
+    font-size: 13px;
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 300;
+    margin: 0 0 16px;
+    padding: 0 20px;
+    padding-top: 14px;
+}
+.tk-panel__body {
+    padding: 0 20px 20px;
+}
+
+/* Triage stat cards grid */
+.tk-triage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.tk-triage-card {
+    background: var(--c-bg-soft, #f7f8fa);
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.tk-triage-card__label {
+    font-size: 12px;
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+.tk-triage-card__value {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--c-text, #111);
+    letter-spacing: -0.02em;
+}
+.tk-triage-card__sub {
+    font-size: 11.5px;
+    font-weight: 400;
+    margin-top: 2px;
+}
+.tk-triage-card__sub--positive { color: #10b981; }
+.tk-triage-card__sub--neutral  { color: var(--c-text-dim, #6b7280); }
+.tk-triage-card__sub--negative { color: #ef4444; }
+
+/* Routing rules code snippets */
+.tk-rule-code {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    background: var(--c-bg-card, #f3f4f6);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Canned responses panel */
+.tk-canned-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+@media (max-width: 768px) {
+    .tk-canned-grid { grid-template-columns: 1fr; }
+}
+.tk-canned-panel {
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px;
+}
+.tk-canned-panel__title {
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: var(--c-text, #111);
+}
+.tk-canned-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.tk-canned-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--c-bg-card, #f9fafb);
+    font-size: 12px;
+    color: var(--c-text, #111);
+}
+.tk-canned-item__usage {
+    color: var(--c-text-dim, #6b7280);
+    font-size: 11.5px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* SLA countdown */
+.tk-sla-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.tk-sla-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: var(--c-text, #111);
+}
+.tk-sla-row__target {
+    font-weight: 500;
+}
+.tk-sla-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--c-bg-card, #f3f4f6);
+    overflow: hidden;
+}
+.tk-sla-fill {
+    height: 100%;
+    border-radius: 2px;
+}
+.tk-sla-fill--critical { background: #ef4444; }
+.tk-sla-fill--high     { background: #f59e0b; }
+.tk-sla-fill--normal   { background: #3b82f6; }
+
+/* Detail drawer */
+.tk-detail {
+    display: none;
+    margin-top: 18px;
+    background: var(--c-surface, #fff);
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.tk-detail.open { display: block; }
+.tk-detail__head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--c-border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.tk-detail__title {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+.tk-detail__title small {
+    color: var(--c-text-dim, #6b7280);
+    font-weight: 400;
+    margin-right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.tk-detail__meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 12px;
+    color: var(--c-text-dim, #6b7280);
+    margin-top: 6px;
+}
+.tk-detail__meta b {
+    color: var(--c-text, #111);
+}
+.tk-detail__actions {
+    display: flex;
+    gap: 6px;
+}
+.tk-detail__body {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 24px;
+}
+@media (max-width: 780px) {
+    .tk-detail__body { grid-template-columns: 1fr; }
+}
+
+/* Thread messages */
+.tk-thread { display: flex; flex-direction: column; gap: 14px; }
+.tk-msg { display: flex; gap: 12px; }
+.tk-msg__av {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c5cff, #22d3ee);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 500;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.tk-msg__b {
+    flex: 1;
+    background: var(--c-bg-soft, #f7f8fa);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.tk-msg__h {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+.tk-msg__n { font-size: 13px; font-weight: 500; }
+.tk-msg__t {
+    font-size: 11px;
+    color: var(--c-text-faint, #9ca3af);
+    font-weight: 400;
+}
+.tk-msg__c {
+    font-size: 13px;
+    color: var(--c-text, #111);
+    line-height: 1.55;
+    font-weight: 300;
+}
+.tk-msg--staff .tk-msg__b {
+    background: rgba(124, 92, 255, .06);
+    border: 1px solid rgba(124, 92, 255, .15);
+}
+.tk-msg--staff .tk-msg__av {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+/* Reply area */
+.tk-reply { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.tk-reply textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 8px;
+    font: 300 13px/1.5 Inter, sans-serif;
+    background: var(--c-surface, #fff);
+    color: var(--c-text, #111);
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+}
+.tk-reply textarea:focus {
+    border-color: #7c5cff;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .12);
+}
+.tk-reply__bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tk-reply__tools {
+    display: flex;
+    gap: 6px;
+    color: var(--c-text-faint, #9ca3af);
+    font-size: 12px;
+}
+.tk-reply__submit {
+    display: flex;
+    gap: 6px;
+}
+
+/* Aside sidebar */
+.tk-aside { display: flex; flex-direction: column; gap: 14px; }
+.tk-aside__sec {
+    padding: 14px;
+    background: var(--c-bg-soft, #f7f8fa);
+    border-radius: 10px;
+}
+.tk-aside__l {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--c-text-faint, #9ca3af);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+.tk-aside__v {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--c-text, #111);
+    line-height: 1.5;
+}
+.tk-aside__v-email {
+    color: var(--c-text-dim, #6b7280);
+}
+.tk-aside__row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12.5px;
+    color: var(--c-text-dim, #6b7280);
+}
+.tk-aside__row b {
+    color: var(--c-text, #111);
+    font-weight: 500;
+}
+.tk-aside__row-mt {
+    margin-top: 8px;
+}
+.tk-aside__row b.tk-aside__sla-ok {
+    color: #10b981;
+}
+.tk-aside__tags {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+.tk-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
+}
+.tk-tag--blue    { background: rgba(59,130,246,.1);   color: #3b82f6; }
+.tk-tag--amber   { background: rgba(245,158,11,.1);   color: #f59e0b; }
+.tk-tag--emerald { background: rgba(16,185,129,.1);    color: #10b981; }
+
+/* Modal form three-column grid */
+.tk-modal-triple {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 768px) {
+    .tk-modal-triple { grid-template-columns: 1fr; }
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] .tk-panel {
+    background: #1a1e2e;
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-panel__header {
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-panel__title,
+[data-theme="dark"] .tk-canned-panel__title {
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-panel__subtitle {
+    color: #9aa0b4;
+}
+[data-theme="dark"] .tk-triage-card {
+    background: rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-triage-card__value {
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-triage-card__label {
+    color: #9aa0b4;
+}
+[data-theme="dark"] .tk-rule-code {
+    background: rgba(255,255,255,.06);
+    color: #c4c8d8;
+}
+[data-theme="dark"] .tk-canned-panel {
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-canned-item {
+    background: rgba(255,255,255,.04);
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-canned-item__usage {
+    color: #9aa0b4;
+}
+[data-theme="dark"] .tk-sla-track {
+    background: rgba(255,255,255,.06);
+}
+[data-theme="dark"] .tk-cat {
+    opacity: 0.9;
+}
+[data-theme="dark"] .tk-detail {
+    background: #1a1e2e;
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-detail__head {
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .tk-detail__meta b {
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-msg__b,
+[data-theme="dark"] .tk-aside__sec {
+    background: rgba(255,255,255,.04);
+}
+[data-theme="dark"] .tk-msg__c,
+[data-theme="dark"] .tk-aside__v,
+[data-theme="dark"] .tk-aside__row b {
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-reply textarea {
+    background: #222739;
+    border-color: rgba(255,255,255,.1);
+    color: #eef0f6;
+}
+[data-theme="dark"] .tk-tag {
+    opacity: 0.85;
+}
+</style>
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Tickets</h1>
+    <p class="ds-page-subtitle">Infrastructure support requests, incident escalation and SLA tracking.</p>
+</div>
+
+<!-- KPI strip -->
+<div class="ws-kpi-grid" style="margin-bottom:20px;">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">9</div>
+            <div class="ws-kpi-card__label">Open</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5 7l4-4 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">5</div>
+            <div class="ws-kpi-card__label">In Progress</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M7 9h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">3</div>
+            <div class="ws-kpi-card__label">Waiting on client</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 9l3 3 5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">42</div>
+            <div class="ws-kpi-card__label">Resolved this month</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="clients-toolbar" style="margin-bottom:16px;">
+    <div class="clients-search">
+        <div class="clients-search__input-wrap">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/><path d="M10 10l3 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <input class="clients-search__input" type="text" placeholder="Search tickets…">
+        </div>
+        <select class="clients-filter">
+            <option>All statuses</option>
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Waiting</option>
+            <option>Resolved</option>
+            <option>Closed</option>
+        </select>
+        <select class="clients-filter">
+            <option>All priorities</option>
+            <option>Critical</option>
+            <option>High</option>
+            <option>Normal</option>
+            <option>Low</option>
+        </select>
+    </div>
+    <button class="btn btn--primary" onclick="document.getElementById('newTicketModal').hidden=false">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Ticket
+    </button>
+</div>
+
+<div class="clients-table-wrap">
+<table class="tenant-table tk-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Subject</th>
+            <th>Client</th>
+            <th>Priority</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Assigned</th>
+            <th>Updated</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="tk-id">#1041</td>
+            <td class="tk-subject"><div class="tk-subj-text">VPS unreachable after snapshot restore</div><div class="tk-subj-meta">3 replies</div></td>
+            <td><div class="tk-client">James Wright</div><div class="tk-client-co">Acme Inc.</div></td>
+            <td><span class="tk-priority tk-priority--critical">Critical</span></td>
+            <td><span class="tk-cat tk-cat--compute">Compute</span></td>
+            <td><span class="tk-status tk-status--open">Open</span></td>
+            <td><div class="tk-assignee">Sara K.</div></td>
+            <td class="tk-date">2 min ago</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button><button class="btn btn--accent btn--sm">Assign</button></td>
+        </tr>
+        <tr>
+            <td class="tk-id">#1040</td>
+            <td class="tk-subject"><div class="tk-subj-text">IPv6 not routing on new deployment</div><div class="tk-subj-meta">1 reply</div></td>
+            <td><div class="tk-client">Sara Nguyen</div><div class="tk-client-co">TechBlue</div></td>
+            <td><span class="tk-priority tk-priority--high">High</span></td>
+            <td><span class="tk-cat tk-cat--network">Network</span></td>
+            <td><span class="tk-status tk-status--progress">In Progress</span></td>
+            <td><div class="tk-assignee">Ali R.</div></td>
+            <td class="tk-date">18 min ago</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button></td>
+        </tr>
+        <tr>
+            <td class="tk-id">#1039</td>
+            <td class="tk-subject"><div class="tk-subj-text">Billing invoice shows wrong amount</div><div class="tk-subj-meta">2 replies</div></td>
+            <td><div class="tk-client">Lena Bauer</div><div class="tk-client-co">BauerHosts</div></td>
+            <td><span class="tk-priority tk-priority--normal">Normal</span></td>
+            <td><span class="tk-cat tk-cat--billing">Billing</span></td>
+            <td><span class="tk-status tk-status--waiting">Waiting</span></td>
+            <td><div class="tk-assignee">Unassigned</div></td>
+            <td class="tk-date">1 hr ago</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button><button class="btn btn--accent btn--sm">Assign</button></td>
+        </tr>
+        <tr>
+            <td class="tk-id">#1038</td>
+            <td class="tk-subject"><div class="tk-subj-text">Request: increase disk quota to 2 TB</div><div class="tk-subj-meta">0 replies</div></td>
+            <td><div class="tk-client">Alice Monroe</div><div class="tk-client-co">Monroe LLC</div></td>
+            <td><span class="tk-priority tk-priority--normal">Normal</span></td>
+            <td><span class="tk-cat tk-cat--storage">Storage</span></td>
+            <td><span class="tk-status tk-status--open">Open</span></td>
+            <td><div class="tk-assignee">Unassigned</div></td>
+            <td class="tk-date">3 hr ago</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button><button class="btn btn--accent btn--sm">Assign</button></td>
+        </tr>
+        <tr>
+            <td class="tk-id">#1037</td>
+            <td class="tk-subject"><div class="tk-subj-text">SSH key not accepted after OS reinstall</div><div class="tk-subj-meta">4 replies</div></td>
+            <td><div class="tk-client">Faisal Al-Amin</div><div class="tk-client-co">Al-Amin Corp</div></td>
+            <td><span class="tk-priority tk-priority--high">High</span></td>
+            <td><span class="tk-cat tk-cat--access">Access</span></td>
+            <td><span class="tk-status tk-status--progress">In Progress</span></td>
+            <td><div class="tk-assignee">Sara K.</div></td>
+            <td class="tk-date">Yesterday</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button></td>
+        </tr>
+        <tr>
+            <td class="tk-id">#1035</td>
+            <td class="tk-subject"><div class="tk-subj-text">Can't login to control panel after 2FA change</div><div class="tk-subj-meta">6 replies</div></td>
+            <td><div class="tk-client">Carlos Diaz</div><div class="tk-client-co">DiazNet</div></td>
+            <td><span class="tk-priority tk-priority--low">Low</span></td>
+            <td><span class="tk-cat tk-cat--auth">Auth</span></td>
+            <td><span class="tk-status tk-status--resolved">Resolved</span></td>
+            <td><div class="tk-assignee">Ali R.</div></td>
+            <td class="tk-date">2 days ago</td>
+            <td class="tk-actions"><button class="btn btn--ghost btn--sm">View</button><button class="btn btn--danger btn--sm">Reopen</button></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<!-- Ticket detail drawer (inline expandable conversation) -->
+<div class="tk-detail" id="tkDetail">
+    <div class="tk-detail__head">
+        <div>
+            <div class="tk-detail__title"><small id="tkD_id">#1041</small><span id="tkD_subj">VPS unreachable after snapshot restore</span></div>
+            <div class="tk-detail__meta">
+                <span class="tk-priority tk-priority--critical">Critical</span>
+                <span class="tk-status tk-status--open">Open</span>
+                <span>Opened by <b>James Wright</b> · 2 min ago</span>
+            </div>
+        </div>
+        <div class="tk-detail__actions">
+            <button class="btn btn--ghost btn--sm">Reassign</button>
+            <button class="btn btn--accent btn--sm">Mark in progress</button>
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('tkDetail').classList.remove('open')">Close</button>
+        </div>
+    </div>
+    <div class="tk-detail__body">
+        <div>
+            <div class="tk-thread">
+                <div class="tk-msg">
+                    <div class="tk-msg__av">JW</div>
+                    <div class="tk-msg__b">
+                        <div class="tk-msg__h"><div class="tk-msg__n">James Wright · Acme Inc.</div><div class="tk-msg__t">2 min ago</div></div>
+                        <div class="tk-msg__c">Hi, after restoring snapshot <b>snap-prod-0413</b> on instance <code>i-0a1b2c3d</code> the VM no longer responds on its public IP. Console output looks normal. Could you take a look? This is impacting production traffic.</div>
+                    </div>
+                </div>
+                <div class="tk-msg tk-msg--staff">
+                    <div class="tk-msg__av">SK</div>
+                    <div class="tk-msg__b">
+                        <div class="tk-msg__h"><div class="tk-msg__n">Sara K. · Support</div><div class="tk-msg__t">1 min ago</div></div>
+                        <div class="tk-msg__c">Hi James — I can see the instance is up but the security group lost its inbound rule for port 443 during the restore. I'm reattaching the rule now; should be reachable in ~30 s.</div>
+                    </div>
+                </div>
+                <div class="tk-msg">
+                    <div class="tk-msg__av">JW</div>
+                    <div class="tk-msg__b">
+                        <div class="tk-msg__h"><div class="tk-msg__n">James Wright</div><div class="tk-msg__t">just now</div></div>
+                        <div class="tk-msg__c">Confirmed reachable. Thanks for the quick turnaround!</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tk-reply">
+                <textarea placeholder="Reply to James Wright…"></textarea>
+                <div class="tk-reply__bar">
+                    <div class="tk-reply__tools">
+                        <button class="btn btn--ghost btn--sm">Attach</button>
+                        <button class="btn btn--ghost btn--sm">Macro</button>
+                        <button class="btn btn--ghost btn--sm">Internal note</button>
+                    </div>
+                    <div class="tk-reply__submit">
+                        <button class="btn btn--ghost btn--sm">Save draft</button>
+                        <button class="btn btn--primary btn--sm">Send reply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <aside class="tk-aside">
+            <div class="tk-aside__sec">
+                <div class="tk-aside__l">Customer</div>
+                <div class="tk-aside__v">James Wright<br/><span class="tk-aside__v-email">james@acme.io</span></div>
+                <div class="tk-aside__row tk-aside__row-mt"><span>Plan</span><b>Pro · $98/mo</b></div>
+                <div class="tk-aside__row"><span>Customer since</span><b>Jan 2024</b></div>
+                <div class="tk-aside__row"><span>Open tickets</span><b>3</b></div>
+            </div>
+            <div class="tk-aside__sec">
+                <div class="tk-aside__l">Properties</div>
+                <div class="tk-aside__row"><span>Resource</span><b>i-0a1b2c3d</b></div>
+                <div class="tk-aside__row"><span>Region</span><b>eu-central-1</b></div>
+                <div class="tk-aside__row"><span>SLA</span><b>4h response</b></div>
+                <div class="tk-aside__row"><span>First reply</span><b class="tk-aside__sla-ok">1m 12s</b></div>
+            </div>
+            <div class="tk-aside__sec">
+                <div class="tk-aside__l">Tags</div>
+                <div class="tk-aside__tags">
+                    <span class="tk-tag tk-tag--blue">snapshot</span>
+                    <span class="tk-tag tk-tag--amber">production</span>
+                    <span class="tk-tag tk-tag--emerald">resolved</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div id="tk-pagination" class="tk-pagination" style="display:none;"></div>
+
+<script>
+(function(){
+  var PAGE_SIZE = 15;
+  var currentPage = 1;
+  var rows = [];
+
+  function initPagination() {
+    var tbody = document.querySelector('.tk-table tbody');
+    if (!tbody) return;
+    rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length <= PAGE_SIZE) return; // no pagination needed
+
+    renderPage(1);
+
+    var pgEl = document.getElementById('tk-pagination');
+    pgEl.style.display = 'flex';
+  }
+
+  function renderPage(page) {
+    currentPage = page;
+    var total = rows.length;
+    var pages = Math.ceil(total / PAGE_SIZE);
+    var start = (page - 1) * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+
+    rows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+    var pgEl = document.getElementById('tk-pagination');
+    pgEl.innerHTML = '';
+
+    var info = document.createElement('span');
+    info.className = 'tk-page-info';
+    info.textContent = (start + 1) + '\u2013' + end + ' of ' + total;
+    pgEl.appendChild(info);
+
+    var nav = document.createElement('div');
+    nav.className = 'tk-page-nav';
+
+    var prev = document.createElement('button');
+    prev.className = 'btn btn--ghost btn--sm';
+    prev.textContent = '\u2190 Prev';
+    prev.disabled = page <= 1;
+    prev.onclick = function() { renderPage(page - 1); };
+    nav.appendChild(prev);
+
+    for (var p = 1; p <= pages; p++) {
+      (function(p) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--sm' + (p === page ? ' btn--accent' : ' btn--ghost');
+        btn.textContent = p;
+        btn.onclick = function() { renderPage(p); };
+        nav.appendChild(btn);
+      })(p);
+    }
+
+    var next = document.createElement('button');
+    next.className = 'btn btn--ghost btn--sm';
+    next.textContent = 'Next \u2192';
+    next.disabled = page >= pages;
+    next.onclick = function() { renderPage(page + 1); };
+    nav.appendChild(next);
+
+    pgEl.appendChild(nav);
+  }
+
+  // Wire all "View" buttons in the ticket table to open the detail panel
+  document.querySelectorAll('.tk-table .tk-actions .btn').forEach(function(b){
+    if(b.textContent.trim()==='View'){
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var tr=b.closest('tr');
+        var id=tr.querySelector('.tk-id').textContent;
+        var subj=tr.querySelector('.tk-subj-text').textContent;
+        document.getElementById('tkD_id').textContent=id;
+        document.getElementById('tkD_subj').textContent=subj;
+        var d=document.getElementById('tkDetail');
+        d.classList.add('open');
+        d.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    }
+  });
+
+  initPagination();
+})();
+</script>
+
+<!-- New Ticket modal -->
+<div class="modal-backdrop" id="newTicketModal" hidden onclick="this.hidden=true">
+    <div class="modal" style="max-width:520px;" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">New Ticket</h2>
+            <button class="modal__close" onclick="document.getElementById('newTicketModal').hidden=true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Client</label>
+                <select class="form-input">
+                    <option>James Wright — Acme Inc.</option>
+                    <option>Sara Nguyen — TechBlue</option>
+                    <option>Alice Monroe — Monroe LLC</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Subject <span class="form-req">*</span></label>
+                <input class="form-input" type="text" placeholder="Brief description of the issue">
+            </div>
+            <div class="form-field tk-modal-triple">
+                <div>
+                    <label class="form-label">Priority</label>
+                    <select class="form-input">
+                        <option>Normal</option>
+                        <option>Low</option>
+                        <option>High</option>
+                        <option>Critical</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Assign to</label>
+                    <select class="form-input">
+                        <option>Unassigned</option>
+                        <option>Sara K.</option>
+                        <option>Ali R.</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Category</label>
+                    <select class="form-input">
+                        <option>Compute</option>
+                        <option>Network</option>
+                        <option>Storage</option>
+                        <option>Database</option>
+                        <option>Billing</option>
+                        <option>Access</option>
+                        <option>DNS</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Description</label>
+                <textarea class="form-input" rows="4" placeholder="Provide details…"></textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Linked resource <span class="form-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="e.g. i-0a1b2c3d, lb-prod-01, db-pg-02">
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newTicketModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Create Ticket</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Automated Triage & Routing -->
+<div class="tk-panel">
+    <div class="tk-panel__header">
+        <h2 class="tk-panel__title">Automated Triage &amp; Routing</h2>
+        <span class="badge badge--info" style="font-size:11px;">AI-powered</span>
+    </div>
+    <p class="tk-panel__subtitle">Incoming tickets are classified by an ML model trained on your infrastructure taxonomy, then routed to the matching on-call queue.</p>
+
+    <div class="tk-panel__body">
+        <div class="tk-triage-grid">
+            <div class="tk-triage-card">
+                <div class="tk-triage-card__label">Auto-classified</div>
+                <div class="tk-triage-card__value">87.4%</div>
+                <div class="tk-triage-card__sub tk-triage-card__sub--positive">+3.2% from last month</div>
+            </div>
+            <div class="tk-triage-card">
+                <div class="tk-triage-card__label">Median first response</div>
+                <div class="tk-triage-card__value">4 min 12 s</div>
+                <div class="tk-triage-card__sub tk-triage-card__sub--positive">SLA target: 15 min</div>
+            </div>
+            <div class="tk-triage-card">
+                <div class="tk-triage-card__label">Mis-routes (7 d)</div>
+                <div class="tk-triage-card__value">3</div>
+                <div class="tk-triage-card__sub tk-triage-card__sub--neutral">Manually reassigned</div>
+            </div>
+            <div class="tk-triage-card">
+                <div class="tk-triage-card__label">Avg resolution</div>
+                <div class="tk-triage-card__value">2 h 38 min</div>
+                <div class="tk-triage-card__sub tk-triage-card__sub--positive">↓ 14% vs prior week</div>
+            </div>
+        </div>
+
+        <!-- Routing rules table -->
+        <div class="clients-table-wrap" style="margin-bottom:16px;">
+            <table class="tenant-table">
+                <thead>
+                    <tr>
+                        <th>Category signal</th>
+                        <th>Confidence&nbsp;≥</th>
+                        <th>Route to queue</th>
+                        <th>Priority</th>
+                        <th>Escalation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="tk-rule-code">compute.*</code></td>
+                        <td>0.82</td>
+                        <td>Infra · Compute</td>
+                        <td><span class="badge badge--danger" style="font-size:11px;">P1</span></td>
+                        <td>→ SRE lead after 30 min</td>
+                    </tr>
+                    <tr>
+                        <td><code class="tk-rule-code">network.dns|ipv6</code></td>
+                        <td>0.78</td>
+                        <td>Infra · Networking</td>
+                        <td><span class="badge badge--warning" style="font-size:11px;">P2</span></td>
+                        <td>→ NetOps after 1 h</td>
+                    </tr>
+                    <tr>
+                        <td><code class="tk-rule-code">billing.*</code></td>
+                        <td>0.90</td>
+                        <td>Finance · Billing</td>
+                        <td><span class="badge" style="font-size:11px;">P3</span></td>
+                        <td>→ Finance lead after 4 h</td>
+                    </tr>
+                    <tr>
+                        <td><code class="tk-rule-code">storage.disk|snapshot</code></td>
+                        <td>0.85</td>
+                        <td>Infra · Storage</td>
+                        <td><span class="badge badge--danger" style="font-size:11px;">P1</span></td>
+                        <td>→ Storage lead after 20 min</td>
+                    </tr>
+                    <tr>
+                        <td><code class="tk-rule-code">auth.ssh|2fa|iam</code></td>
+                        <td>0.88</td>
+                        <td>Security · IAM</td>
+                        <td><span class="badge badge--warning" style="font-size:11px;">P2</span></td>
+                        <td>→ SecOps after 45 min</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Macro / canned response templates + SLA countdown -->
+        <div class="tk-canned-grid">
+            <div class="tk-canned-panel">
+                <div class="tk-canned-panel__title">Canned Response Templates</div>
+                <div class="tk-canned-list">
+                    <div class="tk-canned-item">
+                        <span>VPS unreachable — initial diagnostics</span>
+                        <span class="tk-canned-item__usage">used 34×</span>
+                    </div>
+                    <div class="tk-canned-item">
+                        <span>Billing dispute acknowledgment</span>
+                        <span class="tk-canned-item__usage">used 22×</span>
+                    </div>
+                    <div class="tk-canned-item">
+                        <span>SSH key rotation guide</span>
+                        <span class="tk-canned-item__usage">used 18×</span>
+                    </div>
+                    <div class="tk-canned-item">
+                        <span>Disk quota exceeded — cleanup steps</span>
+                        <span class="tk-canned-item__usage">used 15×</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tk-canned-panel">
+                <div class="tk-canned-panel__title">SLA Countdown by Priority</div>
+                <div class="tk-sla-list">
+                    <div>
+                        <div class="tk-sla-row">
+                            <span><span class="badge badge--danger" style="font-size:10px;">P1</span> Critical</span>
+                            <span class="tk-sla-row__target">15 min response · 2 h resolve</span>
+                        </div>
+                        <div class="tk-sla-track">
+                            <div class="tk-sla-fill tk-sla-fill--critical" style="width:28%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="tk-sla-row">
+                            <span><span class="badge badge--warning" style="font-size:10px;">P2</span> High</span>
+                            <span class="tk-sla-row__target">1 h response · 8 h resolve</span>
+                        </div>
+                        <div class="tk-sla-track">
+                            <div class="tk-sla-fill tk-sla-fill--high" style="width:45%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="tk-sla-row">
+                            <span><span class="badge" style="font-size:10px;">P3</span> Normal</span>
+                            <span class="tk-sla-row__target">4 h response · 24 h resolve</span>
+                        </div>
+                        <div class="tk-sla-track">
+                            <div class="tk-sla-fill tk-sla-fill--normal" style="width:62%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
