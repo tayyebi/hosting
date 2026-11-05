@@ -29,19 +29,7 @@ type mfaEnrollmentStoreType struct {
 }
 
 var mfaEnrollmentStore = &mfaEnrollmentStoreType{
-	enrollments: map[string][]MFAEnrollment{
-		"buyvm": {
-			{ID: newID(), User: "jane.doe@acme.io", Method: "Passkey + TOTP", Roles: "Admin, Finance", Status: "enrolled", LastUsed: "8 min ago", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), User: "mike.chen@acme.io", Method: "YubiKey 5", Roles: "DevOps", Status: "enrolled", LastUsed: "28 min ago", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), User: "temp.contractor@acme.io", Method: "SMS only", Roles: "Viewer", Status: "weak", LastUsed: "3h ago", Created: "2026-01-15", Region: "eu-central-1"},
-			{ID: newID(), User: "lena@acme.io", Method: "Passkey + TOTP", Roles: "Admin", Status: "enrolled", LastUsed: "1h ago", Created: "2025-11-20", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), User: "ops@hosting.io", Method: "Passkey", Roles: "Admin", Status: "enrolled", LastUsed: "2 min ago", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), User: "dev@hosting.io", Method: "TOTP", Roles: "Developer", Status: "enrolled", LastUsed: "45 min ago", Created: "2025-10-15", Region: "ap-south-1"},
-			{ID: newID(), User: "intern@hosting.io", Method: "SMS only", Roles: "Viewer", Status: "weak", LastUsed: "2d ago", Created: "2026-02-01", Region: "ap-south-1"},
-		},
-	},
+	enrollments: map[string][]MFAEnrollment{},
 }
 
 func (s *mfaEnrollmentStoreType) list(slug string) []MFAEnrollment {

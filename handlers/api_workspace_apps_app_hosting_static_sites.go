@@ -35,21 +35,7 @@ type hostedSiteStoreType struct {
 }
 
 var hostedSiteStore = &hostedSiteStoreType{
-	items: map[string][]HostedSite{
-		"buyvm": {
-			{ID: newID(), Name: "marketing-site", Domain: "www.buyvm-demo.com", Framework: "Next.js", Repository: "github.com/buyvm/marketing", Branch: "main", BuildCmd: "npm run build", OutputDir: "out", CDNRegions: 12, LastDeploy: "2026-04-17 10:15", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "docs-portal", Domain: "docs.buyvm-demo.com", Framework: "Hugo", Repository: "github.com/buyvm/docs", Branch: "main", BuildCmd: "hugo build", OutputDir: "public", CDNRegions: 8, LastDeploy: "2026-04-16 14:30", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "status-dashboard", Domain: "status.buyvm-demo.com", Framework: "Astro", Repository: "github.com/buyvm/status", Branch: "production", BuildCmd: "astro build", OutputDir: "dist", CDNRegions: 15, LastDeploy: "2026-04-17 08:00", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "blog", Domain: "blog.buyvm-demo.com", Framework: "Gatsby", Repository: "github.com/buyvm/blog", Branch: "main", BuildCmd: "gatsby build", OutputDir: "public", CDNRegions: 6, LastDeploy: "2026-04-12 09:45", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "landing-page-v2", Domain: "—", Framework: "Vite + React", Repository: "github.com/buyvm/landing-v2", Branch: "develop", BuildCmd: "npm run build", OutputDir: "dist", CDNRegions: 0, LastDeploy: "—", DeployStatus: "Not deployed", SSL: "Pending", Status: "draft", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "corporate-site", Domain: "www.hosting-demo.com", Framework: "Next.js", Repository: "github.com/hosting/corporate", Branch: "main", BuildCmd: "next build && next export", OutputDir: "out", CDNRegions: 20, LastDeploy: "2026-04-17 11:00", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "developer-hub", Domain: "developers.hosting-demo.com", Framework: "Docusaurus", Repository: "github.com/hosting/dev-hub", Branch: "main", BuildCmd: "npm run build", OutputDir: "build", CDNRegions: 14, LastDeploy: "2026-04-16 16:00", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "api-reference", Domain: "api.hosting-demo.com", Framework: "Redoc", Repository: "github.com/hosting/api-docs", Branch: "main", BuildCmd: "redoc-cli build", OutputDir: "dist", CDNRegions: 10, LastDeploy: "2026-04-15 20:30", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "event-microsite", Domain: "summit.hosting-demo.com", Framework: "11ty", Repository: "github.com/hosting/summit-2026", Branch: "main", BuildCmd: "eleventy", OutputDir: "_site", CDNRegions: 5, LastDeploy: "2026-04-14 12:00", DeployStatus: "Live", SSL: "Auto-renewed", Status: "active", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]HostedSite{},
 }
 
 func (s *hostedSiteStoreType) list(slug string) []HostedSite {

@@ -13,26 +13,26 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type ProAppLoadBalancer struct {
-	ID               string
-	Name             string
-	Protocol         string
-	ListenerPorts    string
-	TargetCount      int
-	HealthyTargets   int
-	RPS              int
-	ActiveConns      int
-	BandwidthGbps    float64
-	TLSVersion       string
-	CertDomain       string
-	CertExpiry       string
-	WAFEnabled       bool
-	AccessLogs       bool
-	StickySession    bool
-	IdleTimeoutSec   int
-	Region           string
-	CostPerMonth     float64
-	Status           string
-	Updated          string
+	ID             string
+	Name           string
+	Protocol       string
+	ListenerPorts  string
+	TargetCount    int
+	HealthyTargets int
+	RPS            int
+	ActiveConns    int
+	BandwidthGbps  float64
+	TLSVersion     string
+	CertDomain     string
+	CertExpiry     string
+	WAFEnabled     bool
+	AccessLogs     bool
+	StickySession  bool
+	IdleTimeoutSec int
+	Region         string
+	CostPerMonth   float64
+	Status         string
+	Updated        string
 }
 
 type proAppLBStoreType struct {
@@ -41,21 +41,7 @@ type proAppLBStoreType struct {
 }
 
 var proAppLBStore = &proAppLBStoreType{
-	items: map[string][]ProAppLoadBalancer{
-		"buyvm": {
-			{ID: newID(), Name: "api-gateway-prod", Protocol: "HTTPS (TLS 1.3)", ListenerPorts: "443, 8443", TargetCount: 6, HealthyTargets: 6, RPS: 8420, ActiveConns: 4200, BandwidthGbps: 2.4, TLSVersion: "TLS 1.3", CertDomain: "*.api.company.io", CertExpiry: "2027-01-15", WAFEnabled: true, AccessLogs: true, StickySession: false, IdleTimeoutSec: 60, Region: "us-east-1", CostPerMonth: 85.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "web-frontend-prod", Protocol: "HTTPS (TLS 1.3)", ListenerPorts: "443", TargetCount: 4, HealthyTargets: 4, RPS: 6100, ActiveConns: 12400, BandwidthGbps: 4.8, TLSVersion: "TLS 1.3", CertDomain: "*.company.io", CertExpiry: "2026-11-20", WAFEnabled: true, AccessLogs: true, StickySession: true, IdleTimeoutSec: 120, Region: "us-east-1", CostPerMonth: 72.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "grpc-services", Protocol: "gRPC + TLS", ListenerPorts: "443", TargetCount: 8, HealthyTargets: 8, RPS: 2800, ActiveConns: 1600, BandwidthGbps: 0.8, TLSVersion: "TLS 1.3", CertDomain: "grpc.company.io", CertExpiry: "2027-03-10", WAFEnabled: false, AccessLogs: true, StickySession: false, IdleTimeoutSec: 300, Region: "us-east-1", CostPerMonth: 65.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "websocket-lb", Protocol: "WSS", ListenerPorts: "443, 8080", TargetCount: 3, HealthyTargets: 3, RPS: 640, ActiveConns: 8200, BandwidthGbps: 0.4, TLSVersion: "TLS 1.3", CertDomain: "ws.company.io", CertExpiry: "2026-07-18", WAFEnabled: false, AccessLogs: false, StickySession: true, IdleTimeoutSec: 3600, Region: "us-east-1", CostPerMonth: 45.00, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "staging-lb", Protocol: "HTTPS", ListenerPorts: "443", TargetCount: 4, HealthyTargets: 2, RPS: 120, ActiveConns: 42, BandwidthGbps: 0.01, TLSVersion: "TLS 1.2", CertDomain: "staging.company.io", CertExpiry: "2026-04-01", WAFEnabled: false, AccessLogs: false, StickySession: false, IdleTimeoutSec: 60, Region: "eu-west-1", CostPerMonth: 32.00, Status: "degraded", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-ingress", Protocol: "HTTPS (TLS 1.3)", ListenerPorts: "443, 8443, 9443", TargetCount: 12, HealthyTargets: 12, RPS: 24600, ActiveConns: 18400, BandwidthGbps: 8.2, TLSVersion: "TLS 1.3", CertDomain: "*.platform.hosting.io", CertExpiry: "2027-02-28", WAFEnabled: true, AccessLogs: true, StickySession: false, IdleTimeoutSec: 60, Region: "eu-central-1", CostPerMonth: 180.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "api-v2-gateway", Protocol: "HTTPS (TLS 1.3)", ListenerPorts: "443", TargetCount: 8, HealthyTargets: 8, RPS: 14200, ActiveConns: 6800, BandwidthGbps: 3.6, TLSVersion: "TLS 1.3", CertDomain: "*.api.hosting.io", CertExpiry: "2027-01-05", WAFEnabled: true, AccessLogs: true, StickySession: false, IdleTimeoutSec: 60, Region: "eu-central-1", CostPerMonth: 120.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "internal-services", Protocol: "HTTP/2", ListenerPorts: "8080, 8081", TargetCount: 16, HealthyTargets: 15, RPS: 8400, ActiveConns: 3200, BandwidthGbps: 1.2, TLSVersion: "mTLS", CertDomain: "internal.hosting.local", CertExpiry: "2026-12-31", WAFEnabled: false, AccessLogs: true, StickySession: false, IdleTimeoutSec: 30, Region: "eu-central-1", CostPerMonth: 95.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "edge-us-west", Protocol: "HTTPS (TLS 1.3)", ListenerPorts: "443", TargetCount: 4, HealthyTargets: 4, RPS: 3600, ActiveConns: 2400, BandwidthGbps: 1.4, TLSVersion: "TLS 1.3", CertDomain: "us.hosting.io", CertExpiry: "2027-04-10", WAFEnabled: true, AccessLogs: true, StickySession: false, IdleTimeoutSec: 60, Region: "us-west-2", CostPerMonth: 65.00, Status: "active", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]ProAppLoadBalancer{},
 }
 
 func (s *proAppLBStoreType) list(slug string) []ProAppLoadBalancer {
@@ -121,7 +107,7 @@ type apiProAppLoadBalancer struct {
 
 type apiProAppLBList struct {
 	LoadBalancers []apiProAppLoadBalancer `json:"load_balancers"`
-	Total         int                    `json:"total"`
+	Total         int                     `json:"total"`
 }
 
 func toAPIProAppLB(lb ProAppLoadBalancer) apiProAppLoadBalancer {

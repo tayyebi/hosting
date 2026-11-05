@@ -32,20 +32,7 @@ type onPremExtensionStoreType struct {
 }
 
 var onPremExtensionStore = &onPremExtensionStoreType{
-	items: map[string][]OnPremExtension{
-		"buyvm": {
-			{ID: newID(), Name: "dc-east-rack-14", Location: "New York DC", Connector: "Arc Agent v3.2", Nodes: 12, CPUCores: 384, MemoryGB: 1536, Latency: "4 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "dc-west-rack-07", Location: "San Jose DC", Connector: "Arc Agent v3.2", Nodes: 8, CPUCores: 256, MemoryGB: 1024, Latency: "18 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "office-lab-cluster", Location: "HQ Lab", Connector: "Arc Agent v3.1", Nodes: 3, CPUCores: 48, MemoryGB: 192, Latency: "2 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "edge-warehouse-eu", Location: "Frankfurt Warehouse", Connector: "Arc Agent v3.0", Nodes: 4, CPUCores: 64, MemoryGB: 256, Latency: "42 ms", SyncStatus: "Pending", Status: "degraded", Updated: "2026-04-12"},
-			{ID: newID(), Name: "legacy-mainframe", Location: "Chicago DC", Connector: "Bridge Adapter v1.4", Nodes: 1, CPUCores: 16, MemoryGB: 128, Latency: "85 ms", SyncStatus: "Stale", Status: "inactive", Updated: "2025-12-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "colo-primary", Location: "Amsterdam Colo", Connector: "Arc Agent v3.2", Nodes: 20, CPUCores: 640, MemoryGB: 2560, Latency: "6 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "branch-office-apac", Location: "Singapore Office", Connector: "Arc Agent v3.2", Nodes: 5, CPUCores: 80, MemoryGB: 320, Latency: "52 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "dev-lab-local", Location: "Berlin Lab", Connector: "Arc Agent v3.1", Nodes: 2, CPUCores: 32, MemoryGB: 128, Latency: "3 ms", SyncStatus: "Synced", Status: "active", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]OnPremExtension{},
 }
 
 func (s *onPremExtensionStoreType) list(slug string) []OnPremExtension {

@@ -37,19 +37,7 @@ type managedPostgresStoreType struct {
 }
 
 var managedPostgresStore = &managedPostgresStoreType{
-	items: map[string][]ManagedPostgres{
-		"buyvm": {
-			{ID: newID(), Name: "app-primary", Version: "16.2", Plan: "Production", VCPUs: 4, MemoryGB: 16, StorageGB: 500, Region: "us-east-1", Host: "pg-app-primary.buyvm.internal", Port: 5432, Replicas: 2, BackupSchedule: "Daily 02:00 UTC", SSLEnforced: true, ConnectionLimit: 200, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "analytics-warehouse", Version: "16.2", Plan: "High-Memory", VCPUs: 8, MemoryGB: 64, StorageGB: 2000, Region: "us-east-1", Host: "pg-analytics.buyvm.internal", Port: 5432, Replicas: 1, BackupSchedule: "Daily 03:00 UTC", SSLEnforced: true, ConnectionLimit: 100, Status: "running", Updated: "2026-04-16"},
-			{ID: newID(), Name: "staging-db", Version: "15.6", Plan: "Starter", VCPUs: 1, MemoryGB: 2, StorageGB: 50, Region: "us-east-1", Host: "pg-staging.buyvm.internal", Port: 5432, Replicas: 0, BackupSchedule: "Weekly Sun 04:00 UTC", SSLEnforced: false, ConnectionLimit: 25, Status: "running", Updated: "2026-04-14"},
-			{ID: newID(), Name: "auth-service", Version: "16.2", Plan: "Standard", VCPUs: 2, MemoryGB: 8, StorageGB: 100, Region: "eu-west-1", Host: "pg-auth.buyvm.internal", Port: 5432, Replicas: 1, BackupSchedule: "Daily 01:00 UTC", SSLEnforced: true, ConnectionLimit: 150, Status: "running", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-core", Version: "16.2", Plan: "Enterprise", VCPUs: 16, MemoryGB: 128, StorageGB: 5000, Region: "eu-central-1", Host: "pg-core.hosting.internal", Port: 5432, Replicas: 3, BackupSchedule: "Hourly", SSLEnforced: true, ConnectionLimit: 500, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "events-store", Version: "16.2", Plan: "Standard", VCPUs: 4, MemoryGB: 16, StorageGB: 1000, Region: "eu-central-1", Host: "pg-events.hosting.internal", Port: 5432, Replicas: 1, BackupSchedule: "Daily 02:30 UTC", SSLEnforced: true, ConnectionLimit: 200, Status: "running", Updated: "2026-04-16"},
-			{ID: newID(), Name: "dev-sandbox", Version: "15.6", Plan: "Starter", VCPUs: 1, MemoryGB: 2, StorageGB: 20, Region: "eu-central-1", Host: "pg-dev.hosting.internal", Port: 5432, Replicas: 0, BackupSchedule: "None", SSLEnforced: false, ConnectionLimit: 10, Status: "stopped", Updated: "2026-04-10"},
-		},
-	},
+	items: map[string][]ManagedPostgres{},
 }
 
 func (s *managedPostgresStoreType) list(slug string) []ManagedPostgres {
@@ -157,13 +145,13 @@ func apiWSDBRelationalPostgresListHandler(w http.ResponseWriter, r *http.Request
 }
 
 type apiCreateManagedPostgresRequest struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Plan    string `json:"plan"`
-	VCPUs   int    `json:"vcpus"`
-	MemoryGB int   `json:"memory_gb"`
-	StorageGB int  `json:"storage_gb"`
-	Region  string `json:"region"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	Plan      string `json:"plan"`
+	VCPUs     int    `json:"vcpus"`
+	MemoryGB  int    `json:"memory_gb"`
+	StorageGB int    `json:"storage_gb"`
+	Region    string `json:"region"`
 }
 
 func apiWSDBRelationalPostgresCreateHandler(w http.ResponseWriter, r *http.Request) {

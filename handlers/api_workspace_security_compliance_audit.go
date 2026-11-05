@@ -29,20 +29,7 @@ type auditLogStoreType struct {
 }
 
 var auditLogStore = &auditLogStoreType{
-	logs: map[string][]AuditLog{
-		"buyvm": {
-			{ID: newID(), Name: "API Access Log", Source: "API Gateway", Retention: "90 days", Format: "JSON", Status: "active", Events7d: "1.2M", Updated: "2026-01-15"},
-			{ID: newID(), Name: "IAM Activity Trail", Source: "IAM Service", Retention: "365 days", Format: "JSON", Status: "active", Events7d: "84k", Updated: "2026-01-20"},
-			{ID: newID(), Name: "Network Flow Logs", Source: "VPC", Retention: "30 days", Format: "CEF", Status: "active", Events7d: "18.5M", Updated: "2026-02-01"},
-			{ID: newID(), Name: "Database Audit Trail", Source: "RDS / Managed DB", Retention: "180 days", Format: "JSON", Status: "active", Events7d: "456k", Updated: "2025-12-10"},
-			{ID: newID(), Name: "Console Login Events", Source: "Auth Service", Retention: "365 days", Format: "JSON", Status: "active", Events7d: "1.2k", Updated: "2026-01-25"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "API Access Log", Source: "API Gateway", Retention: "60 days", Format: "JSON", Status: "active", Events7d: "890k", Updated: "2026-01-18"},
-			{ID: newID(), Name: "Admin Activity Trail", Source: "IAM Service", Retention: "365 days", Format: "JSON", Status: "active", Events7d: "12k", Updated: "2026-02-05"},
-			{ID: newID(), Name: "Storage Access Logs", Source: "Object Storage", Retention: "90 days", Format: "JSON", Status: "active", Events7d: "2.4M", Updated: "2026-01-30"},
-		},
-	},
+	logs: map[string][]AuditLog{},
 }
 
 func (s *auditLogStoreType) list(slug string) []AuditLog {

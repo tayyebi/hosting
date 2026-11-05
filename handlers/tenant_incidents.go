@@ -40,21 +40,7 @@ type incidentStoreType struct {
 }
 
 var incidentStore = &incidentStoreType{
-	incidents: map[string][]TenantIncident{
-		"buyvm": {
-			{ID: newID(), RefNum: "INC-2026-018", Title: "INC-2026-018 — Elevated API Error Rate (5xx)", Severity: "critical", Status: "investigating", Affected: "api-gateway, web-prod-01, web-prod-02", Description: "Elevated 5xx error rate on API gateway. Investigation ongoing.", StartedAt: "2026-04-15T14:07:00Z", Duration: "31m ongoing", Created: "2026-04-15T14:07:00Z", Updated: "2026-04-15T14:38:00Z"},
-			{ID: newID(), RefNum: "INC-2026-017", Title: "INC-2026-017 — Database Connection Pool Exhaustion", Severity: "major", Status: "resolved", Affected: "db-primary, api-gateway", Description: "Connection pool exhausted during peak traffic. Pool size increased.", StartedAt: "2026-04-12T09:14:00Z", ResolvedAt: "2026-04-12T10:01:00Z", Duration: "47 min", IsResolved: true, Created: "2026-04-12T09:14:00Z", Updated: "2026-04-12T10:01:00Z"},
-			{ID: newID(), RefNum: "INC-2026-016", Title: "INC-2026-016 — CDN Edge Cache Stale Responses", Severity: "minor", Status: "resolved", Affected: "cdn-edge-us", Description: "Stale cache responses returned for up to 22 minutes. Cache invalidated.", StartedAt: "2026-04-08T16:41:00Z", ResolvedAt: "2026-04-08T17:03:00Z", Duration: "22 min", IsResolved: true, Created: "2026-04-08T16:41:00Z", Updated: "2026-04-08T17:03:00Z"},
-			{ID: newID(), RefNum: "INC-2026-015", Title: "INC-2026-015 — Total Outage — us-east-1 Datacenter Power Event", Severity: "critical", Status: "resolved", Affected: "All services", Description: "Complete power failure in us-east-1. Failover to us-west-2 completed.", StartedAt: "2026-04-03T02:18:00Z", ResolvedAt: "2026-04-03T03:42:00Z", Duration: "1h 24m", IsResolved: true, Created: "2026-04-03T02:18:00Z", Updated: "2026-04-03T03:42:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), RefNum: "INC-2026-010", Title: "INC-2026-010 — Node Unreachable fra-02", Severity: "minor", Status: "resolved", Affected: "node-fra-02", Description: "Node went offline for maintenance, back online after restart.", StartedAt: "2026-04-10T20:00:00Z", ResolvedAt: "2026-04-10T20:30:00Z", Duration: "30 min", IsResolved: true, Created: "2026-04-10T20:00:00Z", Updated: "2026-04-10T20:30:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), RefNum: "INC-2026-012", Title: "INC-2026-012 — k8s Worker Node Failure", Severity: "major", Status: "investigating", Affected: "k8s-worker-02", Description: "Kubernetes worker node down, pods being rescheduled.", StartedAt: "2026-04-16T22:00:00Z", Duration: "active", Created: "2026-04-16T22:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), RefNum: "INC-2026-011", Title: "INC-2026-011 — Redis Cache Miss Spike", Severity: "minor", Status: "resolved", Affected: "cache-redis-01", Description: "Cache miss rate elevated due to key expiry misconfiguration.", StartedAt: "2026-04-14T11:00:00Z", ResolvedAt: "2026-04-14T11:45:00Z", Duration: "45 min", IsResolved: true, Created: "2026-04-14T11:00:00Z", Updated: "2026-04-14T11:45:00Z"},
-		},
-	},
+	incidents: map[string][]TenantIncident{},
 }
 
 func (s *incidentStoreType) list(slug string) []TenantIncident {

@@ -13,16 +13,16 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type TracingEndpoint struct {
-	ID           string
-	Name         string
-	Backend      string
-	Protocol     string
-	SampleRate   string
-	Services     int
-	SpansPerSec  string
-	Retention    string
-	Status       string
-	Updated      string
+	ID          string
+	Name        string
+	Backend     string
+	Protocol    string
+	SampleRate  string
+	Services    int
+	SpansPerSec string
+	Retention   string
+	Status      string
+	Updated     string
 }
 
 type tracingEndpointStoreType struct {
@@ -31,20 +31,7 @@ type tracingEndpointStoreType struct {
 }
 
 var tracingEndpointStore = &tracingEndpointStoreType{
-	endpoints: map[string][]TracingEndpoint{
-		"buyvm": {
-			{ID: newID(), Name: "Production Tracing", Backend: "Jaeger", Protocol: "OpenTelemetry gRPC", SampleRate: "10%", Services: 48, SpansPerSec: "125,000", Retention: "14 days", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Staging Tracing", Backend: "Jaeger", Protocol: "OpenTelemetry gRPC", SampleRate: "100%", Services: 48, SpansPerSec: "8,200", Retention: "7 days", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Edge Service Mesh", Backend: "Zipkin", Protocol: "B3 propagation", SampleRate: "5%", Services: 12, SpansPerSec: "34,000", Retention: "7 days", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "Payment Flow Tracing", Backend: "Tempo", Protocol: "OpenTelemetry HTTP", SampleRate: "100%", Services: 6, SpansPerSec: "4,500", Retention: "30 days", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Legacy X-Ray", Backend: "AWS X-Ray", Protocol: "X-Ray SDK", SampleRate: "1%", Services: 3, SpansPerSec: "1,200", Retention: "30 days", Status: "deprecated", Updated: "2025-08-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Platform Tracing", Backend: "Tempo", Protocol: "OpenTelemetry gRPC", SampleRate: "15%", Services: 32, SpansPerSec: "85,000", Retention: "14 days", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "API Gateway Traces", Backend: "Tempo", Protocol: "OpenTelemetry HTTP", SampleRate: "50%", Services: 8, SpansPerSec: "22,000", Retention: "7 days", Status: "active", Updated: "2026-04-09"},
-			{ID: newID(), Name: "Database Query Tracing", Backend: "Jaeger", Protocol: "OpenTelemetry gRPC", SampleRate: "5%", Services: 4, SpansPerSec: "6,800", Retention: "7 days", Status: "active", Updated: "2026-04-03"},
-		},
-	},
+	endpoints: map[string][]TracingEndpoint{},
 }
 
 func (s *tracingEndpointStoreType) list(slug string) []TracingEndpoint {

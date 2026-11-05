@@ -13,17 +13,17 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type ArchiveEntry struct {
-	ID          string
-	Name        string
-	Region      string
-	Status      string
-	SourceType  string
-	SourceName  string
-	Size        string
-	ArchivedAt  string
-	ExpiresAt   string
+	ID           string
+	Name         string
+	Region       string
+	Status       string
+	SourceType   string
+	SourceName   string
+	Size         string
+	ArchivedAt   string
+	ExpiresAt    string
 	StorageClass string
-	Encrypted   bool
+	Encrypted    bool
 }
 
 type archiveStoreType struct {
@@ -32,20 +32,7 @@ type archiveStoreType struct {
 }
 
 var archiveStore = &archiveStoreType{
-	archives: map[string][]ArchiveEntry{
-		"buyvm": {
-			{ID: newID(), Name: "db-yearly-2025", Region: "eu-central-1", Status: "stored", SourceType: "snapshot", SourceName: "db-primary-annual-2025", Size: "1.2 TB", ArchivedAt: "2026-01-01T00:00:00Z", ExpiresAt: "2033-01-01T00:00:00Z", StorageClass: "glacier-deep", Encrypted: true},
-			{ID: newID(), Name: "compliance-logs-q4-2025", Region: "eu-central-1", Status: "stored", SourceType: "object-store", SourceName: "audit-logs-bucket", Size: "340 GB", ArchivedAt: "2026-01-15T00:00:00Z", ExpiresAt: "2033-01-15T00:00:00Z", StorageClass: "glacier-deep", Encrypted: true},
-			{ID: newID(), Name: "media-archive-2025", Region: "us-east-1", Status: "stored", SourceType: "block-hdd", SourceName: "media-ingest", Size: "14.8 TB", ArchivedAt: "2026-02-01T00:00:00Z", ExpiresAt: "2031-02-01T00:00:00Z", StorageClass: "glacier", Encrypted: true},
-			{ID: newID(), Name: "app-config-backup-q1", Region: "eu-central-1", Status: "restoring", SourceType: "snapshot", SourceName: "app-config-snap-q1", Size: "8.5 GB", ArchivedAt: "2026-04-01T00:00:00Z", ExpiresAt: "2029-04-01T00:00:00Z", StorageClass: "glacier", Encrypted: false},
-			{ID: newID(), Name: "legal-docs-2024", Region: "eu-central-1", Status: "stored", SourceType: "object-store", SourceName: "legal-documents", Size: "52 GB", ArchivedAt: "2025-06-01T00:00:00Z", ExpiresAt: "2035-06-01T00:00:00Z", StorageClass: "glacier-deep", Encrypted: true},
-		},
-		"hosting": {
-			{ID: newID(), Name: "mongo-yearly-2025", Region: "ap-south-1", Status: "stored", SourceType: "snapshot", SourceName: "mongo-data-annual", Size: "680 GB", ArchivedAt: "2026-01-02T00:00:00Z", ExpiresAt: "2033-01-02T00:00:00Z", StorageClass: "glacier-deep", Encrypted: true},
-			{ID: newID(), Name: "user-uploads-archive-2025", Region: "ap-south-1", Status: "stored", SourceType: "object-store", SourceName: "user-uploads-bucket", Size: "4.2 TB", ArchivedAt: "2026-01-10T00:00:00Z", ExpiresAt: "2031-01-10T00:00:00Z", StorageClass: "glacier", Encrypted: true},
-			{ID: newID(), Name: "analytics-raw-2024", Region: "ap-south-1", Status: "expired", SourceType: "object-store", SourceName: "analytics-raw-bucket", Size: "2.1 TB", ArchivedAt: "2024-12-01T00:00:00Z", ExpiresAt: "2025-12-01T00:00:00Z", StorageClass: "glacier", Encrypted: false},
-		},
-	},
+	archives: map[string][]ArchiveEntry{},
 }
 
 func (s *archiveStoreType) list(slug string) []ArchiveEntry {

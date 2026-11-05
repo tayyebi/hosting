@@ -13,27 +13,27 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type ProCloudWAFPolicy struct {
-	ID              string
-	Name            string
-	Mode            string // "blocking", "detection", "learning"
-	RulesetVersion  string
-	CustomRules     int
-	ManagedRules    int
+	ID               string
+	Name             string
+	Mode             string // "blocking", "detection", "learning"
+	RulesetVersion   string
+	CustomRules      int
+	ManagedRules     int
 	ProtectedDomains string
-	RequestsBlocked int64
-	RequestsAllowed int64
-	ThreatScore     float64
-	OWASPTop10      bool
-	BotProtection   bool
-	RateLimiting    bool
-	RateLimit       int    // requests per second
-	GeoBlocking     string // "none", "CN,RU,KP", etc.
-	IPWhitelist     int
-	IPBlacklist     int
-	Region          string
-	CostPerMonth    float64
-	Status          string // "active", "learning", "disabled"
-	Updated         string
+	RequestsBlocked  int64
+	RequestsAllowed  int64
+	ThreatScore      float64
+	OWASPTop10       bool
+	BotProtection    bool
+	RateLimiting     bool
+	RateLimit        int    // requests per second
+	GeoBlocking      string // "none", "CN,RU,KP", etc.
+	IPWhitelist      int
+	IPBlacklist      int
+	Region           string
+	CostPerMonth     float64
+	Status           string // "active", "learning", "disabled"
+	Updated          string
 }
 
 type proCloudWAFStoreType struct {
@@ -42,19 +42,7 @@ type proCloudWAFStoreType struct {
 }
 
 var proCloudWAFStore = &proCloudWAFStoreType{
-	items: map[string][]ProCloudWAFPolicy{
-		"buyvm": {
-			{ID: newID(), Name: "api-gateway-waf", Mode: "blocking", RulesetVersion: "CRS 4.2.0", CustomRules: 18, ManagedRules: 142, ProtectedDomains: "*.api.company.io", RequestsBlocked: 284000, RequestsAllowed: 42800000, ThreatScore: 2.4, OWASPTop10: true, BotProtection: true, RateLimiting: true, RateLimit: 1000, GeoBlocking: "CN,RU,KP", IPWhitelist: 24, IPBlacklist: 186, Region: "us-east-1", CostPerMonth: 120.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "web-frontend-waf", Mode: "blocking", RulesetVersion: "CRS 4.2.0", CustomRules: 8, ManagedRules: 142, ProtectedDomains: "www.company.io, app.company.io", RequestsBlocked: 96000, RequestsAllowed: 18400000, ThreatScore: 1.8, OWASPTop10: true, BotProtection: true, RateLimiting: true, RateLimit: 500, GeoBlocking: "KP", IPWhitelist: 12, IPBlacklist: 42, Region: "us-east-1", CostPerMonth: 85.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "staging-waf", Mode: "detection", RulesetVersion: "CRS 4.2.0", CustomRules: 4, ManagedRules: 142, ProtectedDomains: "*.staging.company.io", RequestsBlocked: 0, RequestsAllowed: 640000, ThreatScore: 0.6, OWASPTop10: true, BotProtection: false, RateLimiting: false, RateLimit: 0, GeoBlocking: "none", IPWhitelist: 48, IPBlacklist: 0, Region: "us-east-1", CostPerMonth: 25.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "admin-panel-waf", Mode: "blocking", RulesetVersion: "CRS 4.2.0", CustomRules: 24, ManagedRules: 142, ProtectedDomains: "admin.company.io", RequestsBlocked: 42000, RequestsAllowed: 860000, ThreatScore: 4.2, OWASPTop10: true, BotProtection: true, RateLimiting: true, RateLimit: 100, GeoBlocking: "CN,RU,KP,IR", IPWhitelist: 6, IPBlacklist: 320, Region: "us-east-1", CostPerMonth: 45.00, Status: "active", Updated: "2026-04-18"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "global-edge-waf", Mode: "blocking", RulesetVersion: "CRS 4.2.0", CustomRules: 64, ManagedRules: 142, ProtectedDomains: "*.hosting.com", RequestsBlocked: 2400000, RequestsAllowed: 840000000, ThreatScore: 3.6, OWASPTop10: true, BotProtection: true, RateLimiting: true, RateLimit: 10000, GeoBlocking: "KP", IPWhitelist: 128, IPBlacklist: 2400, Region: "eu-central-1", CostPerMonth: 1200.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "api-v2-waf", Mode: "blocking", RulesetVersion: "CRS 4.2.0", CustomRules: 32, ManagedRules: 142, ProtectedDomains: "api-v2.hosting.com", RequestsBlocked: 480000, RequestsAllowed: 120000000, ThreatScore: 2.8, OWASPTop10: true, BotProtection: true, RateLimiting: true, RateLimit: 5000, GeoBlocking: "CN,RU,KP", IPWhitelist: 64, IPBlacklist: 860, Region: "eu-central-1", CostPerMonth: 480.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "new-checkout-waf", Mode: "learning", RulesetVersion: "CRS 4.2.0", CustomRules: 0, ManagedRules: 142, ProtectedDomains: "checkout.hosting.com", RequestsBlocked: 0, RequestsAllowed: 2400000, ThreatScore: 0, OWASPTop10: true, BotProtection: false, RateLimiting: false, RateLimit: 0, GeoBlocking: "none", IPWhitelist: 0, IPBlacklist: 0, Region: "eu-central-1", CostPerMonth: 65.00, Status: "learning", Updated: "2026-04-18"},
-		},
-	},
+	items: map[string][]ProCloudWAFPolicy{},
 }
 
 func (s *proCloudWAFStoreType) list(slug string) []ProCloudWAFPolicy {

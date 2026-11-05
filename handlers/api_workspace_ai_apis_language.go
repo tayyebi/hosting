@@ -33,19 +33,7 @@ type languageAPIStoreType struct {
 }
 
 var languageAPIStore = &languageAPIStoreType{
-	apis: map[string][]LanguageAPI{
-		"buyvm": {
-			{ID: newID(), Name: "sentiment-analyzer-v2", Status: "active", Model: "roberta-large-sentiment", Capability: "sentiment", Version: "v2.1.0", Requests: "3.2M/mo", Latency: "28ms p99", Languages: "en,es,fr,de,pt", Region: "eu-central-1", Endpoint: "sentiment.api.eu-central-1.example.com", APIKey: "vk_prod_****a3f1"},
-			{ID: newID(), Name: "translation-api", Status: "active", Model: "nllb-200-3.3b", Capability: "translation", Version: "v1.0.0", Requests: "1.4M/mo", Latency: "180ms p99", Languages: "200+ languages", Region: "eu-central-1", Endpoint: "translation.api.eu-central-1.example.com", APIKey: "vk_prod_****b7e2"},
-			{ID: newID(), Name: "text-summarizer", Status: "active", Model: "bart-large-cnn", Capability: "summarization", Version: "v1.5.0", Requests: "620K/mo", Latency: "420ms p99", Languages: "en", Region: "us-east-1", Endpoint: "summarizer.api.us-east-1.example.com", APIKey: "vk_prod_****d4c8"},
-			{ID: newID(), Name: "entity-extraction", Status: "active", Model: "spacy-transformer", Capability: "ner", Version: "v3.0.0", Requests: "890K/mo", Latency: "32ms p99", Languages: "en,es,fr,de,ja,zh", Region: "eu-central-1", Endpoint: "ner.api.eu-central-1.example.com", APIKey: "vk_prod_****e9a5"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "review-sentiment", Status: "active", Model: "distilbert-sentiment", Capability: "sentiment", Version: "v1.0.0", Requests: "480K/mo", Latency: "14ms p99", Languages: "en,hi", Region: "ap-south-1", Endpoint: "sentiment.api.ap-south-1.example.com", APIKey: "vk_prod_****c2d6"},
-			{ID: newID(), Name: "doc-translator", Status: "active", Model: "mbart-50", Capability: "translation", Version: "v2.0.0", Requests: "320K/mo", Latency: "240ms p99", Languages: "50 languages", Region: "ap-south-1", Endpoint: "translator.api.ap-south-1.example.com", APIKey: "vk_prod_****f1b3"},
-			{ID: newID(), Name: "faq-answering", Status: "active", Model: "roberta-squad2", Capability: "question-answering", Version: "v1.2.0", Requests: "180K/mo", Latency: "85ms p99", Languages: "en", Region: "ap-south-1", Endpoint: "faq.api.ap-south-1.example.com", APIKey: "vk_prod_****a7e4"},
-		},
-	},
+	apis: map[string][]LanguageAPI{},
 }
 
 func (s *languageAPIStoreType) list(slug string) []LanguageAPI {
@@ -187,9 +175,9 @@ func apiWSAIAPIsLanguageCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Model: model, Capability: capability,
 		Version: "v1.0.0", Requests: "0/mo",
 		Latency: "—", Languages: "en",
-		Region: region,
+		Region:   region,
 		Endpoint: "nlp-" + strings.ReplaceAll(strings.ToLower(name), " ", "-") + ".api." + region + ".example.com",
-		APIKey: "vk_new_****" + newID()[:4],
+		APIKey:   "vk_new_****" + newID()[:4],
 	}
 	languageAPIStore.add(slug, api)
 	apiCreated(w, toAPILanguageAPI(api))

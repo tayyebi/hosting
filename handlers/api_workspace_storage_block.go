@@ -33,20 +33,7 @@ type blockVolumeSSDStoreType struct {
 }
 
 var blockVolumeSSDStore = &blockVolumeSSDStoreType{
-	volumes: map[string][]BlockVolumeSSD{
-		"buyvm": {
-			{ID: newID(), Name: "db-primary-data", Region: "eu-central-1", Status: "attached", Size: "500 GB", IOPS: "16,000", Throughput: "500 MB/s", AttachedTo: "vm-prod-db-01", Encrypted: true},
-			{ID: newID(), Name: "db-primary-wal", Region: "eu-central-1", Status: "attached", Size: "100 GB", IOPS: "32,000", Throughput: "1,000 MB/s", AttachedTo: "vm-prod-db-01", Encrypted: true},
-			{ID: newID(), Name: "app-cache-vol", Region: "us-east-1", Status: "attached", Size: "200 GB", IOPS: "24,000", Throughput: "750 MB/s", AttachedTo: "vm-app-server-03", Encrypted: true},
-			{ID: newID(), Name: "elasticsearch-hot", Region: "eu-central-1", Status: "attached", Size: "1 TB", IOPS: "64,000", Throughput: "1,000 MB/s", AttachedTo: "vm-search-01", Encrypted: true},
-			{ID: newID(), Name: "staging-scratch", Region: "eu-central-1", Status: "available", Size: "50 GB", IOPS: "3,000", Throughput: "125 MB/s", AttachedTo: "", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "mongo-data", Region: "ap-south-1", Status: "attached", Size: "250 GB", IOPS: "12,000", Throughput: "500 MB/s", AttachedTo: "vm-mongo-primary", Encrypted: true},
-			{ID: newID(), Name: "redis-aof", Region: "ap-south-1", Status: "attached", Size: "100 GB", IOPS: "16,000", Throughput: "500 MB/s", AttachedTo: "vm-redis-01", Encrypted: true},
-			{ID: newID(), Name: "temp-migration", Region: "ap-south-1", Status: "available", Size: "200 GB", IOPS: "8,000", Throughput: "250 MB/s", AttachedTo: "", Encrypted: false},
-		},
-	},
+	volumes: map[string][]BlockVolumeSSD{},
 }
 
 func (s *blockVolumeSSDStoreType) list(slug string) []BlockVolumeSSD {
@@ -237,19 +224,7 @@ type blockVolumeHDDStoreType struct {
 }
 
 var blockVolumeHDDStore = &blockVolumeHDDStoreType{
-	volumes: map[string][]BlockVolumeHDD{
-		"buyvm": {
-			{ID: newID(), Name: "archive-storage-01", Region: "eu-central-1", Status: "attached", Size: "4 TB", IOPS: "500", Throughput: "60 MB/s", AttachedTo: "vm-archive-01", Encrypted: false},
-			{ID: newID(), Name: "log-collector-vol", Region: "eu-central-1", Status: "attached", Size: "2 TB", IOPS: "500", Throughput: "60 MB/s", AttachedTo: "vm-logstash-01", Encrypted: false},
-			{ID: newID(), Name: "media-ingest", Region: "us-east-1", Status: "attached", Size: "8 TB", IOPS: "500", Throughput: "90 MB/s", AttachedTo: "vm-media-proc-01", Encrypted: true},
-			{ID: newID(), Name: "cold-data-vault", Region: "eu-central-1", Status: "available", Size: "10 TB", IOPS: "250", Throughput: "40 MB/s", AttachedTo: "", Encrypted: true},
-		},
-		"hosting": {
-			{ID: newID(), Name: "backup-vol-daily", Region: "ap-south-1", Status: "attached", Size: "2 TB", IOPS: "500", Throughput: "60 MB/s", AttachedTo: "vm-backup-srv", Encrypted: true},
-			{ID: newID(), Name: "file-share-data", Region: "ap-south-1", Status: "attached", Size: "1 TB", IOPS: "500", Throughput: "60 MB/s", AttachedTo: "vm-fileserver-01", Encrypted: false},
-			{ID: newID(), Name: "dev-scratch", Region: "ap-south-1", Status: "available", Size: "500 GB", IOPS: "250", Throughput: "40 MB/s", AttachedTo: "", Encrypted: false},
-		},
-	},
+	volumes: map[string][]BlockVolumeHDD{},
 }
 
 func (s *blockVolumeHDDStoreType) list(slug string) []BlockVolumeHDD {

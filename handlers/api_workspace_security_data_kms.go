@@ -29,19 +29,7 @@ type kmsKeyStoreType struct {
 }
 
 var kmsKeyStore = &kmsKeyStoreType{
-	keys: map[string][]KMSKey{
-		"buyvm": {
-			{ID: newID(), Alias: "alias/db-master", Algorithm: "AES-256 symmetric", Rotation: "Auto · 90d", Status: "active", Usage24h: "84k ops", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Alias: "alias/uploads-key", Algorithm: "AES-256 symmetric", Rotation: "Auto · 90d", Status: "active", Usage24h: "42k ops", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), Alias: "alias/backup-key", Algorithm: "AES-256 symmetric", Rotation: "Auto · 365d", Status: "active", Usage24h: "12k ops", Created: "2025-10-15", Region: "eu-central-1"},
-			{ID: newID(), Alias: "alias/asymmetric-signing", Algorithm: "RSA-3072", Rotation: "Manual · 1yr", Status: "active", Usage24h: "146k ops", Created: "2025-11-01", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Alias: "alias/app-master", Algorithm: "AES-256 symmetric", Rotation: "Auto · 90d", Status: "active", Usage24h: "62k ops", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), Alias: "alias/assets-key", Algorithm: "AES-256 symmetric", Rotation: "Auto · 90d", Status: "active", Usage24h: "28k ops", Created: "2025-10-15", Region: "ap-south-1"},
-			{ID: newID(), Alias: "alias/signing-key", Algorithm: "ECDSA P-384", Rotation: "Manual · 6mo", Status: "active", Usage24h: "8k ops", Created: "2025-11-20", Region: "ap-south-1"},
-		},
-	},
+	keys: map[string][]KMSKey{},
 }
 
 func (s *kmsKeyStoreType) list(slug string) []KMSKey {

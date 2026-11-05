@@ -36,23 +36,7 @@ type cdnPopStoreType struct {
 }
 
 var cdnPopStore = &cdnPopStoreType{
-	items: map[string][]CDNPoP{
-		"buyvm": {
-			{ID: newID(), Name: "nyc-edge-01", Location: "New York, US", Region: "us-east-1", Provider: "Tier-1 IX", CacheHitRate: 94.5, BandwidthTB: 12.8, RequestsM: 245.0, AvgLatencyMs: 8, Capacity: "100 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "ams-edge-01", Location: "Amsterdam, NL", Region: "eu-west-1", Provider: "AMS-IX", CacheHitRate: 92.1, BandwidthTB: 8.5, RequestsM: 180.0, AvgLatencyMs: 12, Capacity: "100 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "sin-edge-01", Location: "Singapore, SG", Region: "ap-southeast-1", Provider: "Equinix SG", CacheHitRate: 89.3, BandwidthTB: 4.2, RequestsM: 95.0, AvgLatencyMs: 15, Capacity: "40 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: false, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "lax-edge-01", Location: "Los Angeles, US", Region: "us-west-2", Provider: "CoreSite LA", CacheHitRate: 91.8, BandwidthTB: 6.1, RequestsM: 120.0, AvgLatencyMs: 10, Capacity: "40 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "fra-edge-01", Location: "Frankfurt, DE", Region: "eu-central-1", Provider: "DE-CIX", CacheHitRate: 93.7, BandwidthTB: 9.3, RequestsM: 210.0, AvgLatencyMs: 11, Capacity: "100 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "syd-edge-01", Location: "Sydney, AU", Region: "ap-southeast-2", Provider: "Equinix SY", CacheHitRate: 87.5, BandwidthTB: 2.1, RequestsM: 45.0, AvgLatencyMs: 22, Capacity: "10 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: false, Status: "maintenance", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "lon-pop-01", Location: "London, UK", Region: "eu-west-2", Provider: "LINX", CacheHitRate: 95.2, BandwidthTB: 15.0, RequestsM: 320.0, AvgLatencyMs: 6, Capacity: "100 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "fra-pop-01", Location: "Frankfurt, DE", Region: "eu-central-1", Provider: "DE-CIX", CacheHitRate: 94.8, BandwidthTB: 18.5, RequestsM: 410.0, AvgLatencyMs: 7, Capacity: "200 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "iad-pop-01", Location: "Ashburn, US", Region: "us-east-1", Provider: "Equinix DC", CacheHitRate: 93.0, BandwidthTB: 22.0, RequestsM: 500.0, AvgLatencyMs: 9, Capacity: "200 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "nrt-pop-01", Location: "Tokyo, JP", Region: "ap-northeast-1", Provider: "JPIX", CacheHitRate: 90.5, BandwidthTB: 7.8, RequestsM: 165.0, AvgLatencyMs: 14, Capacity: "40 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: true, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "gru-pop-01", Location: "São Paulo, BR", Region: "sa-east-1", Provider: "IX.br", CacheHitRate: 86.2, BandwidthTB: 3.5, RequestsM: 78.0, AvgLatencyMs: 25, Capacity: "10 Gbps", TLSVersion: "1.3", HTTP2: true, HTTP3: false, Status: "active", Updated: "2026-04-15"},
-		},
-	},
+	items: map[string][]CDNPoP{},
 }
 
 func (s *cdnPopStoreType) list(slug string) []CDNPoP {

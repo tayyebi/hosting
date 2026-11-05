@@ -30,20 +30,7 @@ type buildPipelineStoreType struct {
 }
 
 var buildPipelineStore = &buildPipelineStoreType{
-	pipelines: map[string][]BuildPipeline{
-		"buyvm": {
-			{ID: newID(), Name: "Platform Core CI", Repo: "platform-core", Trigger: "push to main", Runtime: "Docker", Status: "passing", LastRun: "2026-04-16 14:30", Duration: "4m 12s", Updated: "2026-04-16"},
-			{ID: newID(), Name: "API Gateway Build", Repo: "api-gateway", Trigger: "pull request", Runtime: "Node 20", Status: "passing", LastRun: "2026-04-15 09:15", Duration: "2m 48s", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Frontend Build", Repo: "frontend-dashboard", Trigger: "push to main", Runtime: "Node 20", Status: "failing", LastRun: "2026-04-16 16:00", Duration: "1m 33s", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Infra Validation", Repo: "infra-terraform", Trigger: "pull request", Runtime: "Terraform 1.7", Status: "passing", LastRun: "2026-04-10 11:00", Duration: "6m 05s", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Nightly Integration", Repo: "platform-core", Trigger: "schedule (daily)", Runtime: "Docker", Status: "passing", LastRun: "2026-04-17 02:00", Duration: "18m 42s", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Cloud Platform CI", Repo: "cloud-platform", Trigger: "push to main", Runtime: "Docker", Status: "passing", LastRun: "2026-04-14 10:20", Duration: "5m 30s", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Deploy Scripts Lint", Repo: "deploy-scripts", Trigger: "pull request", Runtime: "Python 3.12", Status: "passing", LastRun: "2026-04-08 15:45", Duration: "1m 10s", Updated: "2026-04-08"},
-			{ID: newID(), Name: "Monitoring Build", Repo: "monitoring-stack", Trigger: "push to main", Runtime: "Go 1.22", Status: "passing", LastRun: "2026-03-30 08:00", Duration: "3m 22s", Updated: "2026-03-30"},
-		},
-	},
+	pipelines: map[string][]BuildPipeline{},
 }
 
 func (s *buildPipelineStoreType) list(slug string) []BuildPipeline {

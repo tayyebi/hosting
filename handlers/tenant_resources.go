@@ -36,24 +36,7 @@ type tenantResourceStoreType struct {
 }
 
 var tenantResourceStore = &tenantResourceStoreType{
-	resources: map[string][]TenantResource{
-		"buyvm": {
-			{ID: newID(), Name: "web-prod-01", ResourceType: "VM", Provider: "Proxmox", Region: "us-east", Status: "online", IPAddress: "185.22.153.10", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "db-pg-prod-01", ResourceType: "Database", Provider: "Proxmox", Region: "us-east", Status: "online", IPAddress: "185.22.153.11", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "lb-prod-01", ResourceType: "Load Balancer", Provider: "BuyVM", Region: "us-east", Status: "online", IPAddress: "185.22.153.1", Created: "2026-01-15T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "worker-01", ResourceType: "VM", Provider: "Proxmox", Region: "eu-central", Status: "degraded", IPAddress: "93.115.20.20", Created: "2026-02-01T08:00:00Z", Updated: "2026-04-16T14:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "node-fra-01", ResourceType: "Bare Metal", Provider: "ABRnoc", Region: "eu-central", Status: "online", IPAddress: "93.115.20.44", Created: "2026-01-05T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "node-fra-02", ResourceType: "Bare Metal", Provider: "ABRnoc", Region: "eu-central", Status: "maintenance", IPAddress: "93.115.20.45", Created: "2026-01-05T08:00:00Z", Updated: "2026-04-16T20:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "k8s-master-01", ResourceType: "Kubernetes", Provider: "Hosting", Region: "us-west", Status: "online", IPAddress: "172.16.50.1", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "k8s-worker-01", ResourceType: "VM", Provider: "Hosting", Region: "us-west", Status: "online", IPAddress: "172.16.50.10", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "k8s-worker-02", ResourceType: "VM", Provider: "Hosting", Region: "us-west", Status: "offline", IPAddress: "172.16.50.11", Created: "2026-02-15T08:00:00Z", Updated: "2026-04-16T22:00:00Z"},
-			{ID: newID(), Name: "cache-redis-01", ResourceType: "Cache", Provider: "Hosting", Region: "us-west", Status: "online", IPAddress: "172.16.50.50", Created: "2026-03-01T08:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-		},
-	},
+	resources: map[string][]TenantResource{},
 }
 
 func (s *tenantResourceStoreType) list(slug string) []TenantResource {

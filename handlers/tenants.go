@@ -2,46 +2,31 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"html/template"
+	"log"
 	"net/http"
-	"net/mail"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
-)
+	"time"
 
-var slugRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
+	"platform/db"
+)
 
 type Tenant struct {
 	ID     string
+	DBID   int64
 	Name   string
 	Slug   string
-	Domain string
-	DBID   int64
+	Domain string // optional custom domain, e.g. "app.acme.com"
 }
 
-type tenantsStore struct {
-	mu      sync.RWMutex
-	tenants []Tenant
-}
-
-var buyVMID = newID()
-var abrNOCID = newID()
-var hostingID = newID()
-
-var store = &tenantsStore{
-	tenants: []Tenant{
-		{ID: buyVMID, Name: "BuyVM", Slug: "buyvm", Domain: "buyvm.net"},
-		{ID: abrNOCID, Name: "abrNOC", Slug: "abrnoc", Domain: ""},
-		{ID: hostingID, Name: "Hosting", Slug: "hosting", Domain: "new.hosting.com"},
-	},
-}
-
-// ── Tenant owner store ────────────────────────────────────────
-
+// TenantOwner holds the owner account info for a tenant.
 type TenantOwner struct {
 	Name  string
 	Email string
@@ -49,38 +34,96 @@ type TenantOwner struct {
 
 type ownerStoreType struct {
 	mu     sync.RWMutex
-	owners map[string]*TenantOwner // key: tenant ID
+	owners map[string]*TenantOwner // keyed by tenant ID
 }
 
 var owners = &ownerStoreType{
-	owners: map[string]*TenantOwner{
-		buyVMID:  {Name: "BuyVM Admin", Email: "admin@buyvm.net"},
-		hostingID: {Name: "Hosting Admin", Email: "admin@new.hosting.com"},
-	},
+	owners: map[string]*TenantOwner{},
 }
 
 func (o *ownerStoreType) get(tenantID string) (*TenantOwner, bool) {
+	if Pools != nil {
+		numID, err := strconv.ParseInt(tenantID, 10, 64)
+		if err == nil && numID > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			row, ok, dbErr := db.GetTenantByID(ctx, Pools.Admin, numID)
+			if dbErr == nil && ok && (row.OwnerEmail != "" || row.OwnerName != "") {
+				return &TenantOwner{Name: row.OwnerName, Email: row.OwnerEmail}, true
+			}
+			return nil, false
+		}
+	}
 	o.mu.RLock()
 	defer o.mu.RUnlock()
-	owner, ok := o.owners[tenantID]
-	return owner, ok
+	v, ok := o.owners[tenantID]
+	return v, ok
 }
 
 func (o *ownerStoreType) set(tenantID string, owner TenantOwner) {
+	if Pools != nil {
+		numID, err := strconv.ParseInt(tenantID, 10, 64)
+		if err == nil && numID > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if dbErr := db.SetTenantOwner(ctx, Pools.Admin, numID, owner.Name, owner.Email); dbErr != nil {
+				log.Printf("tenants: SetTenantOwner(%d): %v", numID, dbErr)
+			}
+			return
+		}
+	}
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	o.owners[tenantID] = &owner
 }
 
 func (o *ownerStoreType) all() map[string]*TenantOwner {
+	cp := make(map[string]*TenantOwner)
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		rows, err := db.ListTenants(ctx, Pools.Admin)
+		if err == nil {
+			for _, r := range rows {
+				if r.OwnerEmail != "" || r.OwnerName != "" {
+					cp[strconv.FormatInt(r.ID, 10)] = &TenantOwner{
+						Name:  r.OwnerName,
+						Email: r.OwnerEmail,
+					}
+				}
+			}
+			return cp
+		}
+	}
 	o.mu.RLock()
 	defer o.mu.RUnlock()
-	out := make(map[string]*TenantOwner, len(o.owners))
 	for k, v := range o.owners {
-		cp := *v
-		out[k] = &cp
+		cp[k] = v
 	}
-	return out
+	return cp
+}
+
+// slugRe validates a tenant slug: lowercase alphanumeric + hyphens, 3-63 chars,
+// cannot start or end with a hyphen.
+var slugRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
+
+func isValidEmail(s string) bool {
+	at := strings.IndexByte(s, '@')
+	if at <= 0 || at >= len(s)-3 {
+		return false
+	}
+	domain := s[at+1:]
+	dot := strings.LastIndexByte(domain, '.')
+	return dot > 0 && dot < len(domain)-1 && !strings.ContainsAny(s, " \t\r\n")
+}
+
+type tenantsStore struct {
+	mu      sync.RWMutex
+	tenants []Tenant
+}
+
+var store = &tenantsStore{
+	tenants: nil, // No dummy tenants; backed by PostgreSQL `tenants` when Pools != nil.
 }
 
 func newID() string {
@@ -89,38 +132,92 @@ func newID() string {
 	return hex.EncodeToString(b)
 }
 
-func isValidEmail(s string) bool {
-	_, err := mail.ParseAddress(s)
-	return err == nil && strings.Contains(s, "@")
+func tenantFromRow(r db.TenantRow) Tenant {
+	return Tenant{
+		ID:     strconv.FormatInt(r.ID, 10),
+		DBID:   r.ID,
+		Name:   r.Name,
+		Slug:   r.Slug,
+		Domain: r.Domain,
+	}
 }
 
 func (s *tenantsStore) list() []Tenant {
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		rows, err := db.ListTenants(ctx, Pools.Admin)
+		if err != nil {
+			log.Printf("tenants: db.ListTenants: %v", err)
+			return nil
+		}
+		out := make([]Tenant, 0, len(rows))
+		for _, r := range rows {
+			out = append(out, tenantFromRow(r))
+		}
+		return out
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	out := make([]Tenant, len(s.tenants))
-	copy(out, s.tenants)
-	return out
+	cp := make([]Tenant, len(s.tenants))
+	copy(cp, s.tenants)
+	return cp
 }
 
-func (s *tenantsStore) add(t Tenant) {
+func (s *tenantsStore) add(t Tenant) Tenant {
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		row, err := db.CreateTenant(ctx, Pools.Admin, t.Name, t.Slug, t.Domain)
+		if err != nil {
+			log.Printf("tenants: db.CreateTenant: %v", err)
+			return t
+		}
+		return tenantFromRow(row)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if t.ID == "" {
+		t.ID = newID()
+	}
 	s.tenants = append(s.tenants, t)
+	return t
 }
 
-func (s *tenantsStore) update(t Tenant) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for i, existing := range s.tenants {
-		if existing.ID == t.ID {
-			s.tenants[i] = t
-			return true
+func (s *tenantsStore) update(updated Tenant) {
+	if Pools != nil {
+		numID, err := strconv.ParseInt(updated.ID, 10, 64)
+		if err == nil && numID > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if _, _, dbErr := db.UpdateTenant(ctx, Pools.Admin, numID, updated.Name, updated.Slug, updated.Domain); dbErr != nil {
+				log.Printf("tenants: db.UpdateTenant(%d): %v", numID, dbErr)
+			}
+			return
 		}
 	}
-	return false
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for i, t := range s.tenants {
+		if t.ID == updated.ID {
+			s.tenants[i] = updated
+			return
+		}
+	}
 }
 
 func (s *tenantsStore) delete(id string) {
+	if Pools != nil {
+		numID, err := strconv.ParseInt(id, 10, 64)
+		if err == nil && numID > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if dbErr := db.DeleteTenant(ctx, Pools.Admin, numID); dbErr != nil {
+				log.Printf("tenants: db.DeleteTenant(%d): %v", numID, dbErr)
+			}
+			return
+		}
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for i, t := range s.tenants {
@@ -132,6 +229,25 @@ func (s *tenantsStore) delete(id string) {
 }
 
 func (s *tenantsStore) get(id string) (Tenant, bool) {
+	if Pools != nil {
+		numID, err := strconv.ParseInt(id, 10, 64)
+		if err == nil && numID > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			row, ok, dbErr := db.GetTenantByID(ctx, Pools.Admin, numID)
+			if dbErr == nil && ok {
+				return tenantFromRow(row), true
+			}
+		}
+		// Allow lookup by slug if non-numeric ID passed
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		row, ok, dbErr := db.GetTenantBySlug(ctx, Pools.Admin, id)
+		if dbErr == nil && ok {
+			return tenantFromRow(row), true
+		}
+		return Tenant{}, false
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, t := range s.tenants {
@@ -143,6 +259,15 @@ func (s *tenantsStore) get(id string) (Tenant, bool) {
 }
 
 func (s *tenantsStore) getBySlug(slug string) (Tenant, bool) {
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		row, ok, err := db.GetTenantBySlug(ctx, Pools.Admin, slug)
+		if err == nil && ok {
+			return tenantFromRow(row), true
+		}
+		return Tenant{}, false
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, t := range s.tenants {
@@ -155,6 +280,18 @@ func (s *tenantsStore) getBySlug(slug string) (Tenant, bool) {
 
 // slugExists returns true if another tenant already uses the given slug.
 func (s *tenantsStore) slugExists(slug, excludeID string) bool {
+	if Pools != nil {
+		var exNum int64
+		if excludeID != "" {
+			exNum, _ = strconv.ParseInt(excludeID, 10, 64)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		exists, err := db.TenantSlugExists(ctx, Pools.Admin, slug, exNum)
+		if err == nil {
+			return exists
+		}
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for _, t := range s.tenants {
@@ -168,13 +305,11 @@ func (s *tenantsStore) slugExists(slug, excludeID string) bool {
 // ── page data ────────────────────────────────────────────────
 
 type tenantsInnerData struct {
-	Tenants    []Tenant
-	Owners     map[string]*TenantOwner
-	FormError  string
-	EditTenant *Tenant
-	// OwnerModal: tenant being targeted for add-owner action
+	Tenants     []Tenant
+	Owners      map[string]*TenantOwner
+	FormError   string
+	EditTenant  *Tenant
 	OwnerTenant *Tenant
-	// ResetResult: temp password shown after reset
 	ResetResult string
 }
 
@@ -183,12 +318,11 @@ func renderTenantsPage(w http.ResponseWriter, r *http.Request, formErr string, e
 	user, _ := getSession(r)
 
 	data := tenantsInnerData{
-		Tenants:   store.list(),
-		Owners:    owners.all(),
-		FormError: formErr,
+		Tenants:    store.list(),
+		Owners:     owners.all(),
+		FormError:  formErr,
 		EditTenant: editTenant,
 	}
-	// extra[0] = *Tenant (ownerTenant), extra[1] = string (resetResult)
 	if len(extra) > 0 {
 		if t, ok := extra[0].(*Tenant); ok {
 			data.OwnerTenant = t
@@ -200,7 +334,6 @@ func renderTenantsPage(w http.ResponseWriter, r *http.Request, formErr string, e
 		}
 	}
 
-	// Step 1: render the tenant-specific inner content to a buffer.
 	innerTmpl, err := template.ParseFiles(filepath.Join("templates", "sysadmin", "tenants.html"))
 	if err != nil {
 		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
@@ -212,7 +345,6 @@ func renderTenantsPage(w http.ResponseWriter, r *http.Request, formErr string, e
 		return
 	}
 
-	// Step 2: render the shell with the pre-built content.
 	shellPaths := []string{
 		filepath.Join("templates", "sysadmin", "base.html"),
 		filepath.Join("templates", "sysadmin", "shell.html"),
@@ -323,7 +455,6 @@ func tenantsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 }
 
-// tenantsOwnerModalHandler shows the add-owner modal for a tenant.
 func tenantsOwnerModalHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	t, ok := store.get(id)
@@ -334,7 +465,6 @@ func tenantsOwnerModalHandler(w http.ResponseWriter, r *http.Request) {
 	renderTenantsPage(w, r, "", nil, &t)
 }
 
-// tenantsAddOwnerHandler creates or replaces the owner for a tenant.
 func tenantsAddOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if _, ok := store.get(id); !ok {
@@ -356,17 +486,22 @@ func tenantsAddOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 }
 
-// tenantsResetOwnerPasswordHandler generates a mock temporary password.
 func tenantsResetOwnerPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if _, ok := store.get(id); !ok {
 		http.NotFound(w, r)
 		return
 	}
-	// Generate a mock temporary password (8 random hex chars).
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)
-	tmpPw := "Tmp-" + hex.EncodeToString(b)
+	tmpPw := "Tmp1" + hex.EncodeToString(b)
+	if o, hasOwner := owners.get(id); hasOwner && o.Email != "" && Pools != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		if _, err := db.SetUserPasswordByEmail(ctx, Pools.Admin, o.Email, o.Name, "user", tmpPw); err != nil {
+			log.Printf("tenants: reset owner password: %v", err)
+		}
+	}
 	renderTenantsPage(w, r, "", nil, nil, tmpPw)
 }
 

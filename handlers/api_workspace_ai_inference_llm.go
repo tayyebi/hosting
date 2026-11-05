@@ -39,20 +39,7 @@ type llmEndpointStoreType struct {
 }
 
 var llmEndpointStore = &llmEndpointStoreType{
-	items: map[string][]LLMEndpoint{
-		"buyvm": {
-			{ID: newID(), Name: "llama3-70b-prod", Model: "Meta-Llama-3.1-70B-Instruct", ModelFormat: "SafeTensors", GPUType: "A100 80GB", GPUCount: 2, ContextWindow: 131072, MaxTokens: 4096, QuantBits: 16, ReplicasCurrent: 2, ReplicasMax: 8, RPM: 420, AvgLatencyMs: 180, CostPerHour: 4.80, Region: "us-east-1", ScaleToZero: false, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "mistral-7b-chat", Model: "Mistral-7B-Instruct-v0.3", ModelFormat: "GGUF Q5_K_M", GPUType: "L4 24GB", GPUCount: 1, ContextWindow: 32768, MaxTokens: 2048, QuantBits: 5, ReplicasCurrent: 1, ReplicasMax: 4, RPM: 850, AvgLatencyMs: 65, CostPerHour: 0.95, Region: "us-east-1", ScaleToZero: true, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "codellama-34b", Model: "CodeLlama-34B-Instruct", ModelFormat: "SafeTensors", GPUType: "A100 40GB", GPUCount: 1, ContextWindow: 16384, MaxTokens: 4096, QuantBits: 16, ReplicasCurrent: 0, ReplicasMax: 2, RPM: 0, AvgLatencyMs: 0, CostPerHour: 0, Region: "eu-west-1", ScaleToZero: true, Status: "scaled_to_zero", Updated: "2026-04-16"},
-			{ID: newID(), Name: "phi3-mini-staging", Model: "Phi-3-mini-128k-instruct", ModelFormat: "GGUF Q4_K_M", GPUType: "T4 16GB", GPUCount: 1, ContextWindow: 131072, MaxTokens: 2048, QuantBits: 4, ReplicasCurrent: 1, ReplicasMax: 1, RPM: 120, AvgLatencyMs: 45, CostPerHour: 0.35, Region: "us-east-1", ScaleToZero: true, Status: "serving", Updated: "2026-04-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "qwen2-72b-api", Model: "Qwen2-72B-Instruct", ModelFormat: "SafeTensors", GPUType: "A100 80GB", GPUCount: 4, ContextWindow: 131072, MaxTokens: 8192, QuantBits: 16, ReplicasCurrent: 3, ReplicasMax: 12, RPM: 1200, AvgLatencyMs: 210, CostPerHour: 9.60, Region: "us-west-2", ScaleToZero: false, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "llama3-8b-edge", Model: "Meta-Llama-3.1-8B-Instruct", ModelFormat: "GGUF Q4_K_M", GPUType: "L4 24GB", GPUCount: 1, ContextWindow: 131072, MaxTokens: 4096, QuantBits: 4, ReplicasCurrent: 2, ReplicasMax: 6, RPM: 1800, AvgLatencyMs: 38, CostPerHour: 0.95, Region: "eu-central-1", ScaleToZero: true, Status: "serving", Updated: "2026-04-17"},
-			{ID: newID(), Name: "embed-large", Model: "bge-large-en-v1.5", ModelFormat: "SafeTensors", GPUType: "T4 16GB", GPUCount: 1, ContextWindow: 512, MaxTokens: 0, QuantBits: 16, ReplicasCurrent: 1, ReplicasMax: 4, RPM: 5000, AvgLatencyMs: 12, CostPerHour: 0.35, Region: "us-west-2", ScaleToZero: true, Status: "serving", Updated: "2026-04-16"},
-			{ID: newID(), Name: "whisper-v3-large", Model: "whisper-large-v3", ModelFormat: "SafeTensors", GPUType: "A10G 24GB", GPUCount: 1, ContextWindow: 0, MaxTokens: 0, QuantBits: 16, ReplicasCurrent: 0, ReplicasMax: 2, RPM: 0, AvgLatencyMs: 0, CostPerHour: 0, Region: "us-east-1", ScaleToZero: true, Status: "scaled_to_zero", Updated: "2026-04-14"},
-		},
-	},
+	items: map[string][]LLMEndpoint{},
 }
 
 func (s *llmEndpointStoreType) list(slug string) []LLMEndpoint {

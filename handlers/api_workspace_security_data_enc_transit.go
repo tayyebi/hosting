@@ -29,19 +29,7 @@ type encTransitStoreType struct {
 }
 
 var encTransitStore = &encTransitStoreType{
-	endpoints: map[string][]EncTransitEndpoint{
-		"buyvm": {
-			{ID: newID(), Name: "api.acme.io", Protocol: "TLS 1.3", Cipher: "TLS_AES_256_GCM_SHA384", Grade: "A+", Expires: "89d", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "acme.io", Protocol: "TLS 1.3", Cipher: "TLS_AES_256_GCM_SHA384", Grade: "A+", Expires: "89d", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "internal-grpc.svc", Protocol: "mTLS 1.3", Cipher: "TLS_AES_128_GCM_SHA256", Grade: "A+", Expires: "auto-rotates", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), Name: "admin.acme.io", Protocol: "TLS 1.3", Cipher: "TLS_CHACHA20_POLY1305", Grade: "A+", Expires: "82d", Created: "2025-10-15", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app.hosting.io", Protocol: "TLS 1.3", Cipher: "TLS_AES_256_GCM_SHA384", Grade: "A+", Expires: "142d", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), Name: "api.hosting.io", Protocol: "TLS 1.3", Cipher: "TLS_AES_256_GCM_SHA384", Grade: "A+", Expires: "142d", Created: "2025-10-01", Region: "ap-south-1"},
-			{ID: newID(), Name: "mesh.hosting.internal", Protocol: "mTLS 1.3", Cipher: "TLS_AES_128_GCM_SHA256", Grade: "A+", Expires: "auto-rotates", Created: "2025-10-15", Region: "ap-south-1"},
-		},
-	},
+	endpoints: map[string][]EncTransitEndpoint{},
 }
 
 func (s *encTransitStoreType) list(slug string) []EncTransitEndpoint {

@@ -13,18 +13,18 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type InferenceEndpoint struct {
-	ID         string
-	Name       string
-	Status     string
-	Model      string
-	Framework  string
-	Instance   string
-	Replicas   int
-	Latency    string
-	RPS        string
-	Region     string
-	Endpoint   string
-	AutoScale  bool
+	ID        string
+	Name      string
+	Status    string
+	Model     string
+	Framework string
+	Instance  string
+	Replicas  int
+	Latency   string
+	RPS       string
+	Region    string
+	Endpoint  string
+	AutoScale bool
 }
 
 type inferenceEndpointStoreType struct {
@@ -33,20 +33,7 @@ type inferenceEndpointStoreType struct {
 }
 
 var inferenceEndpointStore = &inferenceEndpointStoreType{
-	endpoints: map[string][]InferenceEndpoint{
-		"buyvm": {
-			{ID: newID(), Name: "chatbot-prod", Status: "running", Model: "ft:support-chatbot-v3", Framework: "vLLM", Instance: "gpu.a100.1x", Replicas: 3, Latency: "124ms p99", RPS: "420", Region: "eu-central-1", Endpoint: "chatbot-prod.inf.eu-central-1.example.com", AutoScale: true},
-			{ID: newID(), Name: "product-classifier-api", Status: "running", Model: "ft:product-classifier", Framework: "TorchServe", Instance: "gpu.t4.1x", Replicas: 2, Latency: "18ms p99", RPS: "2,800", Region: "eu-central-1", Endpoint: "product-classifier.inf.eu-central-1.example.com", AutoScale: true},
-			{ID: newID(), Name: "embedding-service", Status: "running", Model: "e5-large-v2", Framework: "Triton", Instance: "gpu.t4.1x", Replicas: 4, Latency: "8ms p99", RPS: "12,000", Region: "us-east-1", Endpoint: "embeddings.inf.us-east-1.example.com", AutoScale: true},
-			{ID: newID(), Name: "image-gen-api", Status: "running", Model: "sdxl-1.0", Framework: "vLLM", Instance: "gpu.a100.1x", Replicas: 2, Latency: "3.2s p99", RPS: "45", Region: "eu-central-1", Endpoint: "image-gen.inf.eu-central-1.example.com", AutoScale: false},
-			{ID: newID(), Name: "staging-llm", Status: "stopped", Model: "mistral-7b", Framework: "vLLM", Instance: "gpu.t4.1x", Replicas: 0, Latency: "—", RPS: "0", Region: "eu-central-1", Endpoint: "staging-llm.inf.eu-central-1.example.com", AutoScale: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "intent-classifier", Status: "running", Model: "ft:customer-intent", Framework: "TorchServe", Instance: "gpu.t4.1x", Replicas: 2, Latency: "22ms p99", RPS: "1,800", Region: "ap-south-1", Endpoint: "intent.inf.ap-south-1.example.com", AutoScale: true},
-			{ID: newID(), Name: "summarizer-api", Status: "running", Model: "ft:doc-summarizer", Framework: "vLLM", Instance: "gpu.a10g.1x", Replicas: 1, Latency: "840ms p99", RPS: "120", Region: "ap-south-1", Endpoint: "summarizer.inf.ap-south-1.example.com", AutoScale: true},
-			{ID: newID(), Name: "ner-service", Status: "running", Model: "ft:ner-custom", Framework: "TorchServe", Instance: "cpu.c6i.2xl", Replicas: 3, Latency: "12ms p99", RPS: "4,200", Region: "ap-south-1", Endpoint: "ner.inf.ap-south-1.example.com", AutoScale: true},
-		},
-	},
+	endpoints: map[string][]InferenceEndpoint{},
 }
 
 func (s *inferenceEndpointStoreType) list(slug string) []InferenceEndpoint {
@@ -200,8 +187,8 @@ func apiWSAIHostInferenceCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Model: model, Framework: framework,
 		Instance: instance, Replicas: replicas,
 		Latency: "—", RPS: "0",
-		Region: region,
-		Endpoint: name + ".inf." + region + ".example.com",
+		Region:    region,
+		Endpoint:  name + ".inf." + region + ".example.com",
 		AutoScale: req.AutoScale,
 	}
 	inferenceEndpointStore.add(slug, ep)
@@ -240,18 +227,18 @@ func apiWSAIHostInferenceDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type BatchInference struct {
-	ID        string
-	Name      string
-	Status    string
-	Model     string
-	InputPath string
+	ID         string
+	Name       string
+	Status     string
+	Model      string
+	InputPath  string
 	OutputPath string
-	Records   string
-	Processed string
-	Progress  string
-	Runtime   string
-	Cost      string
-	Region    string
+	Records    string
+	Processed  string
+	Progress   string
+	Runtime    string
+	Cost       string
+	Region     string
 }
 
 type batchInferenceStoreType struct {
@@ -260,18 +247,7 @@ type batchInferenceStoreType struct {
 }
 
 var batchInferenceStore = &batchInferenceStoreType{
-	jobs: map[string][]BatchInference{
-		"buyvm": {
-			{ID: newID(), Name: "product-embeddings-full", Status: "completed", Model: "e5-large-v2", InputPath: "s3://ml-data/products.jsonl", OutputPath: "s3://ml-data/embeddings/", Records: "890,000", Processed: "890,000", Progress: "100%", Runtime: "2h 14m", Cost: "$42", Region: "eu-central-1"},
-			{ID: newID(), Name: "sentiment-bulk-2026q1", Status: "running", Model: "ft:sentiment-analyzer-v2", InputPath: "s3://ml-data/reviews-q1.jsonl", OutputPath: "s3://ml-data/sentiment-q1/", Records: "1,240,000", Processed: "820,000", Progress: "66%", Runtime: "3h 40m", Cost: "$86", Region: "eu-central-1"},
-			{ID: newID(), Name: "image-classification-batch", Status: "completed", Model: "resnet-50", InputPath: "s3://ml-data/images/", OutputPath: "s3://ml-data/labels/", Records: "2,400,000", Processed: "2,400,000", Progress: "100%", Runtime: "5h 20m", Cost: "$124", Region: "us-east-1"},
-			{ID: newID(), Name: "doc-summarization-weekly", Status: "queued", Model: "ft:doc-summarizer", InputPath: "s3://ml-data/docs-week16.jsonl", OutputPath: "s3://ml-data/summaries-w16/", Records: "18,000", Processed: "0", Progress: "0%", Runtime: "—", Cost: "$0", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "intent-classification-export", Status: "completed", Model: "ft:customer-intent", InputPath: "s3://ml-data/chats-march.jsonl", OutputPath: "s3://ml-data/intents-march/", Records: "340,000", Processed: "340,000", Progress: "100%", Runtime: "48m", Cost: "$18", Region: "ap-south-1"},
-			{ID: newID(), Name: "ner-bulk-extract", Status: "running", Model: "ft:ner-custom", InputPath: "s3://ml-data/contracts.jsonl", OutputPath: "s3://ml-data/entities/", Records: "42,000", Processed: "28,000", Progress: "67%", Runtime: "1h 12m", Cost: "$8", Region: "ap-south-1"},
-		},
-	},
+	jobs: map[string][]BatchInference{},
 }
 
 func (s *batchInferenceStoreType) list(slug string) []BatchInference {
@@ -457,16 +433,16 @@ func apiWSAIHostBatchDeleteHandler(w http.ResponseWriter, r *http.Request) {
 // ════════════════════════════════════════════════════════════════
 
 type EdgeDeployment struct {
-	ID        string
-	Name      string
-	Status    string
-	Model     string
-	Runtime   string
-	Target    string
-	Devices   int
-	Version   string
-	Latency   string
-	Region    string
+	ID      string
+	Name    string
+	Status  string
+	Model   string
+	Runtime string
+	Target  string
+	Devices int
+	Version string
+	Latency string
+	Region  string
 }
 
 type edgeDeploymentStoreType struct {
@@ -475,19 +451,7 @@ type edgeDeploymentStoreType struct {
 }
 
 var edgeDeploymentStore = &edgeDeploymentStoreType{
-	deployments: map[string][]EdgeDeployment{
-		"buyvm": {
-			{ID: newID(), Name: "anomaly-detector-factory", Status: "deployed", Model: "anomaly-det-v2-quantized", Runtime: "ONNX Runtime", Target: "Jetson Orin", Devices: 24, Version: "v2.1.0", Latency: "4ms", Region: "eu-central-1"},
-			{ID: newID(), Name: "quality-inspector", Status: "deployed", Model: "yolov8-custom-int8", Runtime: "TensorRT", Target: "Jetson AGX", Devices: 8, Version: "v1.4.0", Latency: "12ms", Region: "eu-central-1"},
-			{ID: newID(), Name: "voice-assistant-edge", Status: "deployed", Model: "whisper-tiny-quantized", Runtime: "ONNX Runtime", Target: "Coral Edge TPU", Devices: 120, Version: "v3.0.1", Latency: "180ms", Region: "global"},
-			{ID: newID(), Name: "retail-counter", Status: "updating", Model: "mobilenet-v3-int8", Runtime: "TFLite", Target: "Raspberry Pi 5", Devices: 42, Version: "v1.1.0 → v1.2.0", Latency: "45ms", Region: "us-east-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "pos-product-scan", Status: "deployed", Model: "efficientnet-lite-int8", Runtime: "TFLite", Target: "Android Tablet", Devices: 180, Version: "v2.0.0", Latency: "28ms", Region: "ap-south-1"},
-			{ID: newID(), Name: "occupancy-sensor", Status: "deployed", Model: "person-det-tiny", Runtime: "ONNX Runtime", Target: "Jetson Nano", Devices: 35, Version: "v1.3.0", Latency: "8ms", Region: "ap-south-1"},
-			{ID: newID(), Name: "language-id-edge", Status: "deployed", Model: "lid-micro-quantized", Runtime: "TFLite", Target: "ESP32-S3", Devices: 500, Version: "v1.0.0", Latency: "15ms", Region: "global"},
-		},
-	},
+	deployments: map[string][]EdgeDeployment{},
 }
 
 func (s *edgeDeploymentStoreType) list(slug string) []EdgeDeployment {

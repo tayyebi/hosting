@@ -25,7 +25,7 @@ type ProCICDPipeline struct {
 	LastRunDuration int    // seconds
 	TotalRuns       int
 	SuccessRate     float64
-	AvgDuration     int    // seconds
+	AvgDuration     int // seconds
 	Artifacts       bool
 	CacheEnabled    bool
 	AutoDeploy      bool
@@ -42,21 +42,7 @@ type proCICDPipelineStoreType struct {
 }
 
 var proCICDPipelineStore = &proCICDPipelineStoreType{
-	items: map[string][]ProCICDPipeline{
-		"buyvm": {
-			{ID: newID(), Name: "api-service-deploy", Repository: "github.com/company/api-service", Branch: "main", Trigger: "push", BuildTool: "Docker", Runtime: "Go 1.22", StageCount: 5, LastRunStatus: "success", LastRunDuration: 184, TotalRuns: 2840, SuccessRate: 96.4, AvgDuration: 192, Artifacts: true, CacheEnabled: true, AutoDeploy: true, DeployTarget: "k8s-prod", Region: "us-east-1", CostPerMonth: 42.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "web-frontend-build", Repository: "github.com/company/web-app", Branch: "main", Trigger: "push", BuildTool: "Docker", Runtime: "Node 20", StageCount: 4, LastRunStatus: "success", LastRunDuration: 126, TotalRuns: 4200, SuccessRate: 98.2, AvgDuration: 134, Artifacts: true, CacheEnabled: true, AutoDeploy: true, DeployTarget: "static-cdn", Region: "us-east-1", CostPerMonth: 38.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "ml-model-training", Repository: "github.com/company/ml-pipeline", Branch: "main", Trigger: "schedule", BuildTool: "Docker", Runtime: "Python 3.12", StageCount: 7, LastRunStatus: "running", LastRunDuration: 0, TotalRuns: 186, SuccessRate: 88.4, AvgDuration: 2400, Artifacts: true, CacheEnabled: true, AutoDeploy: false, DeployTarget: "—", Region: "us-east-1", CostPerMonth: 120.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "database-migrations", Repository: "github.com/company/db-schemas", Branch: "main", Trigger: "manual", BuildTool: "Buildpack", Runtime: "Go 1.22", StageCount: 3, LastRunStatus: "success", LastRunDuration: 48, TotalRuns: 420, SuccessRate: 99.5, AvgDuration: 52, Artifacts: false, CacheEnabled: false, AutoDeploy: false, DeployTarget: "—", Region: "us-east-1", CostPerMonth: 8.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "mobile-app-release", Repository: "github.com/company/mobile-app", Branch: "release/*", Trigger: "tag", BuildTool: "Buildpack", Runtime: "Node 20", StageCount: 6, LastRunStatus: "failed", LastRunDuration: 340, TotalRuns: 84, SuccessRate: 82.1, AvgDuration: 480, Artifacts: true, CacheEnabled: true, AutoDeploy: false, DeployTarget: "—", Region: "us-east-1", CostPerMonth: 24.00, Status: "failing", Updated: "2026-04-18"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-monorepo", Repository: "github.com/hosting/platform", Branch: "main", Trigger: "push", BuildTool: "Bazel", Runtime: "Java 21", StageCount: 8, LastRunStatus: "success", LastRunDuration: 420, TotalRuns: 12600, SuccessRate: 94.8, AvgDuration: 460, Artifacts: true, CacheEnabled: true, AutoDeploy: true, DeployTarget: "k8s-prod", Region: "eu-central-1", CostPerMonth: 480.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "checkout-service", Repository: "github.com/hosting/checkout", Branch: "main", Trigger: "push", BuildTool: "Docker", Runtime: "Go 1.22", StageCount: 5, LastRunStatus: "success", LastRunDuration: 96, TotalRuns: 3200, SuccessRate: 97.6, AvgDuration: 108, Artifacts: true, CacheEnabled: true, AutoDeploy: true, DeployTarget: "k8s-prod", Region: "eu-central-1", CostPerMonth: 64.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "infra-terraform", Repository: "github.com/hosting/infra", Branch: "main", Trigger: "merge_request", BuildTool: "Docker", Runtime: "Go 1.22", StageCount: 4, LastRunStatus: "success", LastRunDuration: 180, TotalRuns: 860, SuccessRate: 95.2, AvgDuration: 200, Artifacts: false, CacheEnabled: true, AutoDeploy: false, DeployTarget: "—", Region: "eu-central-1", CostPerMonth: 32.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "docs-site-publish", Repository: "github.com/hosting/docs", Branch: "main", Trigger: "push", BuildTool: "Buildpack", Runtime: "Node 20", StageCount: 3, LastRunStatus: "success", LastRunDuration: 64, TotalRuns: 1800, SuccessRate: 99.8, AvgDuration: 72, Artifacts: true, CacheEnabled: true, AutoDeploy: true, DeployTarget: "static-cdn", Region: "eu-central-1", CostPerMonth: 12.00, Status: "active", Updated: "2026-04-18"},
-		},
-	},
+	items: map[string][]ProCICDPipeline{},
 }
 
 func (s *proCICDPipelineStoreType) list(slug string) []ProCICDPipeline {
@@ -173,15 +159,15 @@ func apiWSDevOpsCICDPipelineListHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 type apiCreateProCICDPipelineRequest struct {
-	Name       string `json:"name"`
-	Repository string `json:"repository"`
-	Branch     string `json:"branch"`
-	Trigger    string `json:"trigger"`
-	BuildTool  string `json:"build_tool"`
-	Runtime    string `json:"runtime"`
-	AutoDeploy bool   `json:"auto_deploy"`
+	Name         string `json:"name"`
+	Repository   string `json:"repository"`
+	Branch       string `json:"branch"`
+	Trigger      string `json:"trigger"`
+	BuildTool    string `json:"build_tool"`
+	Runtime      string `json:"runtime"`
+	AutoDeploy   bool   `json:"auto_deploy"`
 	DeployTarget string `json:"deploy_target"`
-	Region     string `json:"region"`
+	Region       string `json:"region"`
 }
 
 func apiWSDevOpsCICDPipelineCreateHandler(w http.ResponseWriter, r *http.Request) {

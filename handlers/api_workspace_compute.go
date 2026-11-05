@@ -60,19 +60,7 @@ type generalVMStoreType struct {
 }
 
 var generalVMStore = &generalVMStoreType{
-	vms: map[string][]GeneralVM{
-		"buyvm": {
-			{ID: newID(), Name: "api-prod-01", InstID: "i-0a1b2c3d4e5f6g7h8", Type: "m5.xlarge", Region: "eu-central-1", Status: "running", CPUPct: 62, MemUsed: "5.2", MemTotal: "8"},
-			{ID: newID(), Name: "worker-02", InstID: "i-0b2c3d4e5f6g7h8i9", Type: "c5.2xlarge", Region: "eu-central-1", Status: "running", CPUPct: 87, MemUsed: "14.1", MemTotal: "16"},
-			{ID: newID(), Name: "db-replica-01", InstID: "i-0c3d4e5f6g7h8i9j0", Type: "r5.large", Region: "us-east-1", Status: "running", CPUPct: 34, MemUsed: "8.4", MemTotal: "16"},
-			{ID: newID(), Name: "staging-box", InstID: "i-0d4e5f6g7h8i9j0k1", Type: "t3.medium", Region: "ap-southeast-1", Status: "rebooting", CPUPct: 12, MemUsed: "1.2", MemTotal: "4"},
-			{ID: newID(), Name: "bastion-eu", InstID: "i-0e5f6g7h8i9j0k1l2", Type: "t3.small", Region: "eu-west-1", Status: "stopped", CPUPct: 0, MemUsed: "0", MemTotal: "2"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "web-front-01", InstID: "i-1a2b3c4d5e", Type: "m5.large", Region: "us-east-1", Status: "running", CPUPct: 45, MemUsed: "5.8", MemTotal: "8"},
-			{ID: newID(), Name: "batch-runner", InstID: "i-2b3c4d5e6f", Type: "c5.xlarge", Region: "us-east-1", Status: "running", CPUPct: 71, MemUsed: "6.2", MemTotal: "8"},
-		},
-	},
+	vms: map[string][]GeneralVM{},
 }
 
 func (s *generalVMStoreType) list(slug string) []GeneralVM {
@@ -240,15 +228,15 @@ func apiWSComputeVMsGeneralDeleteHandler(w http.ResponseWriter, r *http.Request)
 // ═══════════════════════════════════════════════════════════════
 
 type GPUVM struct {
-	ID       string
-	Name     string
-	InstID   string
-	GPU      string
-	Type     string
-	Region   string
-	Status   string
-	GPUPct   int
-	VRAMUsed string
+	ID        string
+	Name      string
+	InstID    string
+	GPU       string
+	Type      string
+	Region    string
+	Status    string
+	GPUPct    int
+	VRAMUsed  string
 	VRAMTotal string
 }
 
@@ -258,17 +246,7 @@ type gpuVMStoreType struct {
 }
 
 var gpuVMStore = &gpuVMStoreType{
-	vms: map[string][]GPUVM{
-		"buyvm": {
-			{ID: newID(), Name: "ml-train-01", InstID: "i-0a1b2c3d", GPU: "1x A100 80GB", Type: "g4.xlarge", Region: "us-east-1", Status: "running", GPUPct: 94, VRAMUsed: "76", VRAMTotal: "80"},
-			{ID: newID(), Name: "ml-train-02", InstID: "i-0b2c3d4e", GPU: "8x H100 80GB", Type: "g4.16xlarge", Region: "us-east-1", Status: "running", GPUPct: 88, VRAMUsed: "612", VRAMTotal: "640"},
-			{ID: newID(), Name: "inference-01", InstID: "i-0c3d4e5f", GPU: "1x L40S 48GB", Type: "g6.xlarge", Region: "eu-central-1", Status: "running", GPUPct: 62, VRAMUsed: "32", VRAMTotal: "48"},
-			{ID: newID(), Name: "notebook-jane", InstID: "i-0d4e5f6g", GPU: "1x T4 16GB", Type: "g4.large", Region: "eu-central-1", Status: "idle", GPUPct: 2, VRAMUsed: "0.4", VRAMTotal: "16"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "render-node-01", InstID: "i-3c4d5e6f", GPU: "1x A100 40GB", Type: "g4.xlarge", Region: "us-east-1", Status: "running", GPUPct: 78, VRAMUsed: "34", VRAMTotal: "40"},
-		},
-	},
+	vms: map[string][]GPUVM{},
 }
 
 func (s *gpuVMStoreType) list(slug string) []GPUVM {
@@ -457,18 +435,7 @@ type spotVMStoreType struct {
 }
 
 var spotVMStore = &spotVMStoreType{
-	vms: map[string][]SpotVM{
-		"buyvm": {
-			{ID: newID(), Name: "worker-spot-01", InstID: "i-0sp1", Pool: "c5.large pool", Bid: "$0.018", Region: "us-east-1a", Status: "running", UpSince: "3d 4h"},
-			{ID: newID(), Name: "worker-spot-02", InstID: "i-0sp2", Pool: "c5.large pool", Bid: "$0.018", Region: "us-east-1b", Status: "running", UpSince: "12h"},
-			{ID: newID(), Name: "etl-spot-batch", InstID: "i-0sp3", Pool: "m5.xlarge pool", Bid: "$0.062", Region: "eu-central-1", Status: "running", UpSince: "2h"},
-			{ID: newID(), Name: "worker-spot-03", InstID: "i-0sp4", Pool: "c5.large pool", Bid: "$0.018", Region: "us-east-1c", Status: "replacing", UpSince: ""},
-			{ID: newID(), Name: "ml-spot-train", InstID: "i-0sp5", Pool: "g4.xlarge pool", Bid: "$0.32", Region: "us-east-1", Status: "reclaimed", UpSince: ""},
-		},
-		"hosting": {
-			{ID: newID(), Name: "batch-spot-01", InstID: "i-0sp6", Pool: "m5.large pool", Bid: "$0.024", Region: "ap-south-1", Status: "running", UpSince: "1d 8h"},
-		},
-	},
+	vms: map[string][]SpotVM{},
 }
 
 func (s *spotVMStoreType) list(slug string) []SpotVM {
@@ -654,16 +621,7 @@ type k8sClusterStoreType struct {
 }
 
 var k8sClusterStore = &k8sClusterStoreType{
-	clusters: map[string][]K8sCluster{
-		"buyvm": {
-			{ID: newID(), Name: "prod-cluster", ClustID: "eks-prod", Version: "v1.29.4", Nodes: "12 (3 groups)", Region: "eu-central-1", Status: "healthy", Pods: "124"},
-			{ID: newID(), Name: "staging-cluster", ClustID: "eks-stg", Version: "v1.29.4", Nodes: "3", Region: "eu-central-1", Status: "healthy", Pods: "42"},
-			{ID: newID(), Name: "ml-cluster-gpu", ClustID: "eks-ml", Version: "v1.28.6", Nodes: "4 GPU", Region: "us-east-1", Status: "upgrading", Pods: "17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-cluster", ClustID: "eks-main", Version: "v1.29.4", Nodes: "6", Region: "ap-south-1", Status: "healthy", Pods: "89"},
-		},
-	},
+	clusters: map[string][]K8sCluster{},
 }
 
 func (s *k8sClusterStoreType) list(slug string) []K8sCluster {
@@ -848,18 +806,7 @@ type containerRepoStoreType struct {
 }
 
 var containerRepoStore = &containerRepoStoreType{
-	repos: map[string][]ContainerRepo{
-		"buyvm": {
-			{ID: newID(), Name: "platform/api", Tags: 18, Size: "412 MB", LastScan: "2h ago", Vulns: "0 critical", Status: "clean"},
-			{ID: newID(), Name: "platform/worker", Tags: 12, Size: "289 MB", LastScan: "2h ago", Vulns: "0 critical", Status: "clean"},
-			{ID: newID(), Name: "platform/ml-inference", Tags: 4, Size: "2.1 GB", LastScan: "1d ago", Vulns: "2 medium", Status: "warning"},
-			{ID: newID(), Name: "platform/legacy-monolith", Tags: 47, Size: "1.8 GB", LastScan: "12d ago", Vulns: "1 critical, 4 high", Status: "critical"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app/frontend", Tags: 22, Size: "180 MB", LastScan: "4h ago", Vulns: "0 critical", Status: "clean"},
-			{ID: newID(), Name: "app/backend", Tags: 15, Size: "340 MB", LastScan: "4h ago", Vulns: "1 low", Status: "clean"},
-		},
-	},
+	repos: map[string][]ContainerRepo{},
 }
 
 func (s *containerRepoStoreType) list(slug string) []ContainerRepo {
@@ -1029,19 +976,7 @@ type containerInstanceStoreType struct {
 }
 
 var containerInstanceStore = &containerInstanceStoreType{
-	instances: map[string][]ContainerInstance{
-		"buyvm": {
-			{ID: newID(), Name: "nginx-proxy", Image: "nginx:1.25-alpine", CPUs: "1", Memory: "512 MB", Region: "eu-central-1", Status: "running", IP: "10.0.1.12"},
-			{ID: newID(), Name: "redis-cache", Image: "redis:7-alpine", CPUs: "2", Memory: "1 GB", Region: "eu-central-1", Status: "running", IP: "10.0.1.13"},
-			{ID: newID(), Name: "worker-queue", Image: "platform/worker:v2.4", CPUs: "4", Memory: "4 GB", Region: "us-east-1", Status: "running", IP: "10.0.2.8"},
-			{ID: newID(), Name: "cron-daily", Image: "platform/cron:latest", CPUs: "1", Memory: "256 MB", Region: "eu-central-1", Status: "stopped", IP: ""},
-			{ID: newID(), Name: "debug-shell", Image: "ubuntu:22.04", CPUs: "1", Memory: "512 MB", Region: "us-east-1", Status: "creating", IP: ""},
-		},
-		"hosting": {
-			{ID: newID(), Name: "api-sidecar", Image: "envoyproxy/envoy:v1.29", CPUs: "1", Memory: "256 MB", Region: "ap-south-1", Status: "running", IP: "10.1.0.5"},
-			{ID: newID(), Name: "log-shipper", Image: "fluent/fluent-bit:3.0", CPUs: "1", Memory: "128 MB", Region: "ap-south-1", Status: "running", IP: "10.1.0.6"},
-		},
-	},
+	instances: map[string][]ContainerInstance{},
 }
 
 func (s *containerInstanceStoreType) list(slug string) []ContainerInstance {
@@ -1095,7 +1030,7 @@ type apiContainerInstance struct {
 
 type apiContainerInstanceList struct {
 	Instances []apiContainerInstance `json:"instances"`
-	Total     int                   `json:"total"`
+	Total     int                    `json:"total"`
 }
 
 func toAPIContainerInstance(c ContainerInstance) apiContainerInstance {
@@ -1233,18 +1168,7 @@ type webAppStoreType struct {
 }
 
 var webAppStore = &webAppStoreType{
-	apps: map[string][]WebApp{
-		"buyvm": {
-			{ID: newID(), Name: "api-production", Runtime: "Node.js 20", Domain: "api.buyvm.app", Region: "eu-central-1", Status: "running", Replicas: 3, Memory: "512 MB"},
-			{ID: newID(), Name: "dashboard-web", Runtime: "Python 3.12", Domain: "dash.buyvm.app", Region: "eu-central-1", Status: "running", Replicas: 2, Memory: "256 MB"},
-			{ID: newID(), Name: "webhook-receiver", Runtime: "Go 1.22", Domain: "hooks.buyvm.app", Region: "us-east-1", Status: "running", Replicas: 1, Memory: "128 MB"},
-			{ID: newID(), Name: "staging-app", Runtime: "Node.js 20", Domain: "staging.buyvm.app", Region: "eu-central-1", Status: "sleeping", Replicas: 0, Memory: "256 MB"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-site", Runtime: "Ruby 3.3", Domain: "www.hosting.app", Region: "ap-south-1", Status: "running", Replicas: 2, Memory: "512 MB"},
-			{ID: newID(), Name: "admin-panel", Runtime: "PHP 8.3", Domain: "admin.hosting.app", Region: "ap-south-1", Status: "deploying", Replicas: 1, Memory: "256 MB"},
-		},
-	},
+	apps: map[string][]WebApp{},
 }
 
 func (s *webAppStoreType) list(slug string) []WebApp {
@@ -1414,13 +1338,13 @@ func apiWSComputeHostingWebDeleteHandler(w http.ResponseWriter, r *http.Request)
 // ═══════════════════════════════════════════════════════════════
 
 type StaticSite struct {
-	ID        string
-	Name      string
-	Framework string
-	Domain    string
-	Region    string
-	Status    string
-	Size      string
+	ID         string
+	Name       string
+	Framework  string
+	Domain     string
+	Region     string
+	Status     string
+	Size       string
 	LastDeploy string
 }
 
@@ -1430,18 +1354,7 @@ type staticSiteStoreType struct {
 }
 
 var staticSiteStore = &staticSiteStoreType{
-	sites: map[string][]StaticSite{
-		"buyvm": {
-			{ID: newID(), Name: "docs-site", Framework: "Hugo", Domain: "docs.buyvm.app", Region: "eu-central-1", Status: "live", Size: "24 MB", LastDeploy: "2h ago"},
-			{ID: newID(), Name: "marketing-site", Framework: "Next.js (static)", Domain: "www.buyvm.app", Region: "us-east-1", Status: "live", Size: "18 MB", LastDeploy: "1d ago"},
-			{ID: newID(), Name: "blog", Framework: "Astro", Domain: "blog.buyvm.app", Region: "eu-central-1", Status: "live", Size: "8 MB", LastDeploy: "3d ago"},
-			{ID: newID(), Name: "landing-v2", Framework: "Vite + React", Domain: "preview-v2.buyvm.app", Region: "eu-central-1", Status: "building", Size: "0 MB", LastDeploy: "never"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "company-site", Framework: "Gatsby", Domain: "www.hosting.io", Region: "ap-south-1", Status: "live", Size: "32 MB", LastDeploy: "6h ago"},
-			{ID: newID(), Name: "status-page", Framework: "HTML/CSS", Domain: "status.hosting.io", Region: "ap-south-1", Status: "live", Size: "1 MB", LastDeploy: "14d ago"},
-		},
-	},
+	sites: map[string][]StaticSite{},
 }
 
 func (s *staticSiteStoreType) list(slug string) []StaticSite {
@@ -1611,15 +1524,15 @@ func apiWSComputeHostingStaticDeleteHandler(w http.ResponseWriter, r *http.Reque
 // ═══════════════════════════════════════════════════════════════
 
 type ServerlessFunc struct {
-	ID         string
-	Name       string
-	Runtime    string
-	Trigger    string
-	Region     string
-	Status     string
+	ID          string
+	Name        string
+	Runtime     string
+	Trigger     string
+	Region      string
+	Status      string
 	Invocations string
-	AvgLatency string
-	Memory     string
+	AvgLatency  string
+	Memory      string
 }
 
 type serverlessFuncStoreType struct {
@@ -1628,19 +1541,7 @@ type serverlessFuncStoreType struct {
 }
 
 var serverlessFuncStore = &serverlessFuncStoreType{
-	funcs: map[string][]ServerlessFunc{
-		"buyvm": {
-			{ID: newID(), Name: "process-upload", Runtime: "Node.js 20", Trigger: "HTTP POST", Region: "eu-central-1", Status: "active", Invocations: "12,482", AvgLatency: "145ms", Memory: "256 MB"},
-			{ID: newID(), Name: "send-email", Runtime: "Python 3.12", Trigger: "Queue: emails", Region: "eu-central-1", Status: "active", Invocations: "89,201", AvgLatency: "62ms", Memory: "128 MB"},
-			{ID: newID(), Name: "resize-image", Runtime: "Go 1.22", Trigger: "S3 event", Region: "us-east-1", Status: "active", Invocations: "5,340", AvgLatency: "320ms", Memory: "512 MB"},
-			{ID: newID(), Name: "nightly-report", Runtime: "Python 3.12", Trigger: "Cron: 0 2 * * *", Region: "eu-central-1", Status: "active", Invocations: "124", AvgLatency: "4.2s", Memory: "1 GB"},
-			{ID: newID(), Name: "test-handler", Runtime: "Node.js 20", Trigger: "HTTP GET", Region: "eu-central-1", Status: "inactive", Invocations: "0", AvgLatency: "—", Memory: "128 MB"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "webhook-handler", Runtime: "Go 1.22", Trigger: "HTTP POST", Region: "ap-south-1", Status: "active", Invocations: "34,120", AvgLatency: "28ms", Memory: "128 MB"},
-			{ID: newID(), Name: "pdf-generator", Runtime: "Node.js 20", Trigger: "Queue: pdfs", Region: "ap-south-1", Status: "active", Invocations: "2,891", AvgLatency: "1.8s", Memory: "512 MB"},
-		},
-	},
+	funcs: map[string][]ServerlessFunc{},
 }
 
 func (s *serverlessFuncStoreType) list(slug string) []ServerlessFunc {
@@ -1832,18 +1733,7 @@ type edgeFuncStoreType struct {
 }
 
 var edgeFuncStore = &edgeFuncStoreType{
-	funcs: map[string][]EdgeFunc{
-		"buyvm": {
-			{ID: newID(), Name: "geo-redirect", Route: "/go/*", Regions: "all (42 PoPs)", Status: "active", Requests: "1.2M/day", P50Latency: "1.4ms", Size: "4 KB"},
-			{ID: newID(), Name: "ab-test-router", Route: "/landing/*", Regions: "EU + US (18 PoPs)", Status: "active", Requests: "340K/day", P50Latency: "2.1ms", Size: "8 KB"},
-			{ID: newID(), Name: "auth-check", Route: "/api/*", Regions: "all (42 PoPs)", Status: "active", Requests: "890K/day", P50Latency: "3.8ms", Size: "12 KB"},
-			{ID: newID(), Name: "maintenance-gate", Route: "/*", Regions: "all (42 PoPs)", Status: "disabled", Requests: "0", P50Latency: "—", Size: "2 KB"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "locale-detect", Route: "/*", Regions: "APAC (8 PoPs)", Status: "active", Requests: "520K/day", P50Latency: "1.1ms", Size: "3 KB"},
-			{ID: newID(), Name: "rate-limiter", Route: "/api/*", Regions: "APAC (8 PoPs)", Status: "active", Requests: "520K/day", P50Latency: "0.8ms", Size: "6 KB"},
-		},
-	},
+	funcs: map[string][]EdgeFunc{},
 }
 
 func (s *edgeFuncStoreType) list(slug string) []EdgeFunc {

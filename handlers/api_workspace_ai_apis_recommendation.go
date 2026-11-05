@@ -33,19 +33,7 @@ type recommendationAPIStoreType struct {
 }
 
 var recommendationAPIStore = &recommendationAPIStoreType{
-	apis: map[string][]RecommendationAPI{
-		"buyvm": {
-			{ID: newID(), Name: "product-recommender-v2", Status: "active", Model: "deepfm-v2", Algorithm: "hybrid", Version: "v2.0.0", Requests: "4.8M/mo", Latency: "18ms p99", Catalog: "2.4M products", Region: "eu-central-1", Endpoint: "recommend.api.eu-central-1.example.com", APIKey: "vk_prod_****6e1a"},
-			{ID: newID(), Name: "content-personalization", Status: "active", Model: "two-tower-bert", Algorithm: "content-based", Version: "v1.5.0", Requests: "2.1M/mo", Latency: "24ms p99", Catalog: "180K articles", Region: "eu-central-1", Endpoint: "personalize.api.eu-central-1.example.com", APIKey: "vk_prod_****b3f9"},
-			{ID: newID(), Name: "similar-items", Status: "active", Model: "item2vec-custom", Algorithm: "collaborative", Version: "v1.2.0", Requests: "1.6M/mo", Latency: "12ms p99", Catalog: "2.4M products", Region: "eu-central-1", Endpoint: "similar.api.eu-central-1.example.com", APIKey: "vk_prod_****d8c4"},
-			{ID: newID(), Name: "contextual-offers", Status: "active", Model: "bandit-contextual", Algorithm: "contextual", Version: "v1.0.0", Requests: "920K/mo", Latency: "8ms p99", Catalog: "45K offers", Region: "us-east-1", Endpoint: "offers.api.us-east-1.example.com", APIKey: "vk_prod_****a2e7"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "shop-recommender", Status: "active", Model: "als-spark", Algorithm: "collaborative", Version: "v1.0.0", Requests: "680K/mo", Latency: "22ms p99", Catalog: "320K products", Region: "ap-south-1", Endpoint: "shop-recommend.api.ap-south-1.example.com", APIKey: "vk_prod_****f5b8"},
-			{ID: newID(), Name: "news-feed", Status: "active", Model: "dssm-custom", Algorithm: "content-based", Version: "v1.1.0", Requests: "1.2M/mo", Latency: "16ms p99", Catalog: "50K articles", Region: "ap-south-1", Endpoint: "news-feed.api.ap-south-1.example.com", APIKey: "vk_prod_****c7d3"},
-			{ID: newID(), Name: "cross-sell-engine", Status: "active", Model: "wide-and-deep", Algorithm: "hybrid", Version: "v1.0.0", Requests: "380K/mo", Latency: "28ms p99", Catalog: "320K products", Region: "ap-south-1", Endpoint: "cross-sell.api.ap-south-1.example.com", APIKey: "vk_prod_****e1a6"},
-		},
-	},
+	apis: map[string][]RecommendationAPI{},
 }
 
 func (s *recommendationAPIStoreType) list(slug string) []RecommendationAPI {
@@ -187,9 +175,9 @@ func apiWSAIAPIsRecommendCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Model: model, Algorithm: algorithm,
 		Version: "v1.0.0", Requests: "0/mo",
 		Latency: "—", Catalog: "0 items",
-		Region: region,
+		Region:   region,
 		Endpoint: "recommend-" + strings.ReplaceAll(strings.ToLower(name), " ", "-") + ".api." + region + ".example.com",
-		APIKey: "vk_new_****" + newID()[:4],
+		APIKey:   "vk_new_****" + newID()[:4],
 	}
 	recommendationAPIStore.add(slug, api)
 	apiCreated(w, toAPIRecommendationAPI(api))

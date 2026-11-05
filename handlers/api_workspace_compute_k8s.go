@@ -13,24 +13,24 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type ManagedK8sCluster struct {
-	ID              string
-	Name            string
-	K8sVersion      string
-	NodePools       int
-	TotalNodes      int
-	VCPUs           int
-	MemoryGB        int
-	PodCount        int
-	PodCapacity     int
-	CNIPlugin       string
-	IngressCtrl     string
-	ServiceMesh     bool
-	AutoScale       bool
-	Region          string
-	ControlPlaneHA  bool
-	CostPerHour     float64
-	Status          string
-	Updated         string
+	ID             string
+	Name           string
+	K8sVersion     string
+	NodePools      int
+	TotalNodes     int
+	VCPUs          int
+	MemoryGB       int
+	PodCount       int
+	PodCapacity    int
+	CNIPlugin      string
+	IngressCtrl    string
+	ServiceMesh    bool
+	AutoScale      bool
+	Region         string
+	ControlPlaneHA bool
+	CostPerHour    float64
+	Status         string
+	Updated        string
 }
 
 type managedK8sStoreType struct {
@@ -39,20 +39,7 @@ type managedK8sStoreType struct {
 }
 
 var managedK8sStore = &managedK8sStoreType{
-	items: map[string][]ManagedK8sCluster{
-		"buyvm": {
-			{ID: newID(), Name: "prod-cluster-01", K8sVersion: "1.30.2", NodePools: 3, TotalNodes: 12, VCPUs: 96, MemoryGB: 384, PodCount: 284, PodCapacity: 660, CNIPlugin: "Cilium", IngressCtrl: "NGINX", ServiceMesh: true, AutoScale: true, Region: "us-east-1", ControlPlaneHA: true, CostPerHour: 18.40, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "staging-cluster", K8sVersion: "1.30.2", NodePools: 1, TotalNodes: 3, VCPUs: 12, MemoryGB: 48, PodCount: 42, PodCapacity: 165, CNIPlugin: "Calico", IngressCtrl: "Traefik", ServiceMesh: false, AutoScale: false, Region: "us-east-1", ControlPlaneHA: false, CostPerHour: 3.60, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "ml-gpu-cluster", K8sVersion: "1.29.6", NodePools: 2, TotalNodes: 4, VCPUs: 32, MemoryGB: 256, PodCount: 18, PodCapacity: 220, CNIPlugin: "Cilium", IngressCtrl: "—", ServiceMesh: false, AutoScale: true, Region: "us-west-2", ControlPlaneHA: true, CostPerHour: 12.80, Status: "running", Updated: "2026-04-16"},
-			{ID: newID(), Name: "dev-sandbox", K8sVersion: "1.30.2", NodePools: 1, TotalNodes: 2, VCPUs: 8, MemoryGB: 16, PodCount: 0, PodCapacity: 110, CNIPlugin: "Flannel", IngressCtrl: "NGINX", ServiceMesh: false, AutoScale: false, Region: "eu-west-1", ControlPlaneHA: false, CostPerHour: 1.20, Status: "stopped", Updated: "2026-04-14"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-prod", K8sVersion: "1.30.2", NodePools: 5, TotalNodes: 24, VCPUs: 192, MemoryGB: 768, PodCount: 620, PodCapacity: 1320, CNIPlugin: "Cilium", IngressCtrl: "Istio Gateway", ServiceMesh: true, AutoScale: true, Region: "eu-central-1", ControlPlaneHA: true, CostPerHour: 36.80, Status: "running", Updated: "2026-04-18"},
-			{ID: newID(), Name: "edge-cluster-us", K8sVersion: "1.29.6", NodePools: 2, TotalNodes: 6, VCPUs: 24, MemoryGB: 96, PodCount: 88, PodCapacity: 330, CNIPlugin: "Calico", IngressCtrl: "NGINX", ServiceMesh: false, AutoScale: true, Region: "us-west-2", ControlPlaneHA: true, CostPerHour: 7.20, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "data-pipeline", K8sVersion: "1.30.2", NodePools: 2, TotalNodes: 8, VCPUs: 64, MemoryGB: 256, PodCount: 142, PodCapacity: 440, CNIPlugin: "Cilium", IngressCtrl: "—", ServiceMesh: false, AutoScale: true, Region: "eu-central-1", ControlPlaneHA: true, CostPerHour: 14.40, Status: "running", Updated: "2026-04-17"},
-			{ID: newID(), Name: "qa-ephemeral", K8sVersion: "1.30.2", NodePools: 1, TotalNodes: 0, VCPUs: 0, MemoryGB: 0, PodCount: 0, PodCapacity: 0, CNIPlugin: "Flannel", IngressCtrl: "NGINX", ServiceMesh: false, AutoScale: true, Region: "eu-central-1", ControlPlaneHA: false, CostPerHour: 0, Status: "scaled_to_zero", Updated: "2026-04-15"},
-		},
-	},
+	items: map[string][]ManagedK8sCluster{},
 }
 
 func (s *managedK8sStoreType) list(slug string) []ManagedK8sCluster {
@@ -219,7 +206,7 @@ func apiWSComputeProK8sCreateHandler(w http.ResponseWriter, r *http.Request) {
 		ServiceMesh: false, AutoScale: req.AutoScale,
 		Region: region, ControlPlaneHA: req.HA,
 		CostPerHour: float64(nodes) * 1.20,
-		Status: "provisioning", Updated: "2026-04-18",
+		Status:      "provisioning", Updated: "2026-04-18",
 	}
 	managedK8sStore.add(slug, cluster)
 	apiCreated(w, toAPIManagedK8s(cluster))

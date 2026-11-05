@@ -13,22 +13,22 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type TransactionalEmail struct {
-	ID             string
-	Name           string
-	Domain         string
-	SenderAddress  string
-	DKIMStatus     string
-	SPFStatus      string
-	DMARCStatus    string
-	DailySent      int
-	DailyLimit     int
-	DeliveryRate   float64
-	BounceRate     float64
-	OpenRate       float64
-	WebhookURL     string
-	APIKeyPrefix   string
-	Status         string
-	Updated        string
+	ID            string
+	Name          string
+	Domain        string
+	SenderAddress string
+	DKIMStatus    string
+	SPFStatus     string
+	DMARCStatus   string
+	DailySent     int
+	DailyLimit    int
+	DeliveryRate  float64
+	BounceRate    float64
+	OpenRate      float64
+	WebhookURL    string
+	APIKeyPrefix  string
+	Status        string
+	Updated       string
 }
 
 type transactionalEmailStoreType struct {
@@ -37,19 +37,7 @@ type transactionalEmailStoreType struct {
 }
 
 var transactionalEmailStore = &transactionalEmailStoreType{
-	items: map[string][]TransactionalEmail{
-		"buyvm": {
-			{ID: newID(), Name: "order-notifications", Domain: "mail.buyvm-demo.com", SenderAddress: "orders@mail.buyvm-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 1250, DailyLimit: 10000, DeliveryRate: 99.2, BounceRate: 0.3, OpenRate: 42.5, WebhookURL: "https://api.buyvm-demo.com/webhooks/email", APIKeyPrefix: "bvm_sk_prod_", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "password-resets", Domain: "mail.buyvm-demo.com", SenderAddress: "security@mail.buyvm-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 85, DailyLimit: 5000, DeliveryRate: 99.8, BounceRate: 0.1, OpenRate: 78.3, WebhookURL: "https://api.buyvm-demo.com/webhooks/email", APIKeyPrefix: "bvm_sk_prod_", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "marketing-campaigns", Domain: "marketing.buyvm-demo.com", SenderAddress: "hello@marketing.buyvm-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 4500, DailyLimit: 50000, DeliveryRate: 97.8, BounceRate: 1.2, OpenRate: 22.1, WebhookURL: "https://api.buyvm-demo.com/webhooks/marketing", APIKeyPrefix: "bvm_sk_mkt_", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "dev-testing", Domain: "sandbox.buyvm-demo.com", SenderAddress: "test@sandbox.buyvm-demo.com", DKIMStatus: "Pending", SPFStatus: "Pending", DMARCStatus: "None", DailySent: 12, DailyLimit: 100, DeliveryRate: 95.0, BounceRate: 5.0, OpenRate: 0.0, WebhookURL: "—", APIKeyPrefix: "bvm_sk_test_", Status: "sandbox", Updated: "2026-04-14"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-alerts", Domain: "notify.hosting-demo.com", SenderAddress: "alerts@notify.hosting-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 3200, DailyLimit: 25000, DeliveryRate: 99.5, BounceRate: 0.2, OpenRate: 65.0, WebhookURL: "https://api.hosting-demo.com/hooks/email", APIKeyPrefix: "cz_sk_prod_", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "user-onboarding", Domain: "notify.hosting-demo.com", SenderAddress: "welcome@notify.hosting-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 420, DailyLimit: 10000, DeliveryRate: 99.1, BounceRate: 0.5, OpenRate: 55.8, WebhookURL: "https://api.hosting-demo.com/hooks/email", APIKeyPrefix: "cz_sk_prod_", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "billing-invoices", Domain: "billing.hosting-demo.com", SenderAddress: "invoices@billing.hosting-demo.com", DKIMStatus: "Verified", SPFStatus: "Pass", DMARCStatus: "Pass", DailySent: 150, DailyLimit: 5000, DeliveryRate: 99.9, BounceRate: 0.05, OpenRate: 70.2, WebhookURL: "https://api.hosting-demo.com/hooks/billing", APIKeyPrefix: "cz_sk_bill_", Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]TransactionalEmail{},
 }
 
 func (s *transactionalEmailStoreType) list(slug string) []TransactionalEmail {
@@ -91,22 +79,22 @@ func (s *transactionalEmailStoreType) delete(slug, id string) {
 }
 
 type apiTransactionalEmail struct {
-	ID             string  `json:"id"`
-	Name           string  `json:"name"`
-	Domain         string  `json:"domain"`
-	SenderAddress  string  `json:"sender_address"`
-	DKIMStatus     string  `json:"dkim_status"`
-	SPFStatus      string  `json:"spf_status"`
-	DMARCStatus    string  `json:"dmarc_status"`
-	DailySent      int     `json:"daily_sent"`
-	DailyLimit     int     `json:"daily_limit"`
-	DeliveryRate   float64 `json:"delivery_rate"`
-	BounceRate     float64 `json:"bounce_rate"`
-	OpenRate       float64 `json:"open_rate"`
-	WebhookURL     string  `json:"webhook_url"`
-	APIKeyPrefix   string  `json:"api_key_prefix"`
-	Status         string  `json:"status"`
-	Updated        string  `json:"updated"`
+	ID            string  `json:"id"`
+	Name          string  `json:"name"`
+	Domain        string  `json:"domain"`
+	SenderAddress string  `json:"sender_address"`
+	DKIMStatus    string  `json:"dkim_status"`
+	SPFStatus     string  `json:"spf_status"`
+	DMARCStatus   string  `json:"dmarc_status"`
+	DailySent     int     `json:"daily_sent"`
+	DailyLimit    int     `json:"daily_limit"`
+	DeliveryRate  float64 `json:"delivery_rate"`
+	BounceRate    float64 `json:"bounce_rate"`
+	OpenRate      float64 `json:"open_rate"`
+	WebhookURL    string  `json:"webhook_url"`
+	APIKeyPrefix  string  `json:"api_key_prefix"`
+	Status        string  `json:"status"`
+	Updated       string  `json:"updated"`
 }
 
 type apiTransactionalEmailList struct {

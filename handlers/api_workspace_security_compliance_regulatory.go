@@ -29,20 +29,7 @@ type regulatoryFrameworkStoreType struct {
 }
 
 var regulatoryFrameworkStore = &regulatoryFrameworkStoreType{
-	frameworks: map[string][]RegulatoryFramework{
-		"buyvm": {
-			{ID: newID(), Name: "GDPR Data Protection", Standard: "GDPR", Region: "EU", Scope: "All personal data processing", Status: "active", Compliance: "compliant", Updated: "2026-01-10"},
-			{ID: newID(), Name: "SOC 2 Type II", Standard: "SOC 2", Region: "Global", Scope: "Security, Availability, Confidentiality", Status: "active", Compliance: "compliant", Updated: "2026-02-15"},
-			{ID: newID(), Name: "PCI DSS v4.0", Standard: "PCI DSS", Region: "Global", Scope: "Payment card processing", Status: "active", Compliance: "partial", Updated: "2026-01-20"},
-			{ID: newID(), Name: "HIPAA Privacy Rule", Standard: "HIPAA", Region: "US", Scope: "Protected health information", Status: "active", Compliance: "compliant", Updated: "2025-12-05"},
-			{ID: newID(), Name: "ISO 27001:2022", Standard: "ISO 27001", Region: "Global", Scope: "Information security management", Status: "active", Compliance: "compliant", Updated: "2026-03-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "GDPR Compliance Program", Standard: "GDPR", Region: "EU", Scope: "Customer data handling", Status: "active", Compliance: "compliant", Updated: "2026-01-25"},
-			{ID: newID(), Name: "SOC 2 Type I", Standard: "SOC 2", Region: "Global", Scope: "Security, Availability", Status: "active", Compliance: "compliant", Updated: "2026-02-10"},
-			{ID: newID(), Name: "CCPA Consumer Privacy", Standard: "CCPA", Region: "US-CA", Scope: "Consumer personal information", Status: "active", Compliance: "partial", Updated: "2026-01-30"},
-		},
-	},
+	frameworks: map[string][]RegulatoryFramework{},
 }
 
 func (s *regulatoryFrameworkStoreType) list(slug string) []RegulatoryFramework {

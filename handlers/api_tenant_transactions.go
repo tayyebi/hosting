@@ -28,27 +28,7 @@ type transactionStoreType struct {
 }
 
 var transactionStore = &transactionStoreType{
-	transactions: map[string][]Transaction{
-		"buyvm": {
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "249.00", Currency: "USD", Description: "Monthly hosting — Pro plan", Client: "Acme Corp", InvoiceID: "INV-2026-0412", Method: "credit_card", Created: "2026-04-15T10:23:00Z"},
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "1,200.00", Currency: "USD", Description: "Annual SSL certificate bundle", Client: "Globex Inc", InvoiceID: "INV-2026-0408", Method: "wire", Created: "2026-04-12T08:45:00Z"},
-			{ID: newID(), Type: "refund", Status: "completed", Amount: "-75.00", Currency: "USD", Description: "Prorated refund — service downtime credit", Client: "Initech Ltd", InvoiceID: "INV-2026-0401", Method: "credit_card", Created: "2026-04-10T14:30:00Z"},
-			{ID: newID(), Type: "payment", Status: "pending", Amount: "499.00", Currency: "USD", Description: "Dedicated server — Q2 prepay", Client: "Wayne Enterprises", InvoiceID: "INV-2026-0415", Method: "wire", Created: "2026-04-16T09:00:00Z"},
-			{ID: newID(), Type: "credit", Status: "completed", Amount: "50.00", Currency: "USD", Description: "Referral program credit", Client: "Acme Corp", InvoiceID: "", Method: "balance", Created: "2026-04-08T12:00:00Z"},
-			{ID: newID(), Type: "payment", Status: "failed", Amount: "149.00", Currency: "USD", Description: "VPS upgrade — card declined", Client: "Stark Industries", InvoiceID: "INV-2026-0410", Method: "credit_card", Created: "2026-04-09T16:20:00Z"},
-			{ID: newID(), Type: "debit", Status: "completed", Amount: "-25.00", Currency: "USD", Description: "Overage — bandwidth 150GB extra", Client: "Globex Inc", InvoiceID: "INV-2026-0413", Method: "balance", Created: "2026-04-14T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "89.00", Currency: "EUR", Description: "VPS Standard — monthly", Client: "Schmidt GmbH", InvoiceID: "INV-2026-0205", Method: "paypal", Created: "2026-04-11T07:30:00Z"},
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "320.00", Currency: "EUR", Description: "Managed Kubernetes cluster", Client: "Dupont SA", InvoiceID: "INV-2026-0209", Method: "credit_card", Created: "2026-04-13T11:15:00Z"},
-			{ID: newID(), Type: "refund", Status: "pending", Amount: "-45.00", Currency: "EUR", Description: "SLA credit — April incident", Client: "Schmidt GmbH", InvoiceID: "INV-2026-0205", Method: "balance", Created: "2026-04-15T09:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "599.00", Currency: "USD", Description: "GPU instance — ml.g5.xlarge monthly", Client: "DeepNet AI", InvoiceID: "INV-2026-0310", Method: "credit_card", Created: "2026-04-14T06:00:00Z"},
-			{ID: newID(), Type: "payment", Status: "completed", Amount: "2,400.00", Currency: "USD", Description: "Enterprise support — annual", Client: "Quantum Labs", InvoiceID: "INV-2026-0312", Method: "wire", Created: "2026-04-10T10:00:00Z"},
-			{ID: newID(), Type: "adjustment", Status: "completed", Amount: "-100.00", Currency: "USD", Description: "Billing correction — duplicate charge", Client: "DeepNet AI", InvoiceID: "INV-2026-0308", Method: "balance", Created: "2026-04-07T15:45:00Z"},
-		},
-	},
+	transactions: map[string][]Transaction{},
 }
 
 func (s *transactionStoreType) list(slug string) []Transaction {

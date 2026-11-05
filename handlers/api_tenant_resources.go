@@ -10,13 +10,13 @@ import (
 // ── Resource store ──────────────────────────────────────────
 
 type Resource struct {
-	ID     string
-	Name   string
-	Type   string // "vm" | "container" | "database" | "cdn" | "cache" | "worker" | "lb"
-	Status string // "online" | "degraded" | "offline" | "maintenance"
-	Region string
-	CPU    string
-	Memory string
+	ID      string
+	Name    string
+	Type    string // "vm" | "container" | "database" | "cdn" | "cache" | "worker" | "lb"
+	Status  string // "online" | "degraded" | "offline" | "maintenance"
+	Region  string
+	CPU     string
+	Memory  string
 	Created string
 	Updated string
 }
@@ -27,28 +27,7 @@ type resourceStoreType struct {
 }
 
 var resourceStore = &resourceStoreType{
-	resources: map[string][]Resource{
-		"buyvm": {
-			{ID: newID(), Name: "web-prod-01", Type: "vm", Status: "online", Region: "us-east", CPU: "38%", Memory: "61%", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "web-prod-02", Type: "vm", Status: "online", Region: "us-east", CPU: "41%", Memory: "58%", Created: "2026-01-10T08:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "api-gateway", Type: "lb", Status: "degraded", Region: "us-east", CPU: "67%", Memory: "74%", Created: "2025-11-03T12:00:00Z", Updated: "2026-04-17T13:30:00Z"},
-			{ID: newID(), Name: "db-primary", Type: "database", Status: "online", Region: "us-east", CPU: "22%", Memory: "81%", Created: "2025-09-15T10:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "cache-redis-01", Type: "cache", Status: "online", Region: "us-east", CPU: "8%", Memory: "44%", Created: "2025-12-01T09:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "worker-queue-1", Type: "worker", Status: "degraded", Region: "us-east", CPU: "88%", Memory: "69%", Created: "2026-02-20T11:00:00Z", Updated: "2026-04-17T13:45:00Z"},
-			{ID: newID(), Name: "cdn-edge-us", Type: "cdn", Status: "online", Region: "us-east", CPU: "—", Memory: "—", Created: "2025-10-05T14:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "app-server-01", Type: "vm", Status: "online", Region: "eu-west", CPU: "32%", Memory: "55%", Created: "2026-02-01T10:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "db-cluster-eu", Type: "database", Status: "online", Region: "eu-west", CPU: "18%", Memory: "72%", Created: "2026-01-15T08:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "lb-eu-west", Type: "lb", Status: "online", Region: "eu-west", CPU: "12%", Memory: "30%", Created: "2026-03-01T09:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "k8s-node-01", Type: "container", Status: "online", Region: "ap-south", CPU: "45%", Memory: "62%", Created: "2026-03-10T06:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "k8s-node-02", Type: "container", Status: "online", Region: "ap-south", CPU: "52%", Memory: "58%", Created: "2026-03-10T06:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-			{ID: newID(), Name: "db-mongo-prod", Type: "database", Status: "maintenance", Region: "ap-south", CPU: "0%", Memory: "0%", Created: "2025-11-20T12:00:00Z", Updated: "2026-04-16T22:00:00Z"},
-			{ID: newID(), Name: "cdn-edge-ap", Type: "cdn", Status: "online", Region: "ap-south", CPU: "—", Memory: "—", Created: "2026-01-05T08:00:00Z", Updated: "2026-04-17T14:00:00Z"},
-		},
-	},
+	resources: map[string][]Resource{},
 }
 
 func (s *resourceStoreType) list(slug string) []Resource {

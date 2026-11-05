@@ -3,18 +3,20 @@ package handlers
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
-	"platform/db"
-
 	"github.com/jackc/pgx/v5"
+
+	"platform/db"
 )
 
 type Role string
@@ -26,37 +28,97 @@ const (
 )
 
 type User struct {
-	ID         int64  // users.id in Postgres; 0 before a DB row exists
+	ID         int64 // database user id (0 in legacy fallback)
 	Email      string
 	Name       string
 	Role       Role
 	AvatarURL  string
-	TenantSlug string // set for RoleTenant users; empty for sysadmin
+	TenantSlug string // non-empty when the user belongs to a specific tenant
 }
 
-// mockUsersMu guards mockUsers for concurrent reads/writes (e.g. password changes).
-var mockUsersMu sync.Mutex
+type SessionUser = User
 
-// Mock user credential table — Phase 1 still owns password checks here;
-// DB persistence kicks in once a login succeeds. Phase 2 moves this to
-// a users + auth_credentials table.
-var mockUsers = map[string]struct {
-	Password string
-	User     User
-}{
-	"sysadmin@platform.io": {
-		Password: "sysadmin123",
-		User: User{
-			Email: "sysadmin@platform.io",
-			Name:  "Sys Admin",
-			Role:  RoleSysAdmin,
-		},
-	},
+// fallbackSysadminMu guards fallbackSysadminPassword when Pools == nil (e.g. unit tests without DB).
+var fallbackSysadminMu sync.Mutex
+var fallbackSysadminPassword string
+
+// authenticateCredentials verifies user credentials against PostgreSQL `users`
+// when Pools is configured. Only when Pools == nil (isolated unit test mode)
+// does it fall back to the bootstrap System Super Administrator credentials.
+func authenticateCredentials(ctx context.Context, email, password string) (User, bool) {
+	email = strings.TrimSpace(email)
+	if email == "" || password == "" {
+		return User{}, false
+	}
+
+	if Pools != nil {
+		authCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		u, ok, err := db.AuthenticateUser(authCtx, Pools.Admin, email, password)
+		if err != nil {
+			log.Printf("auth: AuthenticateUser error: %v", err)
+			return User{}, false
+		}
+		if !ok {
+			return User{}, false
+		}
+		role := RoleUser
+		if u.GlobalRole == "sysadmin" {
+			role = RoleSysAdmin
+		} else if u.TenantRole == "tenant" || u.TenantSlug != "" {
+			role = RoleTenant
+		}
+		return User{
+			ID:         u.ID,
+			Email:      u.Email,
+			Name:       u.Name,
+			Role:       role,
+			AvatarURL:  u.AvatarURL,
+			TenantSlug: u.TenantSlug,
+		}, true
+	}
+
+	// Fallback ONLY when running without a database pool.
+	bootEmail, bootName, bootPass := db.SysadminBootstrapCredentials()
+	fallbackSysadminMu.Lock()
+	if fallbackSysadminPassword == "" {
+		fallbackSysadminPassword = bootPass
+	}
+	expected := fallbackSysadminPassword
+	fallbackSysadminMu.Unlock()
+
+	if !strings.EqualFold(email, bootEmail) {
+		return User{}, false
+	}
+	if subtle.ConstantTimeCompare([]byte(expected), []byte(password)) != 1 {
+		return User{}, false
+	}
+	return User{
+		Email: bootEmail,
+		Name:  bootName,
+		Role:  RoleSysAdmin,
+	}, true
 }
 
-// createSession issues a cookie and persists the session row in Postgres.
-// The plaintext token lives only in the cookie; the DB stores its SHA-256
-// hash so a DB leak cannot be replayed.
+func changeAccountPassword(ctx context.Context, user User, currentPw, newPw string) (bool, error) {
+	if Pools != nil && user.ID > 0 {
+		return db.ChangeUserPassword(ctx, Pools.Admin, user.ID, currentPw, newPw)
+	}
+	fallbackSysadminMu.Lock()
+	defer fallbackSysadminMu.Unlock()
+	bootEmail, _, bootPass := db.SysadminBootstrapCredentials()
+	if fallbackSysadminPassword == "" {
+		fallbackSysadminPassword = bootPass
+	}
+	if !strings.EqualFold(user.Email, bootEmail) ||
+		subtle.ConstantTimeCompare([]byte(fallbackSysadminPassword), []byte(currentPw)) != 1 {
+		return false, nil
+	}
+	fallbackSysadminPassword = newPw
+	return true, nil
+}
+
 func createSession(w http.ResponseWriter, r *http.Request, user User, remember bool) {
 	token := make([]byte, 24)
 	_, _ = rand.Read(token)
@@ -68,28 +130,25 @@ func createSession(w http.ResponseWriter, r *http.Request, user User, remember b
 	}
 
 	if Pools == nil {
-		// Phase 1 makes Postgres a hard dependency; this path is a
-		// defensive no-op that surfaces misconfiguration loudly.
 		log.Println("session: Pools is nil — Postgres not wired; refusing to issue session")
 		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 		return
 	}
 
-	// Ensure a users row exists so sessions.user_id FK holds. The seed
-	// covers sysadmin@platform.io; any additional mockUsers are upserted
-	// lazily here on first login.
-	userID, err := db.UpsertUser(r.Context(), Pools.Admin, user.Email, user.Name, normaliseGlobalRole(user.Role))
-	if err != nil {
-		log.Printf("session: upsert user for %s: %v", user.Email, err)
-		http.Error(w, "database error", http.StatusInternalServerError)
-		return
+	userID := user.ID
+	if userID == 0 {
+		var err error
+		userID, err = db.UpsertUser(r.Context(), Pools.Admin, user.Email, user.Name, normaliseGlobalRole(user.Role))
+		if err != nil {
+			log.Printf("session: upsert user for %s: %v", user.Email, err)
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
 	}
 	user.ID = userID
 
 	var tenantID int64
 	if user.TenantSlug != "" {
-		// Best-effort resolve: if the tenant is seeded, link the session
-		// to it; otherwise leave 0 and the session is effectively sysadmin-scope.
 		_ = Pools.Admin.QueryRow(r.Context(),
 			`SELECT id FROM tenants WHERE slug = $1 AND deleted_at IS NULL`,
 			user.TenantSlug).Scan(&tenantID)
@@ -114,8 +173,6 @@ func createSession(w http.ResponseWriter, r *http.Request, user User, remember b
 	})
 }
 
-// getSession resolves the cookie to a User by querying the sessions table.
-// Returns (User{}, false) for anonymous, expired, or revoked cookies.
 func getSession(r *http.Request) (User, bool) {
 	c, err := r.Cookie("platform_session")
 	if err != nil {
@@ -146,9 +203,6 @@ func getSession(r *http.Request) (User, bool) {
 	case "sysadmin":
 		u.Role = RoleSysAdmin
 	default:
-		// If the session has a tenant, treat the user as a tenant admin
-		// for Phase 1 purposes (the UI doesn't yet distinguish between
-		// tenant-owner and tenant-user in routing).
 		if rec.TenantSlug != "" {
 			u.Role = RoleTenant
 		} else {
@@ -194,7 +248,6 @@ func normaliseGlobalRole(r Role) string {
 
 func clientIP(r *http.Request) string {
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-		// Take the first entry only.
 		for i := 0; i < len(fwd); i++ {
 			if fwd[i] == ',' {
 				return fwd[:i]
@@ -202,8 +255,6 @@ func clientIP(r *http.Request) string {
 		}
 		return fwd
 	}
-	// RemoteAddr is "ip:port" or "[ipv6]:port" — SplitHostPort strips the
-	// brackets too so Postgres accepts it as inet.
 	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
 		return host
 	}

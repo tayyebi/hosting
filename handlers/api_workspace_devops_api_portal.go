@@ -29,19 +29,7 @@ type devPortalStoreType struct {
 }
 
 var devPortalStore = &devPortalStoreType{
-	portals: map[string][]DevPortal{
-		"buyvm": {
-			{ID: newID(), Name: "Public Developer Portal", URL: "developers.buyvm.net", APIs: "24", Subscribers: "1,842", Theme: "default", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Partner Integration Hub", URL: "partners.buyvm.net", APIs: "12", Subscribers: "156", Theme: "partner", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Internal API Docs", URL: "internal-api.buyvm.net", APIs: "48", Subscribers: "320", Theme: "internal", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Legacy Portal", URL: "old-dev.buyvm.net", APIs: "8", Subscribers: "45", Theme: "classic", Status: "deprecated", Updated: "2025-08-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Hosting Developer Hub", URL: "developers.hosting.com", APIs: "18", Subscribers: "2,310", Theme: "default", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "Enterprise API Portal", URL: "enterprise-api.hosting.com", APIs: "32", Subscribers: "89", Theme: "enterprise", Status: "active", Updated: "2026-04-05"},
-			{ID: newID(), Name: "Sandbox Portal", URL: "sandbox.hosting.com", APIs: "18", Subscribers: "540", Theme: "sandbox", Status: "active", Updated: "2026-03-28"},
-		},
-	},
+	portals: map[string][]DevPortal{},
 }
 
 func (s *devPortalStoreType) list(slug string) []DevPortal {

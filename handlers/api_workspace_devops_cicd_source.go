@@ -29,20 +29,7 @@ type sourceRepoStoreType struct {
 }
 
 var sourceRepoStore = &sourceRepoStoreType{
-	repos: map[string][]SourceRepo{
-		"buyvm": {
-			{ID: newID(), Name: "platform-core", Provider: "GitHub", URL: "github.com/buyvm/platform-core", Branch: "main", Status: "active", Commits: "2,847", Updated: "2026-04-15"},
-			{ID: newID(), Name: "infra-terraform", Provider: "GitLab", URL: "gitlab.com/buyvm/infra-terraform", Branch: "main", Status: "active", Commits: "1,203", Updated: "2026-04-10"},
-			{ID: newID(), Name: "api-gateway", Provider: "GitHub", URL: "github.com/buyvm/api-gateway", Branch: "develop", Status: "active", Commits: "956", Updated: "2026-03-28"},
-			{ID: newID(), Name: "frontend-dashboard", Provider: "GitHub", URL: "github.com/buyvm/frontend-dashboard", Branch: "main", Status: "active", Commits: "3,412", Updated: "2026-04-16"},
-			{ID: newID(), Name: "legacy-billing", Provider: "Bitbucket", URL: "bitbucket.org/buyvm/legacy-billing", Branch: "master", Status: "archived", Commits: "892", Updated: "2025-09-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "cloud-platform", Provider: "GitHub", URL: "github.com/hosting/cloud-platform", Branch: "main", Status: "active", Commits: "5,120", Updated: "2026-04-14"},
-			{ID: newID(), Name: "deploy-scripts", Provider: "GitLab", URL: "gitlab.com/hosting/deploy-scripts", Branch: "main", Status: "active", Commits: "743", Updated: "2026-04-08"},
-			{ID: newID(), Name: "monitoring-stack", Provider: "GitHub", URL: "github.com/hosting/monitoring-stack", Branch: "main", Status: "active", Commits: "1,589", Updated: "2026-03-30"},
-		},
-	},
+	repos: map[string][]SourceRepo{},
 }
 
 func (s *sourceRepoStoreType) list(slug string) []SourceRepo {

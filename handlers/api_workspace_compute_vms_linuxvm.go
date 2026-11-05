@@ -13,21 +13,21 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type LinuxVM struct {
-	ID        string
-	Name      string
-	Distro    string
-	Version   string
-	VCPUs     int
-	MemoryGB  int
-	DiskGB    int
-	Region    string
-	PublicIP  string
-	PrivateIP string
-	SSHKey    string
-	Status    string
-	Uptime    string
+	ID          string
+	Name        string
+	Distro      string
+	Version     string
+	VCPUs       int
+	MemoryGB    int
+	DiskGB      int
+	Region      string
+	PublicIP    string
+	PrivateIP   string
+	SSHKey      string
+	Status      string
+	Uptime      string
 	MonthlyCost string
-	Updated   string
+	Updated     string
 }
 
 type linuxVMStoreType struct {
@@ -36,21 +36,7 @@ type linuxVMStoreType struct {
 }
 
 var linuxVMStore = &linuxVMStoreType{
-	items: map[string][]LinuxVM{
-		"buyvm": {
-			{ID: newID(), Name: "web-prod-01", Distro: "Ubuntu", Version: "24.04 LTS", VCPUs: 4, MemoryGB: 8, DiskGB: 160, Region: "us-east-1", PublicIP: "203.0.113.10", PrivateIP: "10.0.1.10", SSHKey: "ops-team-key", Status: "running", Uptime: "45d 12h", MonthlyCost: "$48.00", Updated: "2026-04-17"},
-			{ID: newID(), Name: "db-replica-02", Distro: "Debian", Version: "12 Bookworm", VCPUs: 8, MemoryGB: 32, DiskGB: 500, Region: "us-east-1", PublicIP: "—", PrivateIP: "10.0.1.20", SSHKey: "db-admin-key", Status: "running", Uptime: "120d 3h", MonthlyCost: "$128.00", Updated: "2026-04-16"},
-			{ID: newID(), Name: "ci-runner-03", Distro: "Rocky Linux", Version: "9.3", VCPUs: 2, MemoryGB: 4, DiskGB: 80, Region: "eu-west-1", PublicIP: "198.51.100.5", PrivateIP: "10.0.2.15", SSHKey: "ci-key", Status: "running", Uptime: "10d 8h", MonthlyCost: "$24.00", Updated: "2026-04-15"},
-			{ID: newID(), Name: "staging-app", Distro: "Ubuntu", Version: "22.04 LTS", VCPUs: 2, MemoryGB: 4, DiskGB: 80, Region: "us-west-2", PublicIP: "203.0.113.55", PrivateIP: "10.0.3.10", SSHKey: "dev-key", Status: "stopped", Uptime: "—", MonthlyCost: "$6.00", Updated: "2026-04-14"},
-			{ID: newID(), Name: "monitoring-node", Distro: "AlmaLinux", Version: "9.3", VCPUs: 4, MemoryGB: 16, DiskGB: 200, Region: "us-east-1", PublicIP: "203.0.113.99", PrivateIP: "10.0.1.50", SSHKey: "ops-team-key", Status: "running", Uptime: "60d 0h", MonthlyCost: "$72.00", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "api-gateway-01", Distro: "Ubuntu", Version: "24.04 LTS", VCPUs: 8, MemoryGB: 16, DiskGB: 200, Region: "eu-central-1", PublicIP: "198.51.100.20", PrivateIP: "10.1.0.10", SSHKey: "platform-key", Status: "running", Uptime: "90d 6h", MonthlyCost: "$96.00", Updated: "2026-04-17"},
-			{ID: newID(), Name: "worker-pool-01", Distro: "Debian", Version: "12 Bookworm", VCPUs: 16, MemoryGB: 64, DiskGB: 1000, Region: "eu-central-1", PublicIP: "—", PrivateIP: "10.1.0.20", SSHKey: "platform-key", Status: "running", Uptime: "30d 18h", MonthlyCost: "$256.00", Updated: "2026-04-16"},
-			{ID: newID(), Name: "bastion-host", Distro: "Alpine", Version: "3.19", VCPUs: 1, MemoryGB: 1, DiskGB: 20, Region: "eu-central-1", PublicIP: "198.51.100.30", PrivateIP: "10.1.0.5", SSHKey: "admin-key", Status: "running", Uptime: "180d 0h", MonthlyCost: "$5.00", Updated: "2026-04-10"},
-			{ID: newID(), Name: "ml-training-gpu", Distro: "Ubuntu", Version: "22.04 LTS", VCPUs: 32, MemoryGB: 128, DiskGB: 2000, Region: "us-east-1", PublicIP: "203.0.113.200", PrivateIP: "10.2.0.10", SSHKey: "ml-team-key", Status: "stopped", Uptime: "—", MonthlyCost: "$45.00", Updated: "2026-04-12"},
-		},
-	},
+	items: map[string][]LinuxVM{},
 }
 
 func (s *linuxVMStoreType) list(slug string) []LinuxVM {

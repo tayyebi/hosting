@@ -13,16 +13,16 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type MessageQueue struct {
-	ID          string
-	Name        string
-	Engine      string
-	Type        string
-	Messages    string
-	Throughput  string
-	Consumers   int
-	Retention   string
-	Status      string
-	Updated     string
+	ID         string
+	Name       string
+	Engine     string
+	Type       string
+	Messages   string
+	Throughput string
+	Consumers  int
+	Retention  string
+	Status     string
+	Updated    string
 }
 
 type messageQueueStoreType struct {
@@ -31,22 +31,7 @@ type messageQueueStoreType struct {
 }
 
 var messageQueueStore = &messageQueueStoreType{
-	queues: map[string][]MessageQueue{
-		"buyvm": {
-			{ID: newID(), Name: "order-processing", Engine: "RabbitMQ", Type: "Work queue", Messages: "2.4M pending", Throughput: "12,000 msg/s", Consumers: 8, Retention: "7 days", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "email-notifications", Engine: "RabbitMQ", Type: "Fanout exchange", Messages: "340K pending", Throughput: "3,200 msg/s", Consumers: 4, Retention: "3 days", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "payment-events", Engine: "Amazon SQS", Type: "FIFO queue", Messages: "18K pending", Throughput: "800 msg/s", Consumers: 2, Retention: "14 days", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "image-resize-jobs", Engine: "Redis (Bull)", Type: "Priority queue", Messages: "85K pending", Throughput: "1,500 msg/s", Consumers: 6, Retention: "1 day", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "audit-log-ingest", Engine: "Amazon SQS", Type: "Standard queue", Messages: "1.2M pending", Throughput: "8,500 msg/s", Consumers: 3, Retention: "14 days", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "legacy-task-queue", Engine: "Celery + Redis", Type: "Task queue", Messages: "220 pending", Throughput: "45 msg/s", Consumers: 1, Retention: "1 day", Status: "deprecated", Updated: "2025-11-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "provisioning-tasks", Engine: "RabbitMQ", Type: "Work queue", Messages: "560K pending", Throughput: "4,200 msg/s", Consumers: 10, Retention: "7 days", Status: "active", Updated: "2026-04-13"},
-			{ID: newID(), Name: "webhook-delivery", Engine: "Redis (Bull)", Type: "Delayed queue", Messages: "42K pending", Throughput: "2,800 msg/s", Consumers: 4, Retention: "3 days", Status: "active", Updated: "2026-04-09"},
-			{ID: newID(), Name: "dns-propagation", Engine: "Amazon SQS", Type: "FIFO queue", Messages: "8K pending", Throughput: "600 msg/s", Consumers: 2, Retention: "1 day", Status: "active", Updated: "2026-04-05"},
-			{ID: newID(), Name: "billing-reconciliation", Engine: "RabbitMQ", Type: "Topic exchange", Messages: "125K pending", Throughput: "1,100 msg/s", Consumers: 3, Retention: "30 days", Status: "active", Updated: "2026-04-02"},
-		},
-	},
+	queues: map[string][]MessageQueue{},
 }
 
 func (s *messageQueueStoreType) list(slug string) []MessageQueue {

@@ -35,20 +35,7 @@ type dbMemoryCacheStoreType struct {
 }
 
 var dbMemoryCacheStore = &dbMemoryCacheStoreType{
-	instances: map[string][]DBMemoryCache{
-		"buyvm": {
-			{ID: newID(), Name: "api-response-cache", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.r7g.xlarge", Nodes: 3, MaxMemory: "32 GB", Eviction: "allkeys-lru", HitRate: "94.2%", Connections: 842, Endpoint: "api-response-cache.cache.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "session-store", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.r7g.large", Nodes: 2, MaxMemory: "16 GB", Eviction: "volatile-lru", HitRate: "98.8%", Connections: 1240, Endpoint: "session-store.cache.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "object-cache", Engine: "memcached", Version: "1.6", Region: "eu-central-1", Status: "running", Size: "cache.m7g.xlarge", Nodes: 4, MaxMemory: "64 GB", Eviction: "lru", HitRate: "91.5%", Connections: 320, Endpoint: "object-cache.cache.eu-central-1.example.com:11211", Encrypted: false},
-			{ID: newID(), Name: "query-cache-us", Engine: "redis", Version: "7.2", Region: "us-east-1", Status: "running", Size: "cache.r7g.large", Nodes: 2, MaxMemory: "16 GB", Eviction: "allkeys-lfu", HitRate: "88.4%", Connections: 560, Endpoint: "query-cache-us.cache.us-east-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "dev-cache", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "stopped", Size: "cache.t3.micro", Nodes: 1, MaxMemory: "512 MB", Eviction: "noeviction", HitRate: "—", Connections: 0, Endpoint: "dev-cache.cache.eu-central-1.example.com:6379", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app-cache-primary", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.r7g.large", Nodes: 2, MaxMemory: "16 GB", Eviction: "allkeys-lru", HitRate: "92.1%", Connections: 680, Endpoint: "app-cache-primary.cache.ap-south-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "page-cache", Engine: "memcached", Version: "1.6", Region: "ap-south-1", Status: "running", Size: "cache.m7g.large", Nodes: 2, MaxMemory: "16 GB", Eviction: "lru", HitRate: "89.7%", Connections: 180, Endpoint: "page-cache.cache.ap-south-1.example.com:11211", Encrypted: false},
-			{ID: newID(), Name: "token-cache", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.m7g.medium", Nodes: 1, MaxMemory: "4 GB", Eviction: "volatile-ttl", HitRate: "99.1%", Connections: 420, Endpoint: "token-cache.cache.ap-south-1.example.com:6379", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBMemoryCache{},
 }
 
 func (s *dbMemoryCacheStoreType) list(slug string) []DBMemoryCache {
@@ -226,7 +213,7 @@ func apiWSDBMemoryCacheCreateHandler(w http.ResponseWriter, r *http.Request) {
 		Status: "provisioning", Size: size, Nodes: nodes,
 		MaxMemory: maxMem, Eviction: eviction,
 		HitRate: "—", Connections: 0,
-		Endpoint: name + ".cache." + region + ".example.com:" + port,
+		Endpoint:  name + ".cache." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbMemoryCacheStore.add(slug, inst)

@@ -35,21 +35,7 @@ type abuseReportStoreType struct {
 }
 
 var abuseReportStore = &abuseReportStoreType{
-	reports: map[string][]AbuseReport{
-		"buyvm": {
-			{ID: newID(), Type: "spam", Source: "abuse@spamhaus.org", Target: "185.22.153.10", Status: "investigating", Summary: "Outbound spam detected from IP range", Created: "2026-04-16T08:00:00Z", Updated: "2026-04-16T14:30:00Z"},
-			{ID: newID(), Type: "phishing", Source: "security@google.com", Target: "acme-login.buyvm.net", Status: "new", Summary: "Phishing page mimicking Google login", Created: "2026-04-17T03:00:00Z", Updated: "2026-04-17T03:00:00Z"},
-			{ID: newID(), Type: "tos-violation", Source: "legal@buyvm.net", Target: "omar@khalid.dev", Status: "resolved", Summary: "Cryptocurrency mining on shared resources", Created: "2026-04-10T12:00:00Z", Updated: "2026-04-12T16:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Type: "malware", Source: "cert@ncsc.gov.uk", Target: "93.115.20.44", Status: "investigating", Summary: "C2 beacon traffic detected", Created: "2026-04-15T18:00:00Z", Updated: "2026-04-16T09:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Type: "spam", Source: "postmaster@outlook.com", Target: "mail.hosting.com", Status: "new", Summary: "Bulk email campaign violating CAN-SPAM", Created: "2026-04-17T01:00:00Z", Updated: "2026-04-17T01:00:00Z"},
-			{ID: newID(), Type: "tos-violation", Source: "compliance@hosting.com", Target: "diego@vega.ar", Status: "dismissed", Summary: "False positive - legitimate load testing", Created: "2026-04-08T10:00:00Z", Updated: "2026-04-09T14:00:00Z"},
-			{ID: newID(), Type: "phishing", Source: "abuse@cloudflare.com", Target: "172.16.50.12", Status: "resolved", Summary: "Credential harvesting page on shared hosting", Created: "2026-04-11T20:00:00Z", Updated: "2026-04-13T08:00:00Z"},
-		},
-	},
+	reports: map[string][]AbuseReport{},
 }
 
 func (s *abuseReportStoreType) list(slug string) []AbuseReport {
@@ -139,9 +125,9 @@ func dbAbuseReportToLocal(r db.AbuseReport) AbuseReport {
 // ── Page data ─────────────────────────────────────────────────
 
 type abuseReportsInnerData struct {
-	Reports    []AbuseReport
-	TenantSlug string
-	Search     string
+	Reports      []AbuseReport
+	TenantSlug   string
+	Search       string
 	StatusFilter string
 	TypeFilter   string
 }

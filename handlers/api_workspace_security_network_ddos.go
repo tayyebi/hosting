@@ -29,19 +29,7 @@ type ddosProfileStoreType struct {
 }
 
 var ddosProfileStore = &ddosProfileStoreType{
-	profiles: map[string][]DDoSProfile{
-		"buyvm": {
-			{ID: newID(), Name: "Edge Shield – Production", Tier: "Advanced", Mode: "always-on", Threshold: "10 Gbps", Status: "active", Mitigated7d: "3 events", Updated: "2026-01-15"},
-			{ID: newID(), Name: "Edge Shield – Staging", Tier: "Standard", Mode: "on-demand", Threshold: "5 Gbps", Status: "active", Mitigated7d: "0 events", Updated: "2025-12-20"},
-			{ID: newID(), Name: "L7 Rate Limiter", Tier: "Advanced", Mode: "always-on", Threshold: "50k rps", Status: "active", Mitigated7d: "12 events", Updated: "2026-02-01"},
-			{ID: newID(), Name: "UDP Flood Guard", Tier: "Standard", Mode: "always-on", Threshold: "2 Gbps", Status: "active", Mitigated7d: "1 event", Updated: "2025-11-10"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Global Shield", Tier: "Advanced", Mode: "always-on", Threshold: "20 Gbps", Status: "active", Mitigated7d: "5 events", Updated: "2026-01-20"},
-			{ID: newID(), Name: "API Gateway Protection", Tier: "Standard", Mode: "always-on", Threshold: "25k rps", Status: "active", Mitigated7d: "2 events", Updated: "2026-02-10"},
-			{ID: newID(), Name: "Legacy Endpoint Shield", Tier: "Basic", Mode: "on-demand", Threshold: "1 Gbps", Status: "disabled", Mitigated7d: "0 events", Updated: "2025-09-05"},
-		},
-	},
+	profiles: map[string][]DDoSProfile{},
 }
 
 func (s *ddosProfileStoreType) list(slug string) []DDoSProfile {

@@ -13,15 +13,15 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type APIGateway struct {
-	ID       string
-	Name     string
-	Protocol string
-	Upstream string
+	ID        string
+	Name      string
+	Protocol  string
+	Upstream  string
 	RateLimit string
-	Auth     string
-	Status   string
-	Requests string
-	Updated  string
+	Auth      string
+	Status    string
+	Requests  string
+	Updated   string
 }
 
 type apiGatewayStoreType struct {
@@ -30,20 +30,7 @@ type apiGatewayStoreType struct {
 }
 
 var apiGatewayStore = &apiGatewayStoreType{
-	gateways: map[string][]APIGateway{
-		"buyvm": {
-			{ID: newID(), Name: "Public API Gateway", Protocol: "REST", Upstream: "api-service:8080", RateLimit: "1000 req/min", Auth: "API Key", Status: "active", Requests: "2.4M/day", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Partner Gateway", Protocol: "REST", Upstream: "partner-svc:8080", RateLimit: "500 req/min", Auth: "OAuth 2.0", Status: "active", Requests: "340K/day", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Internal gRPC Gateway", Protocol: "gRPC", Upstream: "internal-mesh:9090", RateLimit: "5000 req/min", Auth: "mTLS", Status: "active", Requests: "8.1M/day", Updated: "2026-04-15"},
-			{ID: newID(), Name: "WebSocket Gateway", Protocol: "WebSocket", Upstream: "ws-broker:8443", RateLimit: "200 conn/min", Auth: "JWT", Status: "active", Requests: "120K/day", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Legacy SOAP Bridge", Protocol: "SOAP", Upstream: "legacy-app:9080", RateLimit: "100 req/min", Auth: "Basic", Status: "deprecated", Requests: "12K/day", Updated: "2025-09-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Main API Gateway", Protocol: "REST", Upstream: "core-api:8080", RateLimit: "2000 req/min", Auth: "API Key", Status: "active", Requests: "1.8M/day", Updated: "2026-04-12"},
-			{ID: newID(), Name: "Mobile Backend Gateway", Protocol: "GraphQL", Upstream: "mobile-bff:4000", RateLimit: "800 req/min", Auth: "JWT", Status: "active", Requests: "950K/day", Updated: "2026-04-08"},
-			{ID: newID(), Name: "Webhook Ingress", Protocol: "REST", Upstream: "webhook-processor:8080", RateLimit: "300 req/min", Auth: "HMAC", Status: "active", Requests: "85K/day", Updated: "2026-03-30"},
-		},
-	},
+	gateways: map[string][]APIGateway{},
 }
 
 func (s *apiGatewayStoreType) list(slug string) []APIGateway {

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"crypto/subtle"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -113,7 +112,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 
 	// Already logged in? Redirect to the right dashboard.
 	if user, ok := getSession(r); ok {
-		redirectByRole(w, r, user.Role)
+		redirectByUser(w, r, user)
 		return
 	}
 
@@ -144,15 +143,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	record, ok := mockUsers[email]
-	if ok && subtle.ConstantTimeCompare([]byte(record.Password), []byte(password)) == 1 {
+	sessionUser, ok := authenticateCredentials(r.Context(), email, password)
+	if ok {
 		clearLoginFailures(ip)
 		remember := r.FormValue("remember") == "on"
-		createSession(w, r, record.User, remember)
+		createSession(w, r, sessionUser, remember)
 		if Pools != nil {
-			go db.InsertAuditEvent(context.Background(), Pools.Admin, record.User.ID, string(record.User.Role), "auth.login.success", "info", map[string]any{"email": email}, "", reqID, ip)
+			go db.InsertAuditEvent(context.Background(), Pools.Admin, sessionUser.ID, string(sessionUser.Role), "auth.login.success", "info", map[string]any{"email": email}, "", reqID, ip)
 		}
-		redirectByRole(w, r, record.User.Role)
+		redirectByUser(w, r, sessionUser)
 		return
 	}
 
@@ -185,6 +184,26 @@ func redirectByRole(w http.ResponseWriter, r *http.Request, role Role) {
 	case RoleSysAdmin:
 		http.Redirect(w, r, "/s/", http.StatusSeeOther)
 	default:
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+// redirectByUser sends the user to their role-specific dashboard.
+func redirectByUser(w http.ResponseWriter, r *http.Request, user User) {
+	switch user.Role {
+	case RoleSysAdmin:
+		http.Redirect(w, r, "/s/", http.StatusSeeOther)
+	case RoleTenant:
+		if user.TenantSlug != "" {
+			http.Redirect(w, r, "/t/"+user.TenantSlug+"/", http.StatusSeeOther)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	default:
+		if user.TenantSlug != "" {
+			http.Redirect(w, r, "/t/"+user.TenantSlug+"/", http.StatusSeeOther)
+			return
+		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

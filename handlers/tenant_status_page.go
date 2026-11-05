@@ -37,24 +37,7 @@ type statusComponentStoreType struct {
 }
 
 var statusComponentStore = &statusComponentStoreType{
-	components: map[string][]StatusPageComponent{
-		"buyvm": {
-			{ID: newID(), Name: "API", GroupName: "Core", Description: "Core infrastructure", Status: "operational", Uptime90d: "99.98", OrderNum: 1, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Web Dashboard", GroupName: "Core", Status: "operational", Uptime90d: "99.95", OrderNum: 2, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Database Cluster", GroupName: "Data", Status: "degraded", Uptime90d: "99.71", OrderNum: 3, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "CDN", GroupName: "Delivery", Status: "operational", Uptime90d: "100.00", OrderNum: 4, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Email Delivery", GroupName: "Notifications", Status: "partial-outage", Uptime90d: "98.12", OrderNum: 5, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "Network Core", GroupName: "Infrastructure", Status: "operational", Uptime90d: "99.99", OrderNum: 1, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Customer Portal", GroupName: "Web", Status: "operational", Uptime90d: "99.97", OrderNum: 2, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Kubernetes API", GroupName: "Compute", Status: "operational", Uptime90d: "99.95", OrderNum: 1, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Worker Nodes", GroupName: "Compute", Status: "major-outage", Uptime90d: "97.40", OrderNum: 2, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-			{ID: newID(), Name: "Object Storage", GroupName: "Storage", Status: "operational", Uptime90d: "100.00", OrderNum: 3, Visible: true, Created: "2026-01-01T00:00:00Z", Updated: "2026-04-17T00:00:00Z"},
-		},
-	},
+	components: map[string][]StatusPageComponent{},
 }
 
 func (s *statusComponentStoreType) list(slug string) []StatusPageComponent {

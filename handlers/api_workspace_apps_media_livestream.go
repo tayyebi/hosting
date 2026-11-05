@@ -31,22 +31,7 @@ type liveStreamStoreType struct {
 }
 
 var liveStreamStore = &liveStreamStoreType{
-	streams: map[string][]LiveStream{
-		"buyvm": {
-			{ID: newID(), Name: "main-event-stream", Protocol: "RTMP", IngestURL: "rtmp://ingest.buyvm.net/live/main", Viewers: 2340, Bitrate: "6 Mbps", Resolution: "1920x1080", Uptime: "2h 15m", Status: "live", Updated: "2026-04-17"},
-			{ID: newID(), Name: "product-launch-feed", Protocol: "SRT", IngestURL: "srt://ingest.buyvm.net:9000", Viewers: 0, Bitrate: "8 Mbps", Resolution: "3840x2160", Uptime: "—", Status: "idle", Updated: "2026-04-16"},
-			{ID: newID(), Name: "support-webcast", Protocol: "RTMP", IngestURL: "rtmp://ingest.buyvm.net/live/support", Viewers: 128, Bitrate: "3 Mbps", Resolution: "1280x720", Uptime: "45m", Status: "live", Updated: "2026-04-17"},
-			{ID: newID(), Name: "internal-townhall", Protocol: "WebRTC", IngestURL: "wss://stream.buyvm.net/townhall", Viewers: 0, Bitrate: "4 Mbps", Resolution: "1920x1080", Uptime: "—", Status: "idle", Updated: "2026-04-15"},
-			{ID: newID(), Name: "dev-conference-2026", Protocol: "HLS", IngestURL: "https://ingest.buyvm.net/hls/devconf", Viewers: 5120, Bitrate: "10 Mbps", Resolution: "3840x2160", Uptime: "5h 30m", Status: "live", Updated: "2026-04-17"},
-			{ID: newID(), Name: "legacy-radio-feed", Protocol: "RTMP", IngestURL: "rtmp://ingest.buyvm.net/live/radio", Viewers: 12, Bitrate: "128 Kbps", Resolution: "audio-only", Uptime: "—", Status: "stopped", Updated: "2025-10-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "platform-demo-live", Protocol: "RTMP", IngestURL: "rtmp://ingest.hosting.net/live/demo", Viewers: 450, Bitrate: "6 Mbps", Resolution: "1920x1080", Uptime: "1h 05m", Status: "live", Updated: "2026-04-17"},
-			{ID: newID(), Name: "customer-training", Protocol: "WebRTC", IngestURL: "wss://stream.hosting.net/training", Viewers: 0, Bitrate: "4 Mbps", Resolution: "1280x720", Uptime: "—", Status: "idle", Updated: "2026-04-14"},
-			{ID: newID(), Name: "status-dashboard-cam", Protocol: "HLS", IngestURL: "https://ingest.hosting.net/hls/noc", Viewers: 18, Bitrate: "2 Mbps", Resolution: "1280x720", Uptime: "72h 10m", Status: "live", Updated: "2026-04-17"},
-			{ID: newID(), Name: "investor-update-q2", Protocol: "SRT", IngestURL: "srt://ingest.hosting.net:9001", Viewers: 0, Bitrate: "8 Mbps", Resolution: "1920x1080", Uptime: "—", Status: "idle", Updated: "2026-04-10"},
-		},
-	},
+	streams: map[string][]LiveStream{},
 }
 
 func (s *liveStreamStoreType) list(slug string) []LiveStream {
@@ -182,7 +167,7 @@ func apiWSAppsMediaLivestreamCreateHandler(w http.ResponseWriter, r *http.Reques
 	ls := LiveStream{
 		ID: newID(), Name: name, Protocol: protocol,
 		IngestURL: "rtmp://ingest.example.net/live/" + strings.ReplaceAll(strings.ToLower(name), " ", "-"),
-		Viewers: 0, Bitrate: bitrate, Resolution: resolution,
+		Viewers:   0, Bitrate: bitrate, Resolution: resolution,
 		Uptime: "—", Status: "idle", Updated: "2026-04-17",
 	}
 	liveStreamStore.add(slug, ls)

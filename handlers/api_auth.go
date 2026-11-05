@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 
@@ -55,8 +54,8 @@ func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record, ok := mockUsers[req.Email]
-	if !ok || subtle.ConstantTimeCompare([]byte(record.Password), []byte(req.Password)) != 1 {
+	sessionUser, ok := authenticateCredentials(r.Context(), req.Email, req.Password)
+	if !ok {
 		justLocked := recordLoginFailure(ip)
 		if Pools != nil {
 			go db.InsertAuditEvent(context.Background(), Pools.Admin, 0, "unknown", "auth.login.failure", "warn", map[string]any{"email": req.Email}, "invalid credentials", reqID, ip)
@@ -69,9 +68,9 @@ func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clearLoginFailures(ip)
-	createSession(w, r, record.User, req.Remember)
+	createSession(w, r, sessionUser, req.Remember)
 	if Pools != nil {
-		go db.InsertAuditEvent(context.Background(), Pools.Admin, record.User.ID, string(record.User.Role), "auth.login.success", "info", map[string]any{"email": req.Email}, "", reqID, ip)
+		go db.InsertAuditEvent(context.Background(), Pools.Admin, sessionUser.ID, string(sessionUser.Role), "auth.login.success", "info", map[string]any{"email": req.Email}, "", reqID, ip)
 	}
 
 	// Read back the cookie value as the token for the JSON response.
@@ -88,11 +87,11 @@ func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
 		OK:    true,
 		Token: token,
 		User: &apiUserInfo{
-			Email:      record.User.Email,
-			Name:       record.User.Name,
-			Role:       string(record.User.Role),
-			AvatarURL:  record.User.AvatarURL,
-			TenantSlug: record.User.TenantSlug,
+			Email:      sessionUser.Email,
+			Name:       sessionUser.Name,
+			Role:       string(sessionUser.Role),
+			AvatarURL:  sessionUser.AvatarURL,
+			TenantSlug: sessionUser.TenantSlug,
 		},
 	})
 }

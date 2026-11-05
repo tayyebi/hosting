@@ -32,20 +32,7 @@ type dbMySQLPGStoreType struct {
 }
 
 var dbMySQLPGStore = &dbMySQLPGStoreType{
-	instances: map[string][]DBMySQLPG{
-		"buyvm": {
-			{ID: newID(), Name: "app-primary-pg", Engine: "postgresql", Version: "16.2", Region: "eu-central-1", Status: "running", Size: "db.m6g.xlarge", Storage: "500 GB SSD", Replicas: 2, Endpoint: "app-primary-pg.db.eu-central-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "analytics-mysql", Engine: "mysql", Version: "8.0.36", Region: "eu-central-1", Status: "running", Size: "db.r6g.2xlarge", Storage: "1 TB SSD", Replicas: 1, Endpoint: "analytics-mysql.db.eu-central-1.example.com:3306", Encrypted: true},
-			{ID: newID(), Name: "auth-pg", Engine: "postgresql", Version: "15.6", Region: "us-east-1", Status: "running", Size: "db.m6g.large", Storage: "100 GB SSD", Replicas: 1, Endpoint: "auth-pg.db.us-east-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "legacy-mysql", Engine: "mysql", Version: "5.7.44", Region: "eu-central-1", Status: "maintenance", Size: "db.t3.medium", Storage: "200 GB SSD", Replicas: 0, Endpoint: "legacy-mysql.db.eu-central-1.example.com:3306", Encrypted: false},
-			{ID: newID(), Name: "staging-pg", Engine: "postgresql", Version: "16.2", Region: "eu-central-1", Status: "stopped", Size: "db.t3.small", Storage: "50 GB SSD", Replicas: 0, Endpoint: "staging-pg.db.eu-central-1.example.com:5432", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "ecommerce-pg", Engine: "postgresql", Version: "16.2", Region: "ap-south-1", Status: "running", Size: "db.r6g.xlarge", Storage: "800 GB SSD", Replicas: 2, Endpoint: "ecommerce-pg.db.ap-south-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "cms-mysql", Engine: "mysql", Version: "8.0.36", Region: "ap-south-1", Status: "running", Size: "db.m6g.large", Storage: "250 GB SSD", Replicas: 1, Endpoint: "cms-mysql.db.ap-south-1.example.com:3306", Encrypted: true},
-			{ID: newID(), Name: "reports-pg", Engine: "postgresql", Version: "15.6", Region: "ap-south-1", Status: "running", Size: "db.m6g.medium", Storage: "100 GB SSD", Replicas: 0, Endpoint: "reports-pg.db.ap-south-1.example.com:5432", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBMySQLPG{},
 }
 
 func (s *dbMySQLPGStoreType) list(slug string) []DBMySQLPG {
@@ -205,7 +192,7 @@ func apiWSDBRelationalMySQLPGCreateHandler(w http.ResponseWriter, r *http.Reques
 		Version: version, Region: region,
 		Status: "creating", Size: size,
 		Storage: storage, Replicas: req.Replicas,
-		Endpoint: name + ".db." + region + ".example.com:" + port,
+		Endpoint:  name + ".db." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbMySQLPGStore.add(slug, inst)
@@ -263,19 +250,7 @@ type dbSQLServerStoreType struct {
 }
 
 var dbSQLServerStore = &dbSQLServerStoreType{
-	instances: map[string][]DBSQLServer{
-		"buyvm": {
-			{ID: newID(), Name: "erp-sqlserver", Edition: "enterprise", Version: "2022", Region: "eu-central-1", Status: "running", Size: "db.r6i.2xlarge", Storage: "2 TB SSD", Replicas: 1, Endpoint: "erp-sqlserver.db.eu-central-1.example.com:1433", Encrypted: true},
-			{ID: newID(), Name: "reporting-sqlserver", Edition: "standard", Version: "2022", Region: "eu-central-1", Status: "running", Size: "db.m6i.xlarge", Storage: "500 GB SSD", Replicas: 0, Endpoint: "reporting-sqlserver.db.eu-central-1.example.com:1433", Encrypted: true},
-			{ID: newID(), Name: "legacy-crm-sql", Edition: "standard", Version: "2019", Region: "us-east-1", Status: "running", Size: "db.m5.large", Storage: "300 GB SSD", Replicas: 0, Endpoint: "legacy-crm-sql.db.us-east-1.example.com:1433", Encrypted: false},
-			{ID: newID(), Name: "dev-sql", Edition: "developer", Version: "2022", Region: "eu-central-1", Status: "stopped", Size: "db.t3.medium", Storage: "50 GB SSD", Replicas: 0, Endpoint: "dev-sql.db.eu-central-1.example.com:1433", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "finance-sql", Edition: "enterprise", Version: "2022", Region: "ap-south-1", Status: "running", Size: "db.r6i.xlarge", Storage: "1 TB SSD", Replicas: 1, Endpoint: "finance-sql.db.ap-south-1.example.com:1433", Encrypted: true},
-			{ID: newID(), Name: "inventory-sql", Edition: "standard", Version: "2022", Region: "ap-south-1", Status: "running", Size: "db.m6i.large", Storage: "250 GB SSD", Replicas: 0, Endpoint: "inventory-sql.db.ap-south-1.example.com:1433", Encrypted: true},
-			{ID: newID(), Name: "test-sql", Edition: "developer", Version: "2019", Region: "ap-south-1", Status: "maintenance", Size: "db.t3.small", Storage: "20 GB SSD", Replicas: 0, Endpoint: "test-sql.db.ap-south-1.example.com:1433", Encrypted: false},
-		},
-	},
+	instances: map[string][]DBSQLServer{},
 }
 
 func (s *dbSQLServerStoreType) list(slug string) []DBSQLServer {
@@ -427,7 +402,7 @@ func apiWSDBRelationalSQLServerCreateHandler(w http.ResponseWriter, r *http.Requ
 		Version: version, Region: region,
 		Status: "creating", Size: size,
 		Storage: storage, Replicas: req.Replicas,
-		Endpoint: name + ".db." + region + ".example.com:1433",
+		Endpoint:  name + ".db." + region + ".example.com:1433",
 		Encrypted: req.Encrypted,
 	}
 	dbSQLServerStore.add(slug, inst)
@@ -487,20 +462,7 @@ type dbCloudNativeStoreType struct {
 }
 
 var dbCloudNativeStore = &dbCloudNativeStoreType{
-	instances: map[string][]DBCloudNative{
-		"buyvm": {
-			{ID: newID(), Name: "api-aurora-pg", Engine: "aurora-postgresql", Version: "15.4", Region: "eu-central-1", Status: "running", Size: "db.r6g.xlarge", Storage: "auto (128 GB used)", Replicas: 3, AutoScaling: true, ServerlessUnits: "—", Endpoint: "api-aurora-pg.cluster.eu-central-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "events-spanner", Engine: "cloud-spanner", Version: "latest", Region: "eu-central-1", Status: "running", Size: "3 nodes", Storage: "auto (2.4 TB used)", Replicas: 3, AutoScaling: true, ServerlessUnits: "3000 PU", Endpoint: "events-spanner.db.eu-central-1.example.com:443", Encrypted: true},
-			{ID: newID(), Name: "search-cockroach", Engine: "cockroachdb", Version: "23.2", Region: "us-east-1", Status: "running", Size: "4 vCPU / 16 GB", Storage: "auto (350 GB used)", Replicas: 3, AutoScaling: false, ServerlessUnits: "—", Endpoint: "search-cockroach.db.us-east-1.example.com:26257", Encrypted: true},
-			{ID: newID(), Name: "serverless-aurora", Engine: "aurora-mysql-serverless", Version: "3.04", Region: "eu-central-1", Status: "running", Size: "serverless v2", Storage: "auto (45 GB used)", Replicas: 1, AutoScaling: true, ServerlessUnits: "0.5–16 ACU", Endpoint: "serverless-aurora.cluster.eu-central-1.example.com:3306", Encrypted: true},
-			{ID: newID(), Name: "dev-planetscale", Engine: "planetscale", Version: "latest", Region: "eu-central-1", Status: "sleeping", Size: "hobby", Storage: "5 GB", Replicas: 0, AutoScaling: false, ServerlessUnits: "—", Endpoint: "dev-planetscale.db.eu-central-1.example.com:3306", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "main-aurora-pg", Engine: "aurora-postgresql", Version: "15.4", Region: "ap-south-1", Status: "running", Size: "db.r6g.2xlarge", Storage: "auto (560 GB used)", Replicas: 2, AutoScaling: true, ServerlessUnits: "—", Endpoint: "main-aurora-pg.cluster.ap-south-1.example.com:5432", Encrypted: true},
-			{ID: newID(), Name: "session-cockroach", Engine: "cockroachdb", Version: "23.2", Region: "ap-south-1", Status: "running", Size: "2 vCPU / 8 GB", Storage: "auto (80 GB used)", Replicas: 3, AutoScaling: false, ServerlessUnits: "—", Endpoint: "session-cockroach.db.ap-south-1.example.com:26257", Encrypted: true},
-			{ID: newID(), Name: "staging-serverless", Engine: "aurora-mysql-serverless", Version: "3.04", Region: "ap-south-1", Status: "paused", Size: "serverless v2", Storage: "auto (12 GB used)", Replicas: 0, AutoScaling: true, ServerlessUnits: "0.5–4 ACU", Endpoint: "staging-serverless.cluster.ap-south-1.example.com:3306", Encrypted: false},
-		},
-	},
+	instances: map[string][]DBCloudNative{},
 }
 
 func (s *dbCloudNativeStoreType) list(slug string) []DBCloudNative {
@@ -665,7 +627,7 @@ func apiWSDBRelationalCloudNativeCreateHandler(w http.ResponseWriter, r *http.Re
 		Status: "creating", Size: size,
 		Storage: "auto (0 GB used)", Replicas: req.Replicas,
 		AutoScaling: req.AutoScaling, ServerlessUnits: serverlessUnits,
-		Endpoint: name + ".cluster." + region + ".example.com:" + port,
+		Endpoint:  name + ".cluster." + region + ".example.com:" + port,
 		Encrypted: req.Encrypted,
 	}
 	dbCloudNativeStore.add(slug, inst)

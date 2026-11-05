@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -152,19 +151,19 @@ func apiChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mockUsersMu.Lock()
-	defer mockUsersMu.Unlock()
-	record, exists := mockUsers[user.Email]
-	if !exists || subtle.ConstantTimeCompare([]byte(record.Password), []byte(req.Current)) != 1 {
-		apiError(w, http.StatusBadRequest, "Current password is incorrect.")
-		return
-	}
 	if req.New == req.Current {
 		apiError(w, http.StatusBadRequest, "New password must differ from the current one.")
 		return
 	}
-	record.Password = req.New
-	mockUsers[user.Email] = record
+	changed, err := changeAccountPassword(r.Context(), user, req.Current, req.New)
+	if err != nil {
+		apiError(w, http.StatusInternalServerError, "Failed to update password.")
+		return
+	}
+	if !changed {
+		apiError(w, http.StatusBadRequest, "Current password is incorrect.")
+		return
+	}
 
 	// Revoke all other active sessions so other devices must re-login.
 	if Pools != nil && user.ID > 0 {

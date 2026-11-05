@@ -33,20 +33,7 @@ type objectBucketStoreType struct {
 }
 
 var objectBucketStore = &objectBucketStoreType{
-	buckets: map[string][]ObjectBucket{
-		"buyvm": {
-			{ID: newID(), Name: "prod-assets", Region: "eu-central-1", Status: "active", Size: "1.2 TB", Objects: "842,310", Versioning: "enabled", Access: "private"},
-			{ID: newID(), Name: "user-uploads", Region: "eu-central-1", Status: "active", Size: "340 GB", Objects: "128,455", Versioning: "enabled", Access: "private"},
-			{ID: newID(), Name: "public-cdn-origin", Region: "us-east-1", Status: "active", Size: "89 GB", Objects: "12,034", Versioning: "disabled", Access: "public-read"},
-			{ID: newID(), Name: "logs-2024", Region: "eu-central-1", Status: "active", Size: "2.8 TB", Objects: "14,221,008", Versioning: "disabled", Access: "private"},
-			{ID: newID(), Name: "staging-data", Region: "eu-central-1", Status: "active", Size: "42 GB", Objects: "8,912", Versioning: "suspended", Access: "private"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "app-media", Region: "ap-south-1", Status: "active", Size: "560 GB", Objects: "234,100", Versioning: "enabled", Access: "private"},
-			{ID: newID(), Name: "static-assets", Region: "ap-south-1", Status: "active", Size: "12 GB", Objects: "1,842", Versioning: "disabled", Access: "public-read"},
-			{ID: newID(), Name: "backups-daily", Region: "ap-south-1", Status: "active", Size: "890 GB", Objects: "365", Versioning: "enabled", Access: "private"},
-		},
-	},
+	buckets: map[string][]ObjectBucket{},
 }
 
 func (s *objectBucketStoreType) list(slug string) []ObjectBucket {
@@ -232,18 +219,7 @@ type archiveVaultStoreType struct {
 }
 
 var archiveVaultStore = &archiveVaultStoreType{
-	vaults: map[string][]ArchiveVault{
-		"buyvm": {
-			{ID: newID(), Name: "compliance-archive", Region: "eu-central-1", Status: "active", Size: "14.2 TB", Archives: "8,420", Tier: "glacier", RetrievalSLA: "3-5 hours"},
-			{ID: newID(), Name: "media-cold-storage", Region: "us-east-1", Status: "active", Size: "28.7 TB", Archives: "124,500", Tier: "deep-archive", RetrievalSLA: "12 hours"},
-			{ID: newID(), Name: "log-archive-2023", Region: "eu-central-1", Status: "active", Size: "4.1 TB", Archives: "365", Tier: "glacier", RetrievalSLA: "3-5 hours"},
-			{ID: newID(), Name: "db-snapshots-archive", Region: "us-east-1", Status: "active", Size: "980 GB", Archives: "52", Tier: "glacier-ir", RetrievalSLA: "minutes"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "old-projects", Region: "ap-south-1", Status: "active", Size: "2.4 TB", Archives: "1,280", Tier: "glacier", RetrievalSLA: "3-5 hours"},
-			{ID: newID(), Name: "regulatory-data", Region: "ap-south-1", Status: "active", Size: "890 GB", Archives: "442", Tier: "deep-archive", RetrievalSLA: "12 hours"},
-		},
-	},
+	vaults: map[string][]ArchiveVault{},
 }
 
 func (s *archiveVaultStoreType) list(slug string) []ArchiveVault {
@@ -340,7 +316,7 @@ func apiWSStorageObjectArchiveListHandler(w http.ResponseWriter, r *http.Request
 }
 
 type apiCreateArchiveVaultRequest struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
 	Region string `json:"region"`
 	Tier   string `json:"tier"`
 }
@@ -432,19 +408,7 @@ type dataLakeZoneStoreType struct {
 }
 
 var dataLakeZoneStore = &dataLakeZoneStoreType{
-	zones: map[string][]DataLakeZone{
-		"buyvm": {
-			{ID: newID(), Name: "raw-events", Region: "eu-central-1", Status: "active", Size: "8.4 TB", Tables: 24, Format: "Parquet", Catalog: "Glue", LastSync: "5m ago"},
-			{ID: newID(), Name: "curated-analytics", Region: "eu-central-1", Status: "active", Size: "2.1 TB", Tables: 42, Format: "Delta Lake", Catalog: "Glue", LastSync: "1h ago"},
-			{ID: newID(), Name: "ml-feature-store", Region: "us-east-1", Status: "active", Size: "480 GB", Tables: 18, Format: "Parquet", Catalog: "Hive", LastSync: "30m ago"},
-			{ID: newID(), Name: "staging-zone", Region: "eu-central-1", Status: "active", Size: "120 GB", Tables: 8, Format: "JSON / CSV", Catalog: "Glue", LastSync: "2m ago"},
-			{ID: newID(), Name: "archive-zone", Region: "us-east-1", Status: "readonly", Size: "14.8 TB", Tables: 56, Format: "ORC", Catalog: "Hive", LastSync: "30d ago"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "clickstream-raw", Region: "ap-south-1", Status: "active", Size: "1.2 TB", Tables: 12, Format: "Parquet", Catalog: "Glue", LastSync: "10m ago"},
-			{ID: newID(), Name: "business-reports", Region: "ap-south-1", Status: "active", Size: "340 GB", Tables: 28, Format: "Delta Lake", Catalog: "Glue", LastSync: "3h ago"},
-		},
-	},
+	zones: map[string][]DataLakeZone{},
 }
 
 func (s *dataLakeZoneStoreType) list(slug string) []DataLakeZone {

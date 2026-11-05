@@ -20,7 +20,7 @@ type ProIdentityProvider struct {
 	ClientID        string
 	Domain          string
 	UserCount       int
-	GroupCount       int
+	GroupCount      int
 	ActiveSessions  int
 	MFAEnforced     bool
 	MFAMethod       string // "TOTP", "WebAuthn", "SMS", "Push"
@@ -39,20 +39,7 @@ type proIdentityStoreType struct {
 }
 
 var proIdentityStore = &proIdentityStoreType{
-	items: map[string][]ProIdentityProvider{
-		"buyvm": {
-			{ID: newID(), Name: "corp-okta-sso", Protocol: "SAML 2.0", Issuer: "https://company.okta.com", ClientID: "0oa8k2x...", Domain: "company.io", UserCount: 2840, GroupCount: 64, ActiveSessions: 1420, MFAEnforced: true, MFAMethod: "WebAuthn", PasswordPolicy: "strong", SessionTimeout: 480, JITProvisioning: true, Region: "us-east-1", CostPerMonth: 284.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "azure-ad-sync", Protocol: "OIDC", Issuer: "https://login.microsoftonline.com/tenant-id", ClientID: "app-id-12345", Domain: "company.onmicrosoft.com", UserCount: 1200, GroupCount: 38, ActiveSessions: 640, MFAEnforced: true, MFAMethod: "Push", PasswordPolicy: "strong", SessionTimeout: 360, JITProvisioning: true, Region: "us-east-1", CostPerMonth: 120.00, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "ldap-legacy", Protocol: "LDAP", Issuer: "ldaps://ldap.internal.company.io:636", ClientID: "cn=admin,dc=company,dc=io", Domain: "internal.company.io", UserCount: 480, GroupCount: 12, ActiveSessions: 86, MFAEnforced: false, MFAMethod: "TOTP", PasswordPolicy: "standard", SessionTimeout: 120, JITProvisioning: false, Region: "us-east-1", CostPerMonth: 48.00, Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "scim-provisioner", Protocol: "SCIM", Issuer: "https://company.okta.com/scim/v2", ClientID: "scim-bearer-token", Domain: "company.io", UserCount: 2840, GroupCount: 64, ActiveSessions: 0, MFAEnforced: false, MFAMethod: "—", PasswordPolicy: "—", SessionTimeout: 0, JITProvisioning: true, Region: "us-east-1", CostPerMonth: 56.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "partner-oidc", Protocol: "OIDC", Issuer: "https://auth.partner-corp.com", ClientID: "partner-client-9876", Domain: "partner-corp.com", UserCount: 320, GroupCount: 8, ActiveSessions: 42, MFAEnforced: true, MFAMethod: "TOTP", PasswordPolicy: "custom", SessionTimeout: 240, JITProvisioning: false, Region: "eu-central-1", CostPerMonth: 32.00, Status: "configuring", Updated: "2026-04-18"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "google-workspace", Protocol: "OIDC", Issuer: "https://accounts.google.com", ClientID: "gcp-client-id-abcd", Domain: "hosting.com", UserCount: 8400, GroupCount: 142, ActiveSessions: 4200, MFAEnforced: true, MFAMethod: "WebAuthn", PasswordPolicy: "strong", SessionTimeout: 720, JITProvisioning: true, Region: "eu-central-1", CostPerMonth: 840.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "customer-sso-pool", Protocol: "SAML 2.0", Issuer: "https://sso.hosting.com/saml/metadata", ClientID: "customer-pool-001", Domain: "*.hosting.com", UserCount: 42000, GroupCount: 380, ActiveSessions: 18600, MFAEnforced: true, MFAMethod: "Push", PasswordPolicy: "strong", SessionTimeout: 480, JITProvisioning: true, Region: "eu-central-1", CostPerMonth: 4200.00, Status: "active", Updated: "2026-04-18"},
-			{ID: newID(), Name: "contractor-ldap", Protocol: "LDAP", Issuer: "ldaps://ldap.hosting.com:636", ClientID: "cn=svc,dc=hosting,dc=com", Domain: "contractors.hosting.com", UserCount: 640, GroupCount: 24, ActiveSessions: 120, MFAEnforced: true, MFAMethod: "SMS", PasswordPolicy: "standard", SessionTimeout: 180, JITProvisioning: false, Region: "eu-central-1", CostPerMonth: 64.00, Status: "active", Updated: "2026-04-16"},
-		},
-	},
+	items: map[string][]ProIdentityProvider{},
 }
 
 func (s *proIdentityStoreType) list(slug string) []ProIdentityProvider {
@@ -101,7 +88,7 @@ type apiProIdentityProvider struct {
 	ClientID        string  `json:"client_id"`
 	Domain          string  `json:"domain"`
 	UserCount       int     `json:"user_count"`
-	GroupCount       int     `json:"group_count"`
+	GroupCount      int     `json:"group_count"`
 	ActiveSessions  int     `json:"active_sessions"`
 	MFAEnforced     bool    `json:"mfa_enforced"`
 	MFAMethod       string  `json:"mfa_method"`

@@ -35,20 +35,7 @@ type dbMemorySessionStoreType struct {
 }
 
 var dbMemorySessionStore = &dbMemorySessionStoreType{
-	instances: map[string][]DBMemorySession{
-		"buyvm": {
-			{ID: newID(), Name: "web-sessions", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.r7g.xlarge", Nodes: 3, MaxMemory: "32 GB", TTL: "24h", ActiveSessions: "1,240,000", Throughput: "18,400 ops/s", Endpoint: "web-sessions.session.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "api-tokens", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "running", Size: "cache.r7g.large", Nodes: 2, MaxMemory: "16 GB", TTL: "1h", ActiveSessions: "320,000", Throughput: "8,200 ops/s", Endpoint: "api-tokens.session.eu-central-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "oauth-state", Engine: "redis", Version: "7.2", Region: "us-east-1", Status: "running", Size: "cache.m7g.large", Nodes: 2, MaxMemory: "8 GB", TTL: "10m", ActiveSessions: "45,000", Throughput: "3,600 ops/s", Endpoint: "oauth-state.session.us-east-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "cart-sessions", Engine: "memcached", Version: "1.6", Region: "eu-central-1", Status: "running", Size: "cache.m7g.xlarge", Nodes: 4, MaxMemory: "64 GB", TTL: "48h", ActiveSessions: "890,000", Throughput: "12,100 ops/s", Endpoint: "cart-sessions.session.eu-central-1.example.com:11211", Encrypted: false},
-			{ID: newID(), Name: "dev-sessions", Engine: "redis", Version: "7.2", Region: "eu-central-1", Status: "stopped", Size: "cache.t3.micro", Nodes: 1, MaxMemory: "512 MB", TTL: "30m", ActiveSessions: "0", Throughput: "0 ops/s", Endpoint: "dev-sessions.session.eu-central-1.example.com:6379", Encrypted: false},
-		},
-		"hosting": {
-			{ID: newID(), Name: "user-sessions", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.r7g.large", Nodes: 2, MaxMemory: "16 GB", TTL: "12h", ActiveSessions: "680,000", Throughput: "9,800 ops/s", Endpoint: "user-sessions.session.ap-south-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "admin-sessions", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.m7g.medium", Nodes: 1, MaxMemory: "4 GB", TTL: "2h", ActiveSessions: "1,200", Throughput: "240 ops/s", Endpoint: "admin-sessions.session.ap-south-1.example.com:6379", Encrypted: true},
-			{ID: newID(), Name: "websocket-state", Engine: "redis", Version: "7.2", Region: "ap-south-1", Status: "running", Size: "cache.m7g.large", Nodes: 2, MaxMemory: "8 GB", TTL: "6h", ActiveSessions: "42,000", Throughput: "5,400 ops/s", Endpoint: "websocket-state.session.ap-south-1.example.com:6379", Encrypted: true},
-		},
-	},
+	instances: map[string][]DBMemorySession{},
 }
 
 func (s *dbMemorySessionStoreType) list(slug string) []DBMemorySession {

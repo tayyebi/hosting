@@ -31,22 +31,7 @@ type scheduledJobStoreType struct {
 }
 
 var scheduledJobStore = &scheduledJobStoreType{
-	jobs: map[string][]ScheduledJob{
-		"buyvm": {
-			{ID: newID(), Name: "db-vacuum-analyze", Schedule: "0 3 * * *", Command: "pg_vacuum --full", Runtime: "PostgreSQL", LastRun: "2026-04-17 03:00", NextRun: "2026-04-18 03:00", Duration: "12m 34s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "log-rotation", Schedule: "0 0 * * *", Command: "logrotate /etc/logrotate.d/*", Runtime: "Shell", LastRun: "2026-04-17 00:00", NextRun: "2026-04-18 00:00", Duration: "45s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "billing-invoice-gen", Schedule: "0 6 1 * *", Command: "invoice-generator --month=current", Runtime: "Python 3.11", LastRun: "2026-04-01 06:00", NextRun: "2026-05-01 06:00", Duration: "8m 12s", Status: "active", Updated: "2026-04-01"},
-			{ID: newID(), Name: "cdn-cache-purge", Schedule: "*/30 * * * *", Command: "cdn-cli purge --stale", Runtime: "Shell", LastRun: "2026-04-17 09:30", NextRun: "2026-04-17 10:00", Duration: "22s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "metrics-aggregation", Schedule: "*/5 * * * *", Command: "aggregate-metrics --window=5m", Runtime: "Go", LastRun: "2026-04-17 09:45", NextRun: "2026-04-17 09:50", Duration: "8s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "legacy-report-export", Schedule: "0 8 * * 1", Command: "export-report --format=csv", Runtime: "Python 2.7", LastRun: "2026-04-14 08:00", NextRun: "2026-04-21 08:00", Duration: "3m 45s", Status: "deprecated", Updated: "2025-09-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "vm-health-check", Schedule: "*/10 * * * *", Command: "health-check --all-vms", Runtime: "Go", LastRun: "2026-04-17 09:40", NextRun: "2026-04-17 09:50", Duration: "1m 15s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "dns-zone-sync", Schedule: "*/15 * * * *", Command: "dns-sync --zones=all", Runtime: "Shell", LastRun: "2026-04-17 09:30", NextRun: "2026-04-17 09:45", Duration: "35s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "storage-usage-report", Schedule: "0 7 * * *", Command: "usage-report --type=storage", Runtime: "Python 3.11", LastRun: "2026-04-17 07:00", NextRun: "2026-04-18 07:00", Duration: "2m 10s", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "expired-trial-cleanup", Schedule: "0 4 * * *", Command: "cleanup-trials --expired", Runtime: "Go", LastRun: "2026-04-17 04:00", NextRun: "2026-04-18 04:00", Duration: "55s", Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	jobs: map[string][]ScheduledJob{},
 }
 
 func (s *scheduledJobStoreType) list(slug string) []ScheduledJob {

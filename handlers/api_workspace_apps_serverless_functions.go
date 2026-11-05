@@ -38,23 +38,7 @@ type proServerlessFuncStoreType struct {
 }
 
 var proServerlessFuncStore = &proServerlessFuncStoreType{
-	items: map[string][]ProServerlessFunc{
-		"buyvm": {
-			{ID: newID(), Name: "api-auth-handler", Runtime: "Node.js 20", Trigger: "HTTP POST", Route: "/auth/callback", MemoryMB: 256, TimeoutSec: 10, EnvVars: 5, Region: "us-east-1", Invocations24: 14500, AvgDurationMs: 35, ErrorRate: 0.1, LastDeployed: "2026-04-17 14:22", CodeSizeKB: 128, ColdStartMs: 8, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "image-resizer", Runtime: "Python 3.12", Trigger: "Queue", Route: "—", MemoryMB: 512, TimeoutSec: 30, EnvVars: 3, Region: "us-east-1", Invocations24: 8200, AvgDurationMs: 180, ErrorRate: 0.3, LastDeployed: "2026-04-16 09:15", CodeSizeKB: 340, ColdStartMs: 45, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "cron-cleanup", Runtime: "Go 1.22", Trigger: "Cron */15 * * * *", Route: "—", MemoryMB: 128, TimeoutSec: 60, EnvVars: 2, Region: "us-east-1", Invocations24: 96, AvgDurationMs: 420, ErrorRate: 0, LastDeployed: "2026-04-15 11:00", CodeSizeKB: 64, ColdStartMs: 4, Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "webhook-processor", Runtime: "Node.js 20", Trigger: "HTTP POST", Route: "/webhooks/stripe", MemoryMB: 256, TimeoutSec: 15, EnvVars: 8, Region: "us-east-1", Invocations24: 3100, AvgDurationMs: 55, ErrorRate: 0.05, LastDeployed: "2026-04-17 18:30", CodeSizeKB: 96, ColdStartMs: 7, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "pdf-generator", Runtime: "Python 3.12", Trigger: "HTTP GET", Route: "/reports/pdf", MemoryMB: 1024, TimeoutSec: 60, EnvVars: 4, Region: "eu-west-1", Invocations24: 450, AvgDurationMs: 2200, ErrorRate: 1.2, LastDeployed: "2026-04-14 16:00", CodeSizeKB: 820, ColdStartMs: 120, Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "legacy-transform", Runtime: "Node.js 18", Trigger: "Queue", Route: "—", MemoryMB: 256, TimeoutSec: 30, EnvVars: 6, Region: "us-east-1", Invocations24: 0, AvgDurationMs: 0, ErrorRate: 0, LastDeployed: "2026-03-01 10:00", CodeSizeKB: 210, ColdStartMs: 0, Status: "inactive", Updated: "2026-03-01"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "edge-auth-verify", Runtime: "Rust", Trigger: "HTTP GET", Route: "/v1/verify", MemoryMB: 128, TimeoutSec: 5, EnvVars: 3, Region: "global-edge", Invocations24: 52000, AvgDurationMs: 8, ErrorRate: 0.01, LastDeployed: "2026-04-17 20:00", CodeSizeKB: 48, ColdStartMs: 2, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "data-etl-pipeline", Runtime: "Python 3.12", Trigger: "Cron 0 */2 * * *", Route: "—", MemoryMB: 2048, TimeoutSec: 300, EnvVars: 12, Region: "us-west-2", Invocations24: 12, AvgDurationMs: 45000, ErrorRate: 0, LastDeployed: "2026-04-16 08:00", CodeSizeKB: 1500, ColdStartMs: 200, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "notification-dispatch", Runtime: "Node.js 20", Trigger: "Queue", Route: "—", MemoryMB: 256, TimeoutSec: 15, EnvVars: 7, Region: "eu-central-1", Invocations24: 18400, AvgDurationMs: 22, ErrorRate: 0.05, LastDeployed: "2026-04-17 11:45", CodeSizeKB: 85, ColdStartMs: 6, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "og-image-gen", Runtime: "Node.js 20", Trigger: "HTTP GET", Route: "/og/{slug}", MemoryMB: 512, TimeoutSec: 10, EnvVars: 2, Region: "us-west-2", Invocations24: 6700, AvgDurationMs: 95, ErrorRate: 0.2, LastDeployed: "2026-04-15 14:30", CodeSizeKB: 420, ColdStartMs: 15, Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "ml-feature-store", Runtime: "Python 3.12", Trigger: "HTTP POST", Route: "/features/compute", MemoryMB: 1024, TimeoutSec: 30, EnvVars: 9, Region: "us-west-2", Invocations24: 2300, AvgDurationMs: 140, ErrorRate: 0.08, LastDeployed: "2026-04-17 07:00", CodeSizeKB: 650, ColdStartMs: 80, Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]ProServerlessFunc{},
 }
 
 func (s *proServerlessFuncStoreType) list(slug string) []ProServerlessFunc {

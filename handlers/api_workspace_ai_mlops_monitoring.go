@@ -31,19 +31,7 @@ type mlMonitorStoreType struct {
 }
 
 var mlMonitorStore = &mlMonitorStoreType{
-	monitors: map[string][]MLMonitor{
-		"buyvm": {
-			{ID: newID(), Model: "acme-recommender", Status: "healthy", DriftScore: "0.04", Confidence: "0.92", LatencyP99: "8 ms", Inferences: "4.2M", AlertsDay: 0, Owner: "growth-team", Region: "eu-central-1"},
-			{ID: newID(), Model: "churn-pred", Status: "drift", DriftScore: "0.18", Confidence: "0.84", LatencyP99: "12 ms", Inferences: "1.8M", AlertsDay: 1, Owner: "data-team", Region: "eu-central-1"},
-			{ID: newID(), Model: "llm-acme-v4", Status: "healthy", DriftScore: "—", Confidence: "0.91", LatencyP99: "842 ms", Inferences: "420K", AlertsDay: 0, Owner: "ml-team", Region: "eu-central-1"},
-			{ID: newID(), Model: "vision-defect", Status: "healthy", DriftScore: "0.02", Confidence: "0.97", LatencyP99: "42 ms", Inferences: "6.4M", AlertsDay: 0, Owner: "cv-team", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Model: "fraud-classifier", Status: "healthy", DriftScore: "0.06", Confidence: "0.93", LatencyP99: "14 ms", Inferences: "2.8M", AlertsDay: 0, Owner: "security-team", Region: "ap-south-1"},
-			{ID: newID(), Model: "price-optimizer", Status: "healthy", DriftScore: "0.08", Confidence: "0.89", LatencyP99: "22 ms", Inferences: "840K", AlertsDay: 0, Owner: "pricing-team", Region: "ap-south-1"},
-			{ID: newID(), Model: "embedding-model", Status: "degraded", DriftScore: "0.14", Confidence: "0.86", LatencyP99: "180 ms", Inferences: "1.2M", AlertsDay: 2, Owner: "ml-team", Region: "ap-south-1"},
-		},
-	},
+	monitors: map[string][]MLMonitor{},
 }
 
 func (s *mlMonitorStoreType) list(slug string) []MLMonitor {

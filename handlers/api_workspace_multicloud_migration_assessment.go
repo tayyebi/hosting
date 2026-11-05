@@ -13,19 +13,19 @@ import (
 // ════════════════════════════════════════════════════════════════
 
 type MigrationAssessment struct {
-	ID              string
-	Name            string
-	SourceEnv       string
-	TargetEnv       string
+	ID               string
+	Name             string
+	SourceEnv        string
+	TargetEnv        string
 	DiscoveredAssets int
-	ReadyToMigrate  int
+	ReadyToMigrate   int
 	NeedsRemediation int
-	Unsupported     int
-	EstimatedCost   string
-	Complexity      string
-	LastScan        string
-	Status          string
-	Updated         string
+	Unsupported      int
+	EstimatedCost    string
+	Complexity       string
+	LastScan         string
+	Status           string
+	Updated          string
 }
 
 type migrationAssessmentStoreType struct {
@@ -34,19 +34,7 @@ type migrationAssessmentStoreType struct {
 }
 
 var migrationAssessmentStore = &migrationAssessmentStoreType{
-	items: map[string][]MigrationAssessment{
-		"buyvm": {
-			{ID: newID(), Name: "dc-east-to-aws", SourceEnv: "On-premises DC East", TargetEnv: "AWS us-east-1", DiscoveredAssets: 342, ReadyToMigrate: 280, NeedsRemediation: 48, Unsupported: 14, EstimatedCost: "$18,500/mo", Complexity: "High", LastScan: "2026-04-17 06:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "azure-to-gcp-analytics", SourceEnv: "Azure West Europe", TargetEnv: "GCP europe-west1", DiscoveredAssets: 85, ReadyToMigrate: 72, NeedsRemediation: 10, Unsupported: 3, EstimatedCost: "$4,200/mo", Complexity: "Medium", LastScan: "2026-04-16 22:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "legacy-mainframe-assess", SourceEnv: "IBM Mainframe", TargetEnv: "AWS + Azure", DiscoveredAssets: 156, ReadyToMigrate: 45, NeedsRemediation: 89, Unsupported: 22, EstimatedCost: "$32,000/mo", Complexity: "Critical", LastScan: "2026-04-15 12:00", Status: "in_progress", Updated: "2026-04-15"},
-			{ID: newID(), Name: "dev-env-consolidation", SourceEnv: "Multi-cloud dev", TargetEnv: "AWS us-west-2", DiscoveredAssets: 210, ReadyToMigrate: 195, NeedsRemediation: 12, Unsupported: 3, EstimatedCost: "$6,800/mo", Complexity: "Low", LastScan: "2026-04-17 09:00", Status: "completed", Updated: "2026-04-17"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "full-infra-discovery", SourceEnv: "AWS + Azure + GCP", TargetEnv: "Unified platform", DiscoveredAssets: 1250, ReadyToMigrate: 890, NeedsRemediation: 310, Unsupported: 50, EstimatedCost: "$95,000/mo", Complexity: "Critical", LastScan: "2026-04-17 03:00", Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Name: "apac-region-migration", SourceEnv: "Alibaba Cloud", TargetEnv: "AWS ap-southeast-1", DiscoveredAssets: 420, ReadyToMigrate: 350, NeedsRemediation: 55, Unsupported: 15, EstimatedCost: "$22,000/mo", Complexity: "High", LastScan: "2026-04-16 18:00", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "k8s-cluster-assessment", SourceEnv: "Self-managed K8s", TargetEnv: "EKS + GKE", DiscoveredAssets: 78, ReadyToMigrate: 65, NeedsRemediation: 13, Unsupported: 0, EstimatedCost: "$8,400/mo", Complexity: "Medium", LastScan: "2026-04-17 07:30", Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]MigrationAssessment{},
 }
 
 func (s *migrationAssessmentStoreType) list(slug string) []MigrationAssessment {

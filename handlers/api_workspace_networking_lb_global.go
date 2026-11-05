@@ -33,16 +33,7 @@ type netLBGlobalStoreType struct {
 }
 
 var netLBGlobalStore = &netLBGlobalStoreType{
-	instances: map[string][]NetLBGlobal{
-		"buyvm": {
-			{ID: newID(), Name: "prod-global-lb", Protocol: "HTTPS", Anycast: "203.0.113.10", Regions: 4, Backends: 3, Status: "active", Routing: "latency-based", Failover: "automatic", HealthChk: "/health", RPS: 82000, Latency: "18ms"},
-			{ID: newID(), Name: "api-global-lb", Protocol: "HTTPS", Anycast: "203.0.113.20", Regions: 3, Backends: 2, Status: "active", Routing: "geo-proximity", Failover: "automatic", HealthChk: "/api/ping", RPS: 54000, Latency: "22ms"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "global-edge-lb", Protocol: "HTTPS", Anycast: "198.51.100.50", Regions: 5, Backends: 4, Status: "active", Routing: "latency-based", Failover: "automatic", HealthChk: "/ready", RPS: 120000, Latency: "14ms"},
-			{ID: newID(), Name: "global-api-lb", Protocol: "HTTPS", Anycast: "198.51.100.60", Regions: 3, Backends: 2, Status: "active", Routing: "weighted", Failover: "manual", HealthChk: "/status", RPS: 45000, Latency: "28ms"},
-		},
-	},
+	instances: map[string][]NetLBGlobal{},
 }
 
 func (s *netLBGlobalStoreType) list(slug string) []NetLBGlobal {

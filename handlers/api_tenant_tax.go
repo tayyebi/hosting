@@ -36,26 +36,7 @@ type taxStoreType struct {
 }
 
 var taxStore = &taxStoreType{
-	rules: map[string][]TaxRule{
-		"buyvm": {
-			{ID: newID(), Name: "US Federal — No Sales Tax", Region: "US", Type: "exempt", Status: "active", Rate: "0.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "New York State Sales Tax", Region: "US-NY", Type: "sales_tax", Status: "active", Rate: "8.00", AppliesTo: "hardware", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-06-15T00:00:00Z"},
-			{ID: newID(), Name: "EU VAT — Standard", Region: "EU", Type: "vat", Status: "active", Rate: "21.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2026-01-01T00:00:00Z"},
-			{ID: newID(), Name: "EU VAT — Reverse Charge (B2B)", Region: "EU", Type: "vat", Status: "active", Rate: "0.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "Canada GST", Region: "CA", Type: "gst", Status: "active", Rate: "5.00", AppliesTo: "all", ValidFrom: "2025-03-01", ValidUntil: "", Created: "2025-03-01T00:00:00Z", Updated: "2025-03-01T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "Germany VAT (Umsatzsteuer)", Region: "DE", Type: "vat", Status: "active", Rate: "19.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "France VAT (TVA)", Region: "FR", Type: "vat", Status: "active", Rate: "20.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "Netherlands VAT (BTW)", Region: "NL", Type: "vat", Status: "active", Rate: "21.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "EU Reverse Charge B2B", Region: "EU", Type: "vat", Status: "active", Rate: "0.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "US — Digital Services (No Tax)", Region: "US", Type: "exempt", Status: "active", Rate: "0.00", AppliesTo: "all", ValidFrom: "2025-01-01", ValidUntil: "", Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-			{ID: newID(), Name: "India GST — Cloud Services", Region: "IN", Type: "gst", Status: "active", Rate: "18.00", AppliesTo: "all", ValidFrom: "2025-04-01", ValidUntil: "", Created: "2025-04-01T00:00:00Z", Updated: "2025-04-01T00:00:00Z"},
-			{ID: newID(), Name: "India Withholding Tax (TDS)", Region: "IN", Type: "withholding", Status: "active", Rate: "2.00", AppliesTo: "all", ValidFrom: "2025-04-01", ValidUntil: "", Created: "2025-04-01T00:00:00Z", Updated: "2025-04-01T00:00:00Z"},
-		},
-	},
+	rules: map[string][]TaxRule{},
 }
 
 func (s *taxStoreType) list(slug string) []TaxRule {
@@ -207,8 +188,8 @@ func apiTenantTaxListHandler(w http.ResponseWriter, r *http.Request) {
 		out[i] = apiTaxRule{
 			ID: t.ID, Name: t.Name, Region: t.Region,
 			Type: t.Type, Status: t.Status, Rate: t.Rate,
-			AppliesTo:  t.AppliesTo,
-			ValidFrom:  t.ValidFrom, ValidUntil: t.ValidUntil,
+			AppliesTo: t.AppliesTo,
+			ValidFrom: t.ValidFrom, ValidUntil: t.ValidUntil,
 			Created: t.Created, Updated: t.Updated,
 		}
 	}
@@ -294,8 +275,8 @@ func apiTenantTaxCreateHandler(w http.ResponseWriter, r *http.Request) {
 		apiCreated(w, apiTaxRule{
 			ID: t.ID, Name: t.Name, Region: t.Region,
 			Type: t.Type, Status: t.Status, Rate: t.Rate,
-			AppliesTo:  t.AppliesTo,
-			ValidFrom:  t.ValidFrom, ValidUntil: t.ValidUntil,
+			AppliesTo: t.AppliesTo,
+			ValidFrom: t.ValidFrom, ValidUntil: t.ValidUntil,
 			Created: t.Created, Updated: t.Updated,
 		})
 		return
@@ -304,8 +285,8 @@ func apiTenantTaxCreateHandler(w http.ResponseWriter, r *http.Request) {
 	t := TaxRule{
 		ID: newID(), Name: name, Region: region,
 		Type: taxType, Status: "active", Rate: rate,
-		AppliesTo:  appliesTo,
-		ValidFrom:  strings.TrimSpace(req.ValidFrom), ValidUntil: strings.TrimSpace(req.ValidUntil),
+		AppliesTo: appliesTo,
+		ValidFrom: strings.TrimSpace(req.ValidFrom), ValidUntil: strings.TrimSpace(req.ValidUntil),
 		Created: time.Now().Format(time.RFC3339), Updated: time.Now().Format(time.RFC3339),
 	}
 	taxStore.add(slug, t)
@@ -313,8 +294,8 @@ func apiTenantTaxCreateHandler(w http.ResponseWriter, r *http.Request) {
 	apiCreated(w, apiTaxRule{
 		ID: t.ID, Name: t.Name, Region: t.Region,
 		Type: t.Type, Status: t.Status, Rate: t.Rate,
-		AppliesTo:  t.AppliesTo,
-		ValidFrom:  t.ValidFrom, ValidUntil: t.ValidUntil,
+		AppliesTo: t.AppliesTo,
+		ValidFrom: t.ValidFrom, ValidUntil: t.ValidUntil,
 		Created: t.Created, Updated: t.Updated,
 	})
 }
@@ -355,8 +336,8 @@ func apiTenantTaxGetHandler(w http.ResponseWriter, r *http.Request) {
 			apiOK(w, apiTaxRule{
 				ID: t.ID, Name: t.Name, Region: t.Region,
 				Type: t.Type, Status: t.Status, Rate: t.Rate,
-				AppliesTo:  t.AppliesTo,
-				ValidFrom:  t.ValidFrom, ValidUntil: t.ValidUntil,
+				AppliesTo: t.AppliesTo,
+				ValidFrom: t.ValidFrom, ValidUntil: t.ValidUntil,
 				Created: t.Created, Updated: t.Updated,
 			})
 			return
@@ -372,8 +353,8 @@ func apiTenantTaxGetHandler(w http.ResponseWriter, r *http.Request) {
 	apiOK(w, apiTaxRule{
 		ID: t.ID, Name: t.Name, Region: t.Region,
 		Type: t.Type, Status: t.Status, Rate: t.Rate,
-		AppliesTo:  t.AppliesTo,
-		ValidFrom:  t.ValidFrom, ValidUntil: t.ValidUntil,
+		AppliesTo: t.AppliesTo,
+		ValidFrom: t.ValidFrom, ValidUntil: t.ValidUntil,
 		Created: t.Created, Updated: t.Updated,
 	})
 }

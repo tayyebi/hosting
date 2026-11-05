@@ -38,21 +38,7 @@ type proDNSZoneStoreType struct {
 }
 
 var proDNSZoneStore = &proDNSZoneStoreType{
-	items: map[string][]ProDNSZone{
-		"buyvm": {
-			{ID: newID(), Domain: "buyvm-demo.com", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 42, DNSSEC: true, DNSSECAlgo: "ECDSAP256SHA256", TTLDefault: 300, GeoRouting: true, ANAMEFlat: true, QueriesDay: 2400000, PropagationMs: 8, Registrar: "Platform Domains", ExpiresAt: "2027-03-15", AutoRenew: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Domain: "buyvm-cdn.net", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 18, DNSSEC: true, DNSSECAlgo: "ECDSAP256SHA256", TTLDefault: 60, GeoRouting: true, ANAMEFlat: false, QueriesDay: 8500000, PropagationMs: 5, Registrar: "Namecheap", ExpiresAt: "2027-01-20", AutoRenew: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Domain: "api.buyvm-demo.com", ZoneType: "Delegated", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 8, DNSSEC: false, DNSSECAlgo: "—", TTLDefault: 300, GeoRouting: false, ANAMEFlat: false, QueriesDay: 650000, PropagationMs: 10, Registrar: "—", ExpiresAt: "—", AutoRenew: false, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Domain: "staging.buyvm-demo.com", ZoneType: "Delegated", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 12, DNSSEC: false, DNSSECAlgo: "—", TTLDefault: 60, GeoRouting: false, ANAMEFlat: false, QueriesDay: 45000, PropagationMs: 12, Registrar: "—", ExpiresAt: "—", AutoRenew: false, Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Domain: "old-brand.com", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 3, DNSSEC: false, DNSSECAlgo: "—", TTLDefault: 3600, GeoRouting: false, ANAMEFlat: false, QueriesDay: 1200, PropagationMs: 15, Registrar: "GoDaddy", ExpiresAt: "2026-06-01", AutoRenew: false, Status: "expiring_soon", Updated: "2026-04-10"},
-		},
-		"hosting": {
-			{ID: newID(), Domain: "hosting-demo.com", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io, ns3.platform.io", RecordCount: 65, DNSSEC: true, DNSSECAlgo: "ECDSAP384SHA384", TTLDefault: 300, GeoRouting: true, ANAMEFlat: true, QueriesDay: 12000000, PropagationMs: 4, Registrar: "Platform Domains", ExpiresAt: "2028-01-10", AutoRenew: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Domain: "hosting.io", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 28, DNSSEC: true, DNSSECAlgo: "ECDSAP256SHA256", TTLDefault: 300, GeoRouting: true, ANAMEFlat: true, QueriesDay: 4200000, PropagationMs: 6, Registrar: "Cloudflare Registrar", ExpiresAt: "2027-09-05", AutoRenew: true, Status: "active", Updated: "2026-04-17"},
-			{ID: newID(), Domain: "hosting-api.com", ZoneType: "Primary", NameServers: "ns1.platform.io, ns2.platform.io", RecordCount: 15, DNSSEC: true, DNSSECAlgo: "ECDSAP256SHA256", TTLDefault: 60, GeoRouting: false, ANAMEFlat: false, QueriesDay: 1800000, PropagationMs: 8, Registrar: "Platform Domains", ExpiresAt: "2027-06-22", AutoRenew: true, Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Domain: "cz-internal.net", ZoneType: "Private", NameServers: "ns-internal.platform.io", RecordCount: 95, DNSSEC: false, DNSSECAlgo: "—", TTLDefault: 30, GeoRouting: false, ANAMEFlat: false, QueriesDay: 320000, PropagationMs: 2, Registrar: "—", ExpiresAt: "—", AutoRenew: false, Status: "active", Updated: "2026-04-17"},
-		},
-	},
+	items: map[string][]ProDNSZone{},
 }
 
 func (s *proDNSZoneStoreType) list(slug string) []ProDNSZone {

@@ -30,22 +30,7 @@ type metricDashboardStoreType struct {
 }
 
 var metricDashboardStore = &metricDashboardStoreType{
-	dashboards: map[string][]MetricDashboard{
-		"buyvm": {
-			{ID: newID(), Name: "Infrastructure Overview", Type: "System metrics", Source: "Prometheus", Panels: 24, RefreshRate: "15s", Retention: "90 days", Status: "active", Updated: "2026-04-16"},
-			{ID: newID(), Name: "Application Performance", Type: "APM metrics", Source: "Prometheus + OTel", Panels: 18, RefreshRate: "30s", Retention: "60 days", Status: "active", Updated: "2026-04-15"},
-			{ID: newID(), Name: "Kubernetes Cluster Health", Type: "Container metrics", Source: "kube-state-metrics", Panels: 32, RefreshRate: "10s", Retention: "30 days", Status: "active", Updated: "2026-04-14"},
-			{ID: newID(), Name: "Database Metrics", Type: "Database metrics", Source: "pg_exporter / mysql_exporter", Panels: 16, RefreshRate: "30s", Retention: "60 days", Status: "active", Updated: "2026-04-12"},
-			{ID: newID(), Name: "Network Traffic", Type: "Network metrics", Source: "SNMP + flow logs", Panels: 12, RefreshRate: "60s", Retention: "30 days", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "Legacy Nagios Checks", Type: "Health checks", Source: "Nagios NRPE", Panels: 8, RefreshRate: "300s", Retention: "14 days", Status: "deprecated", Updated: "2025-09-20"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Platform SLI/SLO", Type: "SLI metrics", Source: "Prometheus", Panels: 20, RefreshRate: "15s", Retention: "365 days", Status: "active", Updated: "2026-04-13"},
-			{ID: newID(), Name: "Edge Node Performance", Type: "CDN metrics", Source: "Custom exporter", Panels: 14, RefreshRate: "30s", Retention: "30 days", Status: "active", Updated: "2026-04-10"},
-			{ID: newID(), Name: "CI/CD Pipeline Metrics", Type: "Build metrics", Source: "Prometheus pushgateway", Panels: 10, RefreshRate: "60s", Retention: "90 days", Status: "active", Updated: "2026-04-06"},
-			{ID: newID(), Name: "Cost & Resource Usage", Type: "Business metrics", Source: "Cloud APIs + Prometheus", Panels: 22, RefreshRate: "300s", Retention: "365 days", Status: "active", Updated: "2026-04-01"},
-		},
-	},
+	dashboards: map[string][]MetricDashboard{},
 }
 
 func (s *metricDashboardStoreType) list(slug string) []MetricDashboard {

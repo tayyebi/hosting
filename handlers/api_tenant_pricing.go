@@ -17,17 +17,17 @@ import (
 // ── Pricing store ──────────────────────────────────────────
 
 type PricingPlan struct {
-	ID        string
-	Name      string
-	Tier      string // "free" | "starter" | "pro" | "enterprise"
-	Status    string // "active" | "archived" | "draft"
-	Price     string
-	Currency  string
-	Interval  string // "monthly" | "annually" | "one-time"
-	Features  string
-	MaxUsers  int
-	Created   string
-	Updated   string
+	ID       string
+	Name     string
+	Tier     string // "free" | "starter" | "pro" | "enterprise"
+	Status   string // "active" | "archived" | "draft"
+	Price    string
+	Currency string
+	Interval string // "monthly" | "annually" | "one-time"
+	Features string
+	MaxUsers int
+	Created  string
+	Updated  string
 }
 
 type pricingStoreType struct {
@@ -36,25 +36,7 @@ type pricingStoreType struct {
 }
 
 var pricingStore = &pricingStoreType{
-	plans: map[string][]PricingPlan{
-		"buyvm": {
-			{ID: newID(), Name: "Starter VPS", Tier: "starter", Status: "active", Price: "4.99", Currency: "USD", Interval: "monthly", Features: "1 vCPU, 1GB RAM, 20GB SSD, 1TB transfer", MaxUsers: 1, Created: "2025-01-15T00:00:00Z", Updated: "2026-03-01T00:00:00Z"},
-			{ID: newID(), Name: "Pro VPS", Tier: "pro", Status: "active", Price: "19.99", Currency: "USD", Interval: "monthly", Features: "4 vCPU, 8GB RAM, 100GB SSD, 5TB transfer, DDoS protection", MaxUsers: 5, Created: "2025-01-15T00:00:00Z", Updated: "2026-03-01T00:00:00Z"},
-			{ID: newID(), Name: "Enterprise Dedicated", Tier: "enterprise", Status: "active", Price: "149.00", Currency: "USD", Interval: "monthly", Features: "16 vCPU, 64GB RAM, 1TB NVMe, unmetered transfer, 24/7 support", MaxUsers: 50, Created: "2025-06-01T00:00:00Z", Updated: "2026-02-15T00:00:00Z"},
-			{ID: newID(), Name: "Storage Block 256GB", Tier: "pro", Status: "active", Price: "5.00", Currency: "USD", Interval: "monthly", Features: "256GB SSD block storage, snapshots, replication", MaxUsers: 0, Created: "2025-03-10T00:00:00Z", Updated: "2025-03-10T00:00:00Z"},
-			{ID: newID(), Name: "Legacy Basic", Tier: "starter", Status: "archived", Price: "2.99", Currency: "USD", Interval: "monthly", Features: "1 vCPU, 512MB RAM, 10GB HDD", MaxUsers: 1, Created: "2023-01-01T00:00:00Z", Updated: "2025-12-31T00:00:00Z"},
-		},
-		"abrnoc": {
-			{ID: newID(), Name: "Cloud Lite", Tier: "starter", Status: "active", Price: "9.99", Currency: "EUR", Interval: "monthly", Features: "2 vCPU, 2GB RAM, 40GB SSD, 2TB transfer", MaxUsers: 1, Created: "2025-04-01T00:00:00Z", Updated: "2026-01-10T00:00:00Z"},
-			{ID: newID(), Name: "Cloud Business", Tier: "pro", Status: "active", Price: "49.99", Currency: "EUR", Interval: "monthly", Features: "8 vCPU, 16GB RAM, 200GB SSD, 10TB transfer, managed backups", MaxUsers: 10, Created: "2025-04-01T00:00:00Z", Updated: "2026-01-10T00:00:00Z"},
-			{ID: newID(), Name: "Annual Business", Tier: "pro", Status: "active", Price: "499.00", Currency: "EUR", Interval: "annually", Features: "Same as Cloud Business — 2 months free", MaxUsers: 10, Created: "2025-09-01T00:00:00Z", Updated: "2026-01-10T00:00:00Z"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "GPU Starter", Tier: "pro", Status: "active", Price: "99.00", Currency: "USD", Interval: "monthly", Features: "1x NVIDIA T4, 4 vCPU, 16GB RAM, 100GB NVMe", MaxUsers: 1, Created: "2025-08-01T00:00:00Z", Updated: "2026-02-20T00:00:00Z"},
-			{ID: newID(), Name: "GPU Pro", Tier: "enterprise", Status: "active", Price: "499.00", Currency: "USD", Interval: "monthly", Features: "4x NVIDIA A100, 32 vCPU, 128GB RAM, 1TB NVMe, priority queue", MaxUsers: 20, Created: "2025-08-01T00:00:00Z", Updated: "2026-02-20T00:00:00Z"},
-			{ID: newID(), Name: "Free Trial", Tier: "free", Status: "active", Price: "0.00", Currency: "USD", Interval: "monthly", Features: "1 vCPU, 512MB RAM, 10GB SSD — 30 day trial", MaxUsers: 1, Created: "2025-01-01T00:00:00Z", Updated: "2025-01-01T00:00:00Z"},
-		},
-	},
+	plans: map[string][]PricingPlan{},
 }
 
 func (s *pricingStoreType) list(slug string) []PricingPlan {

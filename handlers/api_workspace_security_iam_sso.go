@@ -31,18 +31,7 @@ type ssoProviderStoreType struct {
 }
 
 var ssoProviderStore = &ssoProviderStoreType{
-	providers: map[string][]SSOProvider{
-		"buyvm": {
-			{ID: newID(), Name: "Okta Workforce", Protocol: "SAML 2.0", Status: "active", Users: 142, Domains: "acme.io", MFA: "enforced", LastUsed: "2 min ago", Created: "2025-08-12", Region: "eu-central-1"},
-			{ID: newID(), Name: "Google Workspace", Protocol: "OIDC", Status: "active", Users: 48, Domains: "acme.io, acme.dev", MFA: "enforced", LastUsed: "12 min ago", Created: "2025-09-01", Region: "eu-central-1"},
-			{ID: newID(), Name: "Microsoft Entra ID", Protocol: "OIDC", Status: "active", Users: 24, Domains: "acme.onmicrosoft.com", MFA: "enforced", LastUsed: "1h ago", Created: "2026-01-15", Region: "eu-central-1"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "Auth0 Enterprise", Protocol: "OIDC", Status: "active", Users: 84, Domains: "hosting.io", MFA: "enforced", LastUsed: "5 min ago", Created: "2025-11-20", Region: "ap-south-1"},
-			{ID: newID(), Name: "Okta Workforce", Protocol: "SAML 2.0", Status: "active", Users: 62, Domains: "hosting.io, hosting.dev", MFA: "enforced", LastUsed: "18 min ago", Created: "2026-02-01", Region: "ap-south-1"},
-			{ID: newID(), Name: "PingFederate", Protocol: "SAML 2.0", Status: "inactive", Users: 0, Domains: "legacy.hosting.io", MFA: "optional", LastUsed: "42d ago", Created: "2025-06-10", Region: "ap-south-1"},
-		},
-	},
+	providers: map[string][]SSOProvider{},
 }
 
 func (s *ssoProviderStoreType) list(slug string) []SSOProvider {

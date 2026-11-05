@@ -29,20 +29,7 @@ type wafRuleStoreType struct {
 }
 
 var wafRuleStore = &wafRuleStoreType{
-	rules: map[string][]WAFRule{
-		"buyvm": {
-			{ID: newID(), Name: "OWASP Core Rule Set", RuleSet: "OWASP CRS 3.3", Action: "block", Priority: 1, Status: "active", Matches7d: "12.4k", Updated: "2025-11-20"},
-			{ID: newID(), Name: "SQL Injection Filter", RuleSet: "Custom", Action: "block", Priority: 2, Status: "active", Matches7d: "3.8k", Updated: "2025-12-01"},
-			{ID: newID(), Name: "XSS Protection", RuleSet: "Custom", Action: "block", Priority: 3, Status: "active", Matches7d: "2.1k", Updated: "2025-12-05"},
-			{ID: newID(), Name: "Rate Limiter", RuleSet: "Custom", Action: "throttle", Priority: 4, Status: "active", Matches7d: "45.2k", Updated: "2026-01-10"},
-			{ID: newID(), Name: "Geo-Block List", RuleSet: "Custom", Action: "block", Priority: 10, Status: "disabled", Matches7d: "0", Updated: "2025-10-15"},
-		},
-		"hosting": {
-			{ID: newID(), Name: "OWASP Core Rule Set", RuleSet: "OWASP CRS 3.3", Action: "block", Priority: 1, Status: "active", Matches7d: "8.6k", Updated: "2025-11-18"},
-			{ID: newID(), Name: "Bot Protection", RuleSet: "Managed", Action: "challenge", Priority: 2, Status: "active", Matches7d: "22.1k", Updated: "2026-01-05"},
-			{ID: newID(), Name: "API Abuse Prevention", RuleSet: "Custom", Action: "throttle", Priority: 3, Status: "active", Matches7d: "5.4k", Updated: "2026-02-01"},
-		},
-	},
+	rules: map[string][]WAFRule{},
 }
 
 func (s *wafRuleStoreType) list(slug string) []WAFRule {
