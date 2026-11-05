@@ -1,0 +1,638 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── IDS page — scoped under .ids ── */
+.ids {
+  --ids-red:    #ef4444;
+  --ids-orange: #f97316;
+  --ids-yellow: #f59e0b;
+  --ids-green:  #10b981;
+  --ids-blue:   #3b82f6;
+  --ids-purple: #8b5cf6;
+  --ids-bg:      var(--surface, #fff);
+  --ids-bg-soft: var(--bg-soft, #f7f8fa);
+  --ids-border:  var(--border, #e5e7eb);
+  --ids-border-s:var(--border-subtle, #eef0f3);
+  --ids-text:    var(--text, #111827);
+  --ids-text-2:  var(--text-muted, #6b7280);
+  --ids-text-3:  var(--text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .ids {
+  --ids-bg:       #181a20;
+  --ids-bg-soft:  #13151b;
+  --ids-border:   #262932;
+  --ids-border-s: #1f2229;
+  --ids-text:     #e5e7eb;
+  --ids-text-2:   #9ca3af;
+  --ids-text-3:   #6b7280;
+}
+
+@keyframes idsFade { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none} }
+.ids-fade { animation: idsFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Status bar ── */
+.ids-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 20px;
+  background: var(--ids-bg);
+  border: 1px solid var(--ids-border);
+  border-radius: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.ids-status-indicator {
+  display: flex; align-items: center; gap: 8px;
+}
+.ids-status-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ids-green);
+  animation: idsLive 2s ease-in-out infinite;
+}
+@keyframes idsLive {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
+  50%     { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+}
+.ids-status-dot--alert { background: var(--ids-red); animation: idsAlert 1s ease-in-out infinite; }
+@keyframes idsAlert {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+  50%     { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+.ids-status-label { font-size: 13px; font-weight: 600; color: var(--ids-text); }
+.ids-status-sub   { font-size: 12px; color: var(--ids-text-2); }
+.ids-status-bar__right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.ids-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+}
+.ids-badge--critical { color: var(--ids-red);    background: rgba(239,68,68,.1); }
+.ids-badge--high     { color: var(--ids-orange);  background: rgba(249,115,22,.1); }
+.ids-badge--medium   { color: var(--ids-yellow);  background: rgba(245,158,11,.12); }
+.ids-badge--low      { color: var(--ids-blue);    background: rgba(59,130,246,.1); }
+.ids-badge--ok       { color: var(--ids-green);   background: rgba(16,185,129,.1); }
+[data-theme="dark"] .ids-badge--critical { background: rgba(239,68,68,.15); }
+[data-theme="dark"] .ids-badge--high     { background: rgba(249,115,22,.15); }
+[data-theme="dark"] .ids-badge--medium   { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .ids-badge--low      { background: rgba(59,130,246,.15); }
+[data-theme="dark"] .ids-badge--ok       { background: rgba(16,185,129,.15); }
+
+/* ── KPIs ── */
+.ids-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.ids-kpi {
+  background: var(--ids-bg);
+  border: 1px solid var(--ids-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  position: relative;
+  transition: transform .15s, box-shadow .15s;
+}
+.ids-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(17,24,39,.05); }
+.ids-kpi__label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ids-text-2); margin-bottom: 6px;
+}
+.ids-kpi__value {
+  font-size: 26px; font-weight: 700; letter-spacing: -.02em;
+  color: var(--ids-text);
+}
+.ids-kpi__value--critical { color: var(--ids-red); }
+.ids-kpi__value--warn     { color: var(--ids-orange); }
+.ids-kpi__value--ok       { color: var(--ids-green); }
+.ids-kpi__sub { font-size: 11.5px; color: var(--ids-text-3); margin-top: 4px; }
+.ids-kpi__accent {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+/* ── Main layout ── */
+.ids-main {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+.ids-card {
+  background: var(--ids-bg);
+  border: 1px solid var(--ids-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.ids-card__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--ids-border-s);
+}
+.ids-card__title {
+  font-size: 13px; font-weight: 600; color: var(--ids-text);
+  display: flex; align-items: center; gap: 8px;
+}
+.ids-card__meta { font-size: 11px; color: var(--ids-text-3); }
+.ids-card__actions { display: flex; gap: 6px; }
+.ids-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 10px;
+  border: 1px solid var(--ids-border-s);
+  border-radius: 6px; background: var(--ids-bg);
+  color: var(--ids-text-2); font-size: 11.5px; font-weight: 500;
+  cursor: pointer; transition: all .12s;
+}
+.ids-btn:hover { border-color: var(--ids-border); color: var(--ids-text); background: var(--ids-bg-soft); }
+.ids-btn--primary {
+  background: #ef4444; color: white; border-color: #ef4444;
+}
+.ids-btn--primary:hover { background: #dc2626; border-color: #dc2626; }
+
+/* ── Events table ── */
+.ids-table { width: 100%; border-collapse: collapse; min-width: 540px; }
+.ids-table th {
+  text-align: left; padding: 10px 16px;
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ids-text-3);
+  background: var(--ids-bg-soft);
+  border-bottom: 1px solid var(--ids-border-s);
+}
+.ids-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ids-border-s);
+  font-size: 12.5px; color: var(--ids-text);
+  vertical-align: middle;
+}
+.ids-table tr:last-child td { border-bottom: 0; }
+.ids-table tbody tr { transition: background .12s; cursor: pointer; }
+.ids-table tbody tr:hover td { background: var(--ids-bg-soft); }
+
+.ids-sev {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.ids-sev--critical { color: var(--ids-red);    background: rgba(239,68,68,.1); }
+.ids-sev--high     { color: var(--ids-orange);  background: rgba(249,115,22,.1); }
+.ids-sev--medium   { color: var(--ids-yellow);  background: rgba(245,158,11,.12); }
+.ids-sev--low      { color: var(--ids-blue);    background: rgba(59,130,246,.1); }
+[data-theme="dark"] .ids-sev--critical { background: rgba(239,68,68,.15); }
+[data-theme="dark"] .ids-sev--high     { background: rgba(249,115,22,.15); }
+[data-theme="dark"] .ids-sev--medium   { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .ids-sev--low      { background: rgba(59,130,246,.15); }
+
+.ids-status-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+}
+.ids-status-chip--open       { color: var(--ids-red);   background: rgba(239,68,68,.1); }
+.ids-status-chip--mitigated  { color: var(--ids-green);  background: rgba(16,185,129,.12); }
+.ids-status-chip--suppressed { color: var(--ids-text-3); background: var(--ids-bg-soft); border: 1px solid var(--ids-border-s); }
+.ids-status-chip--reviewing  { color: var(--ids-yellow); background: rgba(245,158,11,.12); }
+
+.ids-mono {
+  font-family: ui-monospace, "SF Mono", Monaco, monospace;
+  font-size: 11.5px; color: var(--ids-text-2);
+}
+
+/* Expandable detail row */
+.ids-detail {
+  background: var(--ids-bg-soft);
+  border-bottom: 1px solid var(--ids-border-s);
+}
+.ids-detail td { padding: 14px 18px; }
+.ids-detail__grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px 20px; font-size: 12px;
+}
+.ids-detail__field--full { grid-column: 1 / -1; }
+.ids-detail__key {
+  display: block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ids-text-3); margin-bottom: 2px;
+}
+.ids-detail__val { color: var(--ids-text); font-size: 12.5px; }
+.ids-detail__pre {
+  background: var(--ids-bg); border: 1px solid var(--ids-border-s);
+  padding: 10px 12px; border-radius: 8px; margin-top: 3px;
+  font-family: ui-monospace, "SF Mono", Monaco, monospace;
+  font-size: 11.5px; line-height: 1.5; color: var(--ids-text);
+  white-space: pre-wrap; overflow-x: auto;
+}
+
+/* ── Sidebar ── */
+.ids-side { display: flex; flex-direction: column; gap: 14px; }
+
+/* Threat map */
+.ids-map {
+  position: relative;
+  height: 160px;
+  background: var(--ids-bg-soft);
+  overflow: hidden;
+}
+.ids-map canvas { width: 100%; height: 100%; }
+
+/* Rule list */
+.ids-rules { padding: 4px 0; }
+.ids-rule {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ids-border-s);
+  font-size: 12.5px;
+  transition: background .12s;
+}
+.ids-rule:last-child { border-bottom: 0; }
+.ids-rule:hover { background: var(--ids-bg-soft); }
+.ids-rule__name { flex: 1; font-weight: 500; color: var(--ids-text); }
+.ids-rule__hits {
+  font-variant-numeric: tabular-nums; font-size: 12px;
+  color: var(--ids-text-2); font-weight: 600;
+}
+.ids-rule__toggle {
+  width: 32px; height: 18px; border-radius: 999px;
+  background: var(--ids-green); position: relative;
+  border: 0; cursor: pointer; transition: background .2s; flex-shrink: 0;
+}
+.ids-rule__toggle::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: white; transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.ids-rule__toggle--off { background: var(--ids-border); }
+.ids-rule__toggle--off::after { transform: translateX(0); }
+.ids-rule__toggle:not(.ids-rule__toggle--off)::after { transform: translateX(14px); }
+
+/* Source geo badges */
+.ids-geos { padding: 8px 16px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.ids-geo {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px;
+  font-size: 11.5px; font-weight: 500;
+  background: var(--ids-bg-soft);
+  border: 1px solid var(--ids-border-s);
+  color: var(--ids-text-2);
+}
+.ids-geo__count {
+  font-weight: 700; color: var(--ids-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Animation-delay modifiers ── */
+.ids-fade--1 { animation-delay:  60ms; }
+.ids-fade--2 { animation-delay: 120ms; }
+.ids-fade--3 { animation-delay: 180ms; }
+.ids-fade--4 { animation-delay: 240ms; }
+.ids-fade--5 { animation-delay: 300ms; }
+.ids-fade--6 { animation-delay: 330ms; }
+.ids-fade--7 { animation-delay: 360ms; }
+.ids-fade--8 { animation-delay: 440ms; }
+.ids-fade--9 { animation-delay: 500ms; }
+
+/* ── KPI accent gradients ── */
+.ids-kpi__accent--red    { background: linear-gradient(90deg, #ef4444, #f97316); }
+.ids-kpi__accent--fire   { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.ids-kpi__accent--amber  { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.ids-kpi__accent--teal   { background: linear-gradient(90deg, #10b981, #3b82f6); }
+.ids-kpi__accent--purple { background: linear-gradient(90deg, #8b5cf6, #6366f1); }
+
+/* ── Table wrapper ── */
+.ids-table-wrap { overflow-x: auto; }
+
+/* ── Right-aligned table cell ── */
+.ids-td--right { text-align: right; }
+
+/* ── Modal form single-column layout ── */
+.ids-modal--single-col { grid-template-columns: 1fr; }
+
+/* ── Modal footer flush ── */
+.ids-modal__foot--flush { margin: 4px -22px -20px; padding: 14px 22px; }
+
+/* ── Danger submit button ── */
+.ids-mbtn--danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+[data-theme="dark"] .ids-mbtn--danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+/* ── Visually hidden (screen-reader only) ── */
+.ids .sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Focus styles ── */
+.ids *:focus-visible {
+  outline: 2px solid var(--ids-blue);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .ids-kpis { grid-template-columns: repeat(3, 1fr); }
+  .ids-main  { grid-template-columns: 1fr; }
+}
+@media (max-width: 660px) {
+  .ids-kpis { grid-template-columns: 1fr 1fr; }
+  .ids-status-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .ids-status-bar__right { margin-left: 0; flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .ids-kpis { grid-template-columns: 1fr; }
+  .ids-detail__grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="ids" role="main" aria-label="Intrusion Detection System">
+
+  <!-- Status bar -->
+  <div class="ids-status-bar ids-fade" role="status" aria-live="polite" aria-label="Threat status summary">
+    <div class="ids-status-indicator">
+      <span class="ids-status-dot ids-status-dot--alert" aria-hidden="true"></span>
+      <span class="ids-status-label">2 Active Threats</span>
+    </div>
+    <span class="ids-status-sub">Suricata 7.0.4 · ET-Pro ruleset r.24186 (3 min ago) · 18 sensors · 21 Gb/s dpdk</span>
+    <div class="ids-status-bar__right">
+      <span class="ids-badge ids-badge--critical" aria-label="2 critical alerts">2 critical</span>
+      <span class="ids-badge ids-badge--high" aria-label="1 high alert">1 high</span>
+      <span class="ids-badge ids-badge--medium" aria-label="4 medium alerts">4 medium</span>
+      <span class="ids-badge ids-badge--low" aria-label="12 low alerts">12 low</span>
+      <button class="ids-btn ids-btn--primary" aria-label="Block an IP address" onclick="document.getElementById('idsBlockModal').classList.add('open')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.1"/><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+        Block IP
+      </button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="ids-kpis" role="region" aria-label="Key performance indicators">
+    <div class="ids-kpi ids-fade ids-fade--1" role="group" aria-label="Events in last 24 hours">
+      <div class="ids-kpi__accent ids-kpi__accent--red" aria-hidden="true"></div>
+      <div class="ids-kpi__label" id="ids-kpi-events-lbl">Events (24h)</div>
+      <div class="ids-kpi__value" aria-labelledby="ids-kpi-events-lbl">1,847</div>
+      <div class="ids-kpi__sub">↑ 14% vs yesterday</div>
+    </div>
+    <div class="ids-kpi ids-fade ids-fade--2" role="group" aria-label="Open alerts">
+      <div class="ids-kpi__accent ids-kpi__accent--fire" aria-hidden="true"></div>
+      <div class="ids-kpi__label" id="ids-kpi-alerts-lbl">Open Alerts</div>
+      <div class="ids-kpi__value ids-kpi__value--critical" aria-labelledby="ids-kpi-alerts-lbl">3</div>
+      <div class="ids-kpi__sub">2 critical · 1 high</div>
+    </div>
+    <div class="ids-kpi ids-fade ids-fade--3" role="group" aria-label="Blocked IP addresses">
+      <div class="ids-kpi__accent ids-kpi__accent--amber" aria-hidden="true"></div>
+      <div class="ids-kpi__label" id="ids-kpi-blocked-lbl">Blocked IPs</div>
+      <div class="ids-kpi__value ids-kpi__value--warn" aria-labelledby="ids-kpi-blocked-lbl">48</div>
+      <div class="ids-kpi__sub">+6 in last hour</div>
+    </div>
+    <div class="ids-kpi ids-fade ids-fade--4" role="group" aria-label="Active detection rules">
+      <div class="ids-kpi__accent ids-kpi__accent--teal" aria-hidden="true"></div>
+      <div class="ids-kpi__label" id="ids-kpi-rules-lbl">Rules Active</div>
+      <div class="ids-kpi__value ids-kpi__value--ok" aria-labelledby="ids-kpi-rules-lbl">214</div>
+      <div class="ids-kpi__sub">of 220 enabled</div>
+    </div>
+    <div class="ids-kpi ids-fade ids-fade--5" role="group" aria-label="False positive rate">
+      <div class="ids-kpi__accent ids-kpi__accent--purple" aria-hidden="true"></div>
+      <div class="ids-kpi__label" id="ids-kpi-fp-lbl">False Positive Rate</div>
+      <div class="ids-kpi__value ids-kpi__value--ok" aria-labelledby="ids-kpi-fp-lbl">0.8%</div>
+      <div class="ids-kpi__sub">↓ 0.3pp this week</div>
+    </div>
+  </div>
+
+  <!-- MITRE ATT&CK coverage strip -->
+  <div class="ids-mitre ids-fade ids-fade--6" role="region" aria-label="MITRE ATT&amp;CK coverage">
+    <div class="ids-mitre__head">
+      <span class="ids-mitre__title">MITRE ATT&amp;CK coverage</span>
+      <span class="ids-mitre__meta">Enterprise v14.1 · 186 / 214 techniques with at least one active detection · 86.9%</span>
+    </div>
+    <div class="ids-mitre__row">
+      <div class="ids-mitre__cell" data-lvl="3"><span>Initial Access</span><em>9/10</em></div>
+      <div class="ids-mitre__cell" data-lvl="3"><span>Execution</span><em>12/13</em></div>
+      <div class="ids-mitre__cell" data-lvl="2"><span>Persistence</span><em>15/19</em></div>
+      <div class="ids-mitre__cell" data-lvl="2"><span>Priv. Escalation</span><em>10/13</em></div>
+      <div class="ids-mitre__cell" data-lvl="1"><span>Defense Evasion</span><em>28/42</em></div>
+      <div class="ids-mitre__cell" data-lvl="3"><span>Credential Access</span><em>15/17</em></div>
+      <div class="ids-mitre__cell" data-lvl="2"><span>Discovery</span><em>24/31</em></div>
+      <div class="ids-mitre__cell" data-lvl="3"><span>Lateral Movement</span><em>8/9</em></div>
+      <div class="ids-mitre__cell" data-lvl="2"><span>Collection</span><em>13/17</em></div>
+      <div class="ids-mitre__cell" data-lvl="3"><span>C2</span><em>14/16</em></div>
+      <div class="ids-mitre__cell" data-lvl="3"><span>Exfiltration</span><em>9/9</em></div>
+      <div class="ids-mitre__cell" data-lvl="1"><span>Impact</span><em>7/14</em></div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="ids-main">
+
+    <!-- Events table -->
+    <div class="ids-card ids-fade ids-fade--7" role="region" aria-label="Detection events">
+      <div class="ids-card__head">
+        <div class="ids-card__title" id="ids-events-title">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L1 13h12L7 1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M7 6v3M7 10.5h.01" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          Detection Events
+        </div>
+        <div class="ids-card__actions">
+          <button class="ids-btn" aria-label="Filter detection events">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 7.5l2 2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Filter
+          </button>
+          <button class="ids-btn" aria-label="Export detection events">Export</button>
+        </div>
+      </div>
+      <div class="ids-table-wrap" role="region" aria-label="Events table" tabindex="0">
+      <table class="ids-table" aria-labelledby="ids-events-title">
+        <thead>
+          <tr>
+            <th scope="col">Severity</th>
+            <th scope="col">Event Type</th>
+            <th scope="col">Source IP</th>
+            <th scope="col">Target</th>
+            <th scope="col">Time</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="idsEventsBody">
+          {{range .Events}}
+          <tr onclick="idsToggle(this)" role="row" aria-expanded="false" tabindex="0">
+            <td><span class="ids-sev ids-sev--{{.Severity}}">{{.Severity | title}}</span></td>
+            <td>{{.EventType}}</td>
+            <td class="ids-mono">{{.SourceIP}}</td>
+            <td class="ids-mono">{{.Target}}</td>
+            <td class="ids-mono">{{.TimeLabel}}</td>
+            <td><span class="ids-status-chip ids-status-chip--{{.Status}}">{{.Status | title}}</span></td>
+            <td class="ids-td--right">
+              {{if or (eq .Status "open") (eq .Status "reviewing")}}
+              <button class="ids-btn ids-btn--primary" onclick="event.stopPropagation();idsBlock('{{.SourceIP}}')">Block</button>
+              {{end}}
+            </td>
+          </tr>
+          <tr class="ids-detail" hidden><td colspan="7">
+            <div class="ids-detail__grid">
+              {{if .RuleID}}<div class="ids-detail__field"><span class="ids-detail__key">rule_id</span><span class="ids-detail__val ids-mono">{{.RuleID}}</span></div>{{end}}
+              {{if .Protocol}}<div class="ids-detail__field"><span class="ids-detail__key">protocol</span><span class="ids-detail__val ids-mono">{{.Protocol}}</span></div>{{end}}
+              {{if .Action}}<div class="ids-detail__field"><span class="ids-detail__key">action</span><span class="ids-detail__val ids-mono">{{.Action}}</span></div>{{end}}
+              {{if .Details}}<div class="ids-detail__field ids-detail__field--full"><span class="ids-detail__key">details</span><pre class="ids-detail__pre">{{.Details}}</pre></div>{{end}}
+              <div class="ids-detail__field"><span class="ids-detail__key">first_seen</span><span class="ids-detail__val ids-mono">{{.Created}}</span></div>
+              <div class="ids-detail__field"><span class="ids-detail__key">id</span><span class="ids-detail__val ids-mono">{{.ID}}</span></div>
+            </div>
+          </td></tr>
+          {{else}}
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ids-text-2)">No events found</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="ids-side" role="complementary" aria-label="Threat intelligence sidebar">
+
+      <!-- Top sources -->
+      <div class="ids-card ids-fade ids-fade--8" role="region" aria-label="Top source countries">
+        <div class="ids-card__head">
+          <div class="ids-card__title">Top Source Countries</div>
+          <span class="ids-card__meta">last 24h</span>
+        </div>
+        <div class="ids-geos">
+          <span class="ids-geo">🇨🇳 CN <span class="ids-geo__count">312</span></span>
+          <span class="ids-geo">🇷🇺 RU <span class="ids-geo__count">218</span></span>
+          <span class="ids-geo">🇺🇸 US <span class="ids-geo__count">184</span></span>
+          <span class="ids-geo">🇧🇷 BR <span class="ids-geo__count">97</span></span>
+          <span class="ids-geo">🇩🇪 DE <span class="ids-geo__count">74</span></span>
+          <span class="ids-geo">🇳🇱 NL <span class="ids-geo__count">62</span></span>
+          <span class="ids-geo">🇫🇷 FR <span class="ids-geo__count">48</span></span>
+          <span class="ids-geo">🇮🇳 IN <span class="ids-geo__count">41</span></span>
+        </div>
+      </div>
+
+      <!-- Active rules -->
+      <div class="ids-card ids-fade ids-fade--9" role="region" aria-label="Detection rules">
+        <div class="ids-card__head">
+          <div class="ids-card__title">Detection Rules</div>
+          <a href="#" class="ids-btn" aria-label="Manage all detection rules">Manage all</a>
+        </div>
+        <div class="ids-rules" role="list" aria-label="Active detection rules">
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">SQL Injection (OWASP)</span>
+            <span class="ids-rule__hits">1,204</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle SQL Injection rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">XSS Attacks</span>
+            <span class="ids-rule__hits">342</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle XSS Attacks rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">Brute Force / DoS</span>
+            <span class="ids-rule__hits">87</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle Brute Force rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">Port Scan Detection</span>
+            <span class="ids-rule__hits">21</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle Port Scan Detection rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">File Inclusion (LFI/RFI)</span>
+            <span class="ids-rule__hits">18</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle File Inclusion rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">Command Injection</span>
+            <span class="ids-rule__hits">9</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle Command Injection rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">Tor Exit Nodes</span>
+            <span class="ids-rule__hits">6</span>
+            <button class="ids-rule__toggle" title="Enabled" aria-label="Toggle Tor Exit Nodes rule" aria-pressed="true" onclick="idsToggleRule(this)"></button>
+          </div>
+          <div class="ids-rule" role="listitem">
+            <span class="ids-rule__name">Geo-block (custom)</span>
+            <span class="ids-rule__hits">3</span>
+            <button class="ids-rule__toggle ids-rule__toggle--off" title="Disabled" aria-label="Toggle Geo-block rule" aria-pressed="false" onclick="idsToggleRule(this)"></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Block IP modal -->
+<div class="jm-modal-back" id="idsBlockModal" role="dialog" aria-modal="true" aria-labelledby="idsBlockModalTitle" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="jm-modal">
+    <div class="jm-modal__head">
+      <span class="jm-modal__title" id="idsBlockModalTitle">Block IP Address</span>
+      <button class="jm-modal__close" aria-label="Close dialog" onclick="document.getElementById('idsBlockModal').classList.remove('open')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <form class="jm-modal__form ids-modal--single-col" method="POST" action="/t/{{.TenantSlug}}/ids/block" onsubmit="return idsSubmitBlock(event)">
+      <div class="jm-field jm-field--full">
+        <label class="jm-field__label">IP Address / CIDR</label>
+        <input class="jm-field__input" id="idsBlockIP" type="text" name="ip" placeholder="e.g. 203.0.113.42 or 203.0.113.0/24" autocomplete="off" />
+      </div>
+      <div class="jm-field jm-field--full">
+        <label class="jm-field__label">Duration</label>
+        <select class="jm-field__select" name="duration">
+          <option value="1h">1 hour</option>
+          <option value="24h" selected>24 hours</option>
+          <option value="7d">7 days</option>
+          <option value="30d">30 days</option>
+          <option value="permanent">Permanent</option>
+        </select>
+      </div>
+      <div class="jm-field jm-field--full">
+        <label class="jm-field__label">Reason <small>(optional)</small></label>
+        <input class="jm-field__input" type="text" name="reason" placeholder="e.g. SQL injection attempt" />
+      </div>
+      <div class="jm-modal__foot jm-field--full ids-modal__foot--flush">
+        <button type="button" class="jm-mbtn jm-mbtn--ghost" onclick="document.getElementById('idsBlockModal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="jm-mbtn jm-mbtn--primary ids-mbtn--danger">Block IP</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function idsToggle(row) {
+  var detail = row.nextElementSibling;
+  if (detail && detail.classList.contains('ids-detail')) {
+    detail.hidden = !detail.hidden;
+    row.classList.toggle('ids-row--expanded', !detail.hidden);
+    row.setAttribute('aria-expanded', String(!detail.hidden));
+  }
+}
+function idsBlock(ip) {
+  document.getElementById('idsBlockIP').value = ip;
+  document.getElementById('idsBlockModal').classList.add('open');
+  document.getElementById('idsBlockIP').focus();
+}
+function idsSubmitBlock(e) {
+  e.preventDefault();
+  var ip = document.getElementById('idsBlockIP').value.trim();
+  if (!ip) return false;
+  document.getElementById('idsBlockModal').classList.remove('open');
+  window.mockToast('IP ' + ip + ' has been blocked.');
+  return false;
+}
+function idsToggleRule(btn) {
+  btn.classList.toggle('ids-rule__toggle--off');
+  var isOn = !btn.classList.contains('ids-rule__toggle--off');
+  btn.title = isOn ? 'Enabled' : 'Disabled';
+  btn.setAttribute('aria-pressed', String(isOn));
+}
+/* Keyboard support: Enter/Space to expand event rows */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') document.getElementById('idsBlockModal').classList.remove('open');
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('#idsEventsBody tr[aria-expanded]')) {
+    e.preventDefault();
+    idsToggle(e.target.closest('tr[aria-expanded]'));
+  }
+});
+</script>
+{{end}}

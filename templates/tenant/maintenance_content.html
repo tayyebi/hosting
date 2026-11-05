@@ -1,0 +1,699 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Maintenance page — scoped under .mnt ── */
+.mnt {
+  --mnt-red:     #ef4444;
+  --mnt-orange:  #f97316;
+  --mnt-amber:   #f59e0b;
+  --mnt-green:   #10b981;
+  --mnt-blue:    #3b82f6;
+  --mnt-indigo:  #6366f1;
+  --mnt-violet:  #8b5cf6;
+  --mnt-bg:       var(--c-surface, #fff);
+  --mnt-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --mnt-border:   var(--c-border, #e5e7eb);
+  --mnt-border-s: var(--c-border-subtle, #eef0f3);
+  --mnt-text:     var(--c-text, #111827);
+  --mnt-text-2:   var(--c-text-dim, #6b7280);
+  --mnt-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .mnt {
+  --mnt-bg:       #181a20;
+  --mnt-bg-soft:  #13151b;
+  --mnt-border:   #262932;
+  --mnt-border-s: #1f2229;
+  --mnt-text:     #e5e7eb;
+  --mnt-text-2:   #9ca3af;
+  --mnt-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes mntFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.mnt-fade { animation: mntFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit span ── */
+.mnt-kpi-unit {
+  font-size: 14px;
+  color: var(--mnt-text-2);
+}
+
+/* ── Upcoming banner ── */
+.mnt-banner {
+  background: rgba(245,158,11,.08);
+  border-color: rgba(245,158,11,.25);
+  margin-bottom: 24px;
+}
+.mnt-banner__dot {
+  background: var(--mnt-amber);
+  box-shadow: 0 0 0 3px rgba(245,158,11,.25);
+}
+.mnt-banner__when {
+  color: #b45309;
+}
+[data-theme="dark"] .mnt-banner {
+  background: rgba(245,158,11,.12);
+  border-color: rgba(245,158,11,.3);
+}
+[data-theme="dark"] .mnt-banner__when {
+  color: #fbbf24;
+}
+
+/* ── Toolbar ── */
+.mnt-toolbar {
+  margin-bottom: 16px;
+}
+.mnt-toolbar__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Table margin reset ── */
+.mnt-table--flush {
+  margin: 0;
+}
+
+/* ── Risk badges ── */
+.mnt-risk {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.mnt-risk--high   { background: rgba(239,68,68,.08);  color: var(--mnt-red); }
+.mnt-risk--medium { background: rgba(245,158,11,.08); color: #d97706; }
+.mnt-risk--low    { background: rgba(16,185,129,.08); color: var(--mnt-green); }
+[data-theme="dark"] .mnt-risk--high   { background: rgba(239,68,68,.15); }
+[data-theme="dark"] .mnt-risk--medium { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .mnt-risk--low    { background: rgba(16,185,129,.15); }
+
+/* ── Status badges ── */
+.mnt-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.mnt-status--scheduled  { background: rgba(59,130,246,.08);  color: var(--mnt-blue); }
+.mnt-status--completed  { background: rgba(16,185,129,.08);  color: var(--mnt-green); }
+.mnt-status--cancelled  { background: rgba(107,114,128,.08); color: #6b7280; }
+.mnt-status--inprogress { background: rgba(245,158,11,.08);  color: #d97706; }
+[data-theme="dark"] .mnt-status--scheduled  { background: rgba(59,130,246,.15); }
+[data-theme="dark"] .mnt-status--completed  { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .mnt-status--cancelled  { background: rgba(107,114,128,.15); }
+[data-theme="dark"] .mnt-status--inprogress { background: rgba(245,158,11,.15); }
+
+/* ── Two-column grid (Impact + Notifications) ── */
+.mnt-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ── Panel (card) ── */
+.mnt-panel {
+  margin-bottom: 0;
+}
+.mnt-panel--spaced {
+  margin-bottom: 24px;
+}
+.mnt-panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mnt-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mnt-panel__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mnt-text);
+}
+.mnt-panel__subtitle {
+  font-size: 11.5px;
+  color: var(--mnt-text-2);
+  font-weight: 300;
+}
+.mnt-panel__body {
+  padding: 16px 18px;
+}
+.mnt-panel__body--flush {
+  padding: 0;
+}
+.mnt-panel__actions {
+  display: flex;
+  gap: 6px;
+}
+[data-theme="dark"] .mnt-panel {
+  background: var(--mnt-bg);
+  border-color: var(--mnt-border);
+}
+[data-theme="dark"] .mnt-panel__header {
+  border-color: var(--mnt-border);
+}
+[data-theme="dark"] .mnt-panel__title {
+  color: var(--mnt-text);
+}
+[data-theme="dark"] .mnt-panel__subtitle {
+  color: var(--mnt-text-2);
+}
+
+/* ── Impact analysis cards ── */
+.mnt-impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.mnt-impact-card {
+  padding: 12px;
+  border: 1px solid var(--mnt-border);
+  border-radius: 10px;
+  background: var(--mnt-bg-soft);
+}
+.mnt-impact-card__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--mnt-text-3);
+  font-weight: 500;
+}
+.mnt-impact-card__value {
+  font-size: 22px;
+  font-weight: 500;
+  margin-top: 4px;
+  color: var(--mnt-text);
+}
+.mnt-impact-card__value-unit {
+  font-size: 13px;
+  color: var(--mnt-text-2);
+}
+.mnt-impact-card__sub {
+  font-size: 11px;
+  color: var(--mnt-text-2);
+  font-weight: 300;
+}
+[data-theme="dark"] .mnt-impact-card {
+  background: var(--mnt-bg-soft);
+  border-color: var(--mnt-border);
+}
+[data-theme="dark"] .mnt-impact-card__value {
+  color: var(--mnt-text);
+}
+[data-theme="dark"] .mnt-impact-card__label {
+  color: var(--mnt-text-3);
+}
+
+/* ── Dependency chain description ── */
+.mnt-dep-chain {
+  font-size: 12px;
+  color: var(--mnt-text-2);
+  font-weight: 300;
+  line-height: 1.55;
+}
+.mnt-dep-chain strong {
+  color: var(--mnt-text);
+}
+[data-theme="dark"] .mnt-dep-chain strong {
+  color: var(--mnt-text);
+}
+
+/* ── Impact tag pills ── */
+.mnt-impact-tags {
+  margin-top: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mnt-impact-tag {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.mnt-impact-tag--danger  { background: rgba(239,68,68,.08);  color: #dc2626; }
+.mnt-impact-tag--warn    { background: rgba(245,158,11,.08); color: #b45309; }
+.mnt-impact-tag--ok      { background: rgba(16,185,129,.08); color: #059669; }
+[data-theme="dark"] .mnt-impact-tag--danger { background: rgba(239,68,68,.15);  color: #fca5a5; }
+[data-theme="dark"] .mnt-impact-tag--warn   { background: rgba(245,158,11,.15); color: #fcd34d; }
+[data-theme="dark"] .mnt-impact-tag--ok     { background: rgba(16,185,129,.15); color: #6ee7b7; }
+
+/* ── Notification channel rows ── */
+.mnt-channel {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--mnt-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mnt-channel:last-child {
+  border-bottom: none;
+}
+.mnt-channel__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.mnt-channel__icon--indigo  { background: rgba(99,102,241,.08); }
+.mnt-channel__icon--amber   { background: rgba(245,158,11,.08); }
+.mnt-channel__icon--violet  { background: rgba(139,92,246,.08); }
+.mnt-channel__icon--gray    { background: rgba(107,114,128,.08); }
+[data-theme="dark"] .mnt-channel__icon--indigo { background: rgba(99,102,241,.15); }
+[data-theme="dark"] .mnt-channel__icon--amber  { background: rgba(245,158,11,.15); }
+[data-theme="dark"] .mnt-channel__icon--violet { background: rgba(139,92,246,.15); }
+[data-theme="dark"] .mnt-channel__icon--gray   { background: rgba(107,114,128,.15); }
+[data-theme="dark"] .mnt-channel {
+  border-color: var(--mnt-border);
+}
+.mnt-channel__info {
+  flex: 1;
+  min-width: 0;
+}
+.mnt-channel__name {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--mnt-text);
+}
+.mnt-channel__desc {
+  font-size: 11px;
+  color: var(--mnt-text-2);
+  font-weight: 300;
+}
+.mnt-channel__badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.mnt-channel__badge--active  { background: rgba(16,185,129,.08); color: #059669; }
+.mnt-channel__badge--standby { background: rgba(107,114,128,.08); color: #6b7280; }
+[data-theme="dark"] .mnt-channel__badge--active  { background: rgba(16,185,129,.15); color: #6ee7b7; }
+[data-theme="dark"] .mnt-channel__badge--standby  { background: rgba(107,114,128,.15); color: #9ca3af; }
+[data-theme="dark"] .mnt-channel__name { color: var(--mnt-text); }
+[data-theme="dark"] .mnt-channel__desc { color: var(--mnt-text-2); }
+
+/* ── CAB reviewer avatars ── */
+.mnt-avatar--green  { background: rgba(16,185,129,.12); color: #059669; }
+.mnt-avatar--indigo { background: rgba(99,102,241,.12); color: #6366f1; }
+.mnt-avatar--amber  { background: rgba(245,158,11,.12); color: #b45309; }
+[data-theme="dark"] .mnt-avatar--green  { background: rgba(16,185,129,.2); color: #6ee7b7; }
+[data-theme="dark"] .mnt-avatar--indigo { background: rgba(99,102,241,.2); color: #a5b4fc; }
+[data-theme="dark"] .mnt-avatar--amber  { background: rgba(245,158,11,.2); color: #fcd34d; }
+
+/* ── CAB comment column ── */
+.mnt-cab-comment {
+  font-size: 12px;
+  color: var(--mnt-text-2);
+  max-width: 260px;
+  font-weight: 300;
+}
+[data-theme="dark"] .mnt-cab-comment {
+  color: var(--mnt-text-2);
+}
+
+/* ── Modal overrides ── */
+.mnt-modal {
+  max-width: 500px;
+}
+.mnt-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.mnt-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .mnt-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .mnt-impact-grid {
+    grid-template-columns: 1fr;
+  }
+  .mnt-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .mnt-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .mnt-panel__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 380px) {
+  .mnt-impact-tags {
+    flex-direction: column;
+  }
+  .mnt-toolbar__filters {
+    flex-direction: column;
+    width: 100%;
+  }
+  .mnt-toolbar__filters select {
+    width: 100%;
+  }
+  .mnt-channel {
+    flex-wrap: wrap;
+  }
+}
+</style>
+
+<div class="mnt" role="main" aria-label="Maintenance management">
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Maintenance</h1>
+    <p class="ds-page-subtitle">Plan, announce and track change windows across your production fleet.</p>
+</div>
+
+<!-- KPI row -- change-management signals -->
+<div class="ws-kpi-grid mnt-fade" style="animation-delay:.05s" role="region" aria-label="Change management metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2.5" y="3" width="13" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M13 2v2M2.5 7h13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">7</div>
+            <div class="ws-kpi-card__label">Windows this month</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9.5l3 3 7-7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">96.8<span class="mnt-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Change success rate &middot; 90 d</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">3.4<span class="mnt-kpi-unit"> d</span></div>
+            <div class="ws-kpi-card__label">Mean change lead time</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2l7 13H2L9 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 7v4M9 13h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">1</div>
+            <div class="ws-kpi-card__label">Pending CAB review</div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming banner -->
+<div class="replica-status-banner mnt-banner mnt-fade" style="animation-delay:.1s" role="alert" aria-label="Next scheduled maintenance">
+    <div class="replica-status-banner__dot mnt-banner__dot"></div>
+    <span>Next change: <strong>PostgreSQL 14 &rarr; 16 major upgrade</strong> &middot; blue-green with logical replication &middot; starts in <strong>2 d 4 h</strong></span>
+    <span class="replica-status-banner__lag mnt-banner__when">Nov 17 &middot; 02:00&ndash;04:00 UTC &middot; fra1</span>
+</div>
+
+<div class="clients-toolbar mnt-toolbar mnt-fade" style="animation-delay:.15s">
+    <div class="mnt-toolbar__filters">
+        <select class="clients-filter" aria-label="Filter by status">
+            <option>All statuses</option>
+            <option>Scheduled</option>
+            <option>In progress</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+        </select>
+        <select class="clients-filter" aria-label="Filter by component">
+            <option>All components</option>
+            <option>API</option>
+            <option>Database Cluster</option>
+            <option>CDN</option>
+            <option>Web Dashboard</option>
+        </select>
+    </div>
+    <button class="btn btn--primary" onclick="document.getElementById('newMaintModal').hidden=false" aria-haspopup="dialog">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Change Request
+    </button>
+</div>
+
+<div class="clients-table-wrap mnt-fade" style="animation-delay:.2s">
+<table class="tenant-table" role="table" aria-label="Change requests">
+    <thead><tr><th scope="col">Change</th><th scope="col">Components</th><th scope="col">Window (UTC)</th><th scope="col">Risk</th><th scope="col">Rollback</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+        {{range .Windows}}
+        <tr>
+            <td>
+                <div class="rs-name">{{.RefNum}} &middot; {{.Title}}</div>
+                {{if .Description}}<div class="rs-id">{{.Description}}</div>{{end}}
+            </td>
+            <td class="tenant-table__domain">{{.Affected}}</td>
+            <td class="tk-date">{{.WindowLabel}}</td>
+            <td><span class="mnt-risk mnt-risk--{{.Risk}}">{{.Risk}}</span></td>
+            <td class="tenant-table__domain">{{.Rollback}}</td>
+            <td><span class="mnt-status mnt-status--{{.Status}}">{{.Status}}</span></td>
+            <td class="tenant-table__actions">
+                {{if or (eq .Status "scheduled") (eq .Status "in-progress")}}
+                <form method="POST" action="/t/{{$.TenantSlug}}/maintenance/{{.ID}}/status/" style="display:inline">
+                    <input type="hidden" name="status" value="cancelled">
+                    <button type="submit" class="btn btn--danger btn--sm">Cancel</button>
+                </form>
+                {{else}}
+                <button class="btn btn--ghost btn--sm">View</button>
+                {{end}}
+            </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">No change requests yet</td></tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Impact Analysis & Notification Channels ── -->
+<div class="mnt-two-col mnt-fade" style="animation-delay:.25s">
+
+    <!-- Impact analysis -->
+    <div class="clients-table-wrap mnt-panel" role="region" aria-label="Impact analysis">
+        <div class="mnt-panel__header">
+            <div>
+                <div class="mnt-panel__title">Impact Analysis</div>
+                <div class="mnt-panel__subtitle">Blast-radius estimate for the next scheduled change</div>
+            </div>
+            <span class="mnt-risk mnt-risk--high">High</span>
+        </div>
+        <div class="mnt-panel__body">
+            <div class="mnt-impact-grid">
+                <div class="mnt-impact-card">
+                    <div class="mnt-impact-card__label">Affected workspaces</div>
+                    <div class="mnt-impact-card__value">14</div>
+                    <div class="mnt-impact-card__sub">of 38 total &middot; 36.8%</div>
+                </div>
+                <div class="mnt-impact-card">
+                    <div class="mnt-impact-card__label">Estimated downtime</div>
+                    <div class="mnt-impact-card__value">~8 <span class="mnt-impact-card__value-unit">min</span></div>
+                    <div class="mnt-impact-card__sub">during cutover window</div>
+                </div>
+            </div>
+            <div class="mnt-dep-chain">
+                <strong>Dependency chain:</strong> pg-primary-fra1 &rarr; pg-replica-fra1a &rarr; API read replicas (3) &rarr; dashboard cache layer.
+                Blue-green cutover will briefly pause write traffic. Read queries fail over to replica within ~2 s.
+            </div>
+            <div class="mnt-impact-tags">
+                <span class="mnt-impact-tag mnt-impact-tag--danger">Write pause &le; 8 min</span>
+                <span class="mnt-impact-tag mnt-impact-tag--warn">Read degraded &le; 2 s</span>
+                <span class="mnt-impact-tag mnt-impact-tag--ok">CDN unaffected</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification channels -->
+    <div class="clients-table-wrap mnt-panel" role="region" aria-label="Notification channels">
+        <div class="mnt-panel__header">
+            <div>
+                <div class="mnt-panel__title">Notification Channels</div>
+                <div class="mnt-panel__subtitle">Automated alerts for scheduled and emergency maintenance</div>
+            </div>
+            <button class="btn btn--ghost btn--sm" aria-label="Configure notification channels">Configure</button>
+        </div>
+        <div class="mnt-panel__body--flush">
+            <div class="mnt-channel" role="listitem">
+                <div class="mnt-channel__icon mnt-channel__icon--indigo" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="3" width="12" height="9" rx="1.5" stroke="#6366f1" stroke-width="1.1"/><path d="M1.5 4.5l6 4 6-4" stroke="#6366f1" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="mnt-channel__info">
+                    <div class="mnt-channel__name">Email &mdash; all affected clients</div>
+                    <div class="mnt-channel__desc">72 h advance &middot; start &middot; completion &middot; post-mortem</div>
+                </div>
+                <span class="mnt-channel__badge mnt-channel__badge--active">Active</span>
+            </div>
+            <div class="mnt-channel" role="listitem">
+                <div class="mnt-channel__icon mnt-channel__icon--amber" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2a4.5 4.5 0 014.5 4.5v2.5l1.5 2H1.5L3 9V6.5A4.5 4.5 0 017.5 2z" stroke="#f59e0b" stroke-width="1.1" stroke-linejoin="round"/><path d="M6 12a1.5 1.5 0 003 0" stroke="#f59e0b" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="mnt-channel__info">
+                    <div class="mnt-channel__name">Webhook &mdash; status.example.com</div>
+                    <div class="mnt-channel__desc">POST /api/v1/maintenance &middot; HMAC-SHA256 signed</div>
+                </div>
+                <span class="mnt-channel__badge mnt-channel__badge--active">Active</span>
+            </div>
+            <div class="mnt-channel" role="listitem">
+                <div class="mnt-channel__icon mnt-channel__icon--violet" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5-2.5 5-5.5 5c-1 0-2-.2-2.5-.5L2 13l1-2.5c-.6-1-1-2-1-3z" stroke="#8b5cf6" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="mnt-channel__info">
+                    <div class="mnt-channel__name">Slack &mdash; #ops-maintenance</div>
+                    <div class="mnt-channel__desc">Real-time progress updates during change window</div>
+                </div>
+                <span class="mnt-channel__badge mnt-channel__badge--active">Active</span>
+            </div>
+            <div class="mnt-channel" role="listitem">
+                <div class="mnt-channel__icon mnt-channel__icon--gray" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v4M7.5 10v4M1 7.5h4M10 7.5h4" stroke="#6b7280" stroke-width="1.1" stroke-linecap="round"/></svg>
+                </div>
+                <div class="mnt-channel__info">
+                    <div class="mnt-channel__name">PagerDuty &mdash; on-call escalation</div>
+                    <div class="mnt-channel__desc">Auto-page if rollback is triggered</div>
+                </div>
+                <span class="mnt-channel__badge mnt-channel__badge--standby">Standby</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Change Advisory Board ── -->
+<div class="clients-table-wrap mnt-panel mnt-panel--spaced mnt-fade" style="animation-delay:.3s" role="region" aria-label="Change Advisory Board">
+    <div class="mnt-panel__header">
+        <div>
+            <div class="mnt-panel__title">Change Advisory Board (CAB)</div>
+            <div class="mnt-panel__subtitle">ITIL-aligned approval workflow for high and critical risk changes</div>
+        </div>
+        <div class="mnt-panel__actions">
+            <button class="btn btn--ghost btn--sm">History</button>
+            <button class="btn btn--primary btn--sm">Submit for Review</button>
+        </div>
+    </div>
+    <table class="tenant-table mnt-table--flush" role="table" aria-label="CAB reviewers">
+        <thead><tr><th scope="col">Reviewer</th><th scope="col">Role</th><th scope="col">Decision</th><th scope="col">Date</th><th scope="col">Comments</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar mnt-avatar--green">A</div>
+                        <span>Alice Smith</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">SRE Lead</td>
+                <td><span class="tk-status tk-status--resolved">Approved</span></td>
+                <td class="tk-date">Apr 13, 14:22</td>
+                <td class="mnt-cab-comment">Runbook reviewed. Logical replication tested in staging &mdash; clean cutover in 6 min.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar mnt-avatar--indigo">B</div>
+                        <span>Bob Carter</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">DBA</td>
+                <td><span class="tk-status tk-status--resolved">Approved</span></td>
+                <td class="tk-date">Apr 13, 15:01</td>
+                <td class="mnt-cab-comment">Extension compatibility confirmed: pgvector 0.7, PostGIS 3.4, pg_stat_statements.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar mnt-avatar--amber">C</div>
+                        <span>Carol White</span>
+                    </div>
+                </td>
+                <td class="tenant-table__domain">VP Engineering</td>
+                <td><span class="tk-status tk-status--progress">Pending</span></td>
+                <td class="tk-date">&mdash;</td>
+                <td class="mnt-cab-comment">Awaiting final sign-off &mdash; requested customer comms draft first.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Schedule Maintenance modal -->
+<div class="modal-backdrop" id="newMaintModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-labelledby="newMaintModalTitle">
+    <div class="modal mnt-modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="newMaintModalTitle">Schedule Maintenance</h2>
+            <button class="modal__close" onclick="document.getElementById('newMaintModal').hidden=true" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Title <span class="form-req">*</span></label>
+                <input class="form-input" type="text" placeholder="e.g. Database upgrade v14 &rarr; v16" aria-required="true">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Description</label>
+                <textarea class="form-input" rows="3" placeholder="What will happen during this window? Will there be downtime?"></textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Affected components</label>
+                <div class="mnt-checkbox-list" role="group" aria-label="Component selection">
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">API</span></label>
+                    <label class="perm-item"><input type="checkbox" checked class="perm-item__check"><span class="perm-item__label">Database Cluster</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">Web Dashboard</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">CDN</span></label>
+                    <label class="perm-item"><input type="checkbox" class="perm-item__check"><span class="perm-item__label">Email Delivery</span></label>
+                </div>
+            </div>
+            <div class="form-field mnt-form-grid">
+                <div><label class="form-label">Start (UTC) <span class="form-req">*</span></label><input class="form-input" type="datetime-local" aria-required="true"></div>
+                <div><label class="form-label">End (UTC) <span class="form-req">*</span></label><input class="form-input" type="datetime-local" aria-required="true"></div>
+            </div>
+            <div class="form-field mnt-form-grid">
+                <div>
+                    <label class="form-label">Notify subscribers</label>
+                    <select class="form-input">
+                        <option>Yes &mdash; send advance notice</option>
+                        <option>No &mdash; silent window</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Advance notice</label>
+                    <select class="form-input">
+                        <option>24 hours before</option>
+                        <option>48 hours before</option>
+                        <option selected>72 hours before</option>
+                        <option>1 week before</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Auto-update status page</label>
+                <select class="form-input">
+                    <option selected>Yes &mdash; set components to Maintenance during window</option>
+                    <option>No &mdash; manage status manually</option>
+                </select>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('newMaintModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.mnt -->
+{{end}}

@@ -1,0 +1,1576 @@
+{{define "database-content"}}
+<div class="db-layout">
+
+    <div class="db-layout__inner">
+
+    <!-- ── Schema Explorer ── -->
+    <aside class="db-explorer">
+
+        <div class="db-explorer__head">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <ellipse cx="7" cy="3.5" rx="5" ry="2" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M2 3.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M2 6.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>platform_db</span>
+            <span class="db-conn-dot" title="Connected"></span>
+        </div>
+
+        <!-- Schema filter -->
+        <div class="db-tree-filter">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M8 8l2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+            <input type="text" class="db-tree-filter__input" id="dbTreeFilter" placeholder="Filter tables…" oninput="dbFilterTables(this.value)" autocomplete="off" spellcheck="false"/>
+        </div>
+
+        <!-- Schema tree -->
+        <div class="db-tree" id="dbTree" role="tree">
+            {{range .Schemas}}
+            <div class="db-schema-group" data-schema="{{.Name}}" role="treeitem">
+                <button class="db-schema-row" onclick="dbToggleSchema(this)" aria-expanded="true">
+                    <svg class="db-schema-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <rect x="1" y="3" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M4 3V2a1 1 0 011-1h3a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.0"/>
+                    </svg>
+                    <span class="db-schema-name">{{.Name}}</span>
+                    <span class="db-schema-count">{{len .Tables}}</span>
+                </button>
+                <div class="db-table-list db-table-list--open" role="group">
+                    {{range .Tables}}
+                    <a href="/s/database/?table={{.Schema}}.{{.Name}}"
+                       class="db-table-row {{if eq $.ActiveTable (printf `%s.%s` .Schema .Name)}}db-table-row--active{{end}}"
+                       title="{{.Schema}}.{{.Name}}">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                            <path d="M1 4.5h10M1 7.5h10M4.5 4.5v6" stroke="currentColor" stroke-width="1.0"/>
+                        </svg>
+                        <span class="db-table-name">{{.Name}}</span>
+                        <span class="db-table-rows">{{fmtRows .RowCount}}</span>
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Footer stats -->
+        <div class="db-explorer__footer">
+            <div class="db-stat-row">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.0"/>
+                    <path d="M6 4v2.5L8 8" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/>
+                </svg>
+                <span>{{.DBVersion}}</span>
+            </div>
+            <div class="db-stat-row">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                    <path d="M1 4.5h10M4.5 4.5v6" stroke="currentColor" stroke-width="1.0"/>
+                </svg>
+                <span>{{.TotalTables}} tables &middot; {{.TotalSize}}</span>
+            </div>
+            <a href="/s/database/?view=erd" class="db-new-query-btn db-new-query-btn--erd {{if eq .View `erd`}}db-new-query-btn--active{{end}}" title="Open schema diagram">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <rect x="1" y="1" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                    <rect x="8.5" y="1" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                    <rect x="4.75" y="10" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                    <path d="M3.25 4v3L7 7v3M10.75 4v3L7 7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                </svg>
+                Schema Diagram
+            </a>
+            <a href="/s/database/" class="db-new-query-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                New Query
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- ── Main Panel ── -->
+    <div class="db-main">
+
+        {{if eq .View "erd"}}
+        <!-- ── ERD Mode ── -->
+        <div class="db-panel-header">
+            <div class="db-panel-tabs" role="tablist">
+                <a href="/s/database/" class="db-ptab">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M2 4l3 2.5L2 9M7 9h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    SQL Query
+                </a>
+                <button class="db-ptab db-ptab--active" type="button">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <rect x="1" y="1" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                        <rect x="8.5" y="1" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                        <rect x="4.75" y="10" width="4.5" height="3" rx="0.8" stroke="currentColor" stroke-width="1.1"/>
+                        <path d="M3.25 4v3L7 7v3M10.75 4v3L7 7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                    Schema Diagram
+                </button>
+            </div>
+            <div class="db-panel-meta db-erd-toolbar">
+                <div class="db-erd-search">
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <circle cx="5" cy="5" r="3.5" stroke="currentColor" stroke-width="1.1"/>
+                        <path d="M8 8l2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                    <input id="erdSearch" type="text" placeholder="Highlight table…" autocomplete="off" spellcheck="false"/>
+                </div>
+                <button type="button" class="db-erd-btn" id="erdFit" title="Fit canvas to all tables">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4V2h2M10 4V2H8M2 8v2h2M10 8v2H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    Fit
+                </button>
+                <button type="button" class="db-erd-btn" id="erdArrange" title="Auto-arrange tables">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="3" cy="3" r="1.3" stroke="currentColor" stroke-width="1.1"/><circle cx="9" cy="3" r="1.3" stroke="currentColor" stroke-width="1.1"/><circle cx="3" cy="9" r="1.3" stroke="currentColor" stroke-width="1.1"/><circle cx="9" cy="9" r="1.3" stroke="currentColor" stroke-width="1.1"/><path d="M4 3h4M4 9h4M3 4v4M9 4v4" stroke="currentColor" stroke-width="1.0"/></svg>
+                    Arrange
+                </button>
+                <button type="button" class="db-erd-btn" id="erdReset" title="Reset layout and zoom">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6a4 4 0 107-2.5M3.5 3V2H2M9 3V2h1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Reset
+                </button>
+                <span class="db-meta-pill" id="erdStats">…</span>
+            </div>
+        </div>
+
+        <div class="db-erd-stage" id="erdStage">
+            <svg id="erdCanvas" class="db-erd-canvas" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="erd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0 0 L10 5 L0 10 Z" fill="var(--erd-edge, #6b7280)"/>
+                    </marker>
+                    <marker id="erd-arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                        <path d="M0 0 L10 5 L0 10 Z" fill="var(--erd-edge-hi, #2563eb)"/>
+                    </marker>
+                </defs>
+                <g id="erdViewport">
+                    <g id="erdEdges"></g>
+                    <g id="erdNodes"></g>
+                </g>
+            </svg>
+            <div class="db-erd-legend">
+                <div class="db-erd-legend__row"><span class="db-erd-pk">PK</span> Primary key</div>
+                <div class="db-erd-legend__row"><span class="db-erd-fk">FK</span> Foreign key</div>
+                <div class="db-erd-legend__row"><span class="db-erd-hint">Scroll to zoom · drag background to pan · drag a table to move it</span></div>
+            </div>
+            <div class="db-erd-loading" id="erdLoading">Loading schema…</div>
+        </div>
+
+        {{else if .ActiveTable}}
+        <!-- ── Browse Mode ── -->
+        <div class="db-panel-header">
+            <div class="db-panel-tabs" role="tablist">
+                <button class="db-ptab db-ptab--active" id="tab-data" onclick="dbSwitchTab('data')" role="tab" aria-selected="true">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <rect x="1" y="1" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M1 4.5h11M1 8h11M4.5 4.5v7" stroke="currentColor" stroke-width="1.0"/>
+                    </svg>
+                    Data
+                </button>
+                <button class="db-ptab" id="tab-structure" onclick="dbSwitchTab('structure')" role="tab" aria-selected="false">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M2 3.5h9M2 6.5h6M2 9.5h7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                    Structure
+                </button>
+                <button class="db-ptab" id="tab-backups" onclick="dbSwitchTab('backups')" role="tab" aria-selected="false">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M2 3v7a1.5 1.5 0 001.5 1.5h6A1.5 1.5 0 0011 10V5.5L8 2.5H3.5A1.5 1.5 0 002 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 2.5V5.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 8.5l1.5 1.5L9 7" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Backups
+                </button>
+            </div>
+            <div class="db-panel-meta">
+                <span class="db-table-badge">
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M1 4.5h10M1 7.5h10M4.5 4.5v6" stroke="currentColor" stroke-width="1.0"/>
+                    </svg>
+                    {{.ActiveTable}}
+                </span>
+                {{if .BrowseTable}}
+                <span class="db-meta-pill">{{.BrowseTable.RowCount}} rows</span>
+                <span class="db-meta-pill">{{fmtSize .BrowseTable.SizeKB}}</span>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Data tab -->
+        <div class="db-tab-panel" id="panel-data" role="tabpanel">
+            {{if and .BrowseTable .BrowseRows}}
+            <div class="db-results-wrap">
+                <table class="db-grid">
+                    <thead>
+                        <tr>
+                            <th class="db-grid__rownum">#</th>
+                            {{range .BrowseTable.Columns}}
+                            <th>
+                                {{if .PrimaryKey}}<span class="db-col-pk" title="Primary Key">PK</span>{{end}}
+                                {{.Name}}
+                                <span class="db-col-type">{{.Type}}</span>
+                            </th>
+                            {{end}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $i, $row := .BrowseRows}}
+                        <tr>
+                            <td class="db-grid__rownum">{{$i | rownum}}</td>
+                            {{range $row}}
+                            <td class="{{if eq . "NULL"}}db-null{{end}}">{{.}}</td>
+                            {{end}}
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            <div class="db-results-footer">
+                Showing {{len .BrowseRows}} of {{.BrowseTable.RowCount}} rows
+                <span class="db-results-footer__note">(mock data)</span>
+            </div>
+            {{else}}
+            <div class="db-empty">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect x="4" y="4" width="24" height="24" rx="3" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M4 11h24M4 18h24M11 11v17" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+                <p>No data available</p>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Structure tab -->
+        <div class="db-tab-panel" id="panel-structure" style="display:none" role="tabpanel">
+            {{if .BrowseTable}}
+            <div class="db-results-wrap">
+                <table class="db-grid db-grid--structure">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Nullable</th>
+                            <th>Key</th>
+                            <th>Default</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $i, $col := .BrowseTable.Columns}}
+                        <tr>
+                            <td class="db-grid__rownum">{{$i | rownum}}</td>
+                            <td class="db-col-name">
+                                {{if $col.PrimaryKey}}<span class="db-col-pk">PK</span>{{end}}
+                                {{$col.Name}}
+                            </td>
+                            <td><code class="db-type-code">{{$col.Type}}</code></td>
+                            <td>{{if $col.Nullable}}<span class="db-yes">YES</span>{{else}}<span class="db-no">NO</span>{{end}}</td>
+                            <td>{{if $col.PrimaryKey}}<span class="db-badge-pk">PRIMARY</span>{{end}}</td>
+                            <td>{{if $col.Default}}<code class="db-type-code">{{$col.Default}}</code>{{end}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Backups tab -->
+        <div class="db-tab-panel" id="panel-backups" style="display:none" role="tabpanel">
+            <div class="db-backups-info">
+                <div class="db-backups-meta">
+                    <div class="db-backups-meta__item">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.0"/>
+                            <path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="db-backups-meta__label">Schedule</span>
+                        <span class="db-backups-meta__val">Daily at 03:00 UTC</span>
+                    </div>
+                    <div class="db-backups-meta__item">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <rect x="2" y="2" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.0"/>
+                            <path d="M2 5h9" stroke="currentColor" stroke-width="1.0"/>
+                            <path d="M4.5 1v2M8.5 1v2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/>
+                        </svg>
+                        <span class="db-backups-meta__label">Retention</span>
+                        <span class="db-backups-meta__val">30 days</span>
+                    </div>
+                    <div class="db-backups-meta__item">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <path d="M2 3v7a1.5 1.5 0 001.5 1.5h6A1.5 1.5 0 0011 10V5.5L8 2.5H3.5A1.5 1.5 0 002 4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/>
+                            <path d="M8 2.5V5.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/>
+                        </svg>
+                        <span class="db-backups-meta__label">Point-in-Time Recovery</span>
+                        <span class="db-backups-meta__val db-backups-meta__val--ok">Enabled <span style="opacity:.6">(WAL archiving)</span></span>
+                    </div>
+                </div>
+                <div class="db-backups-actions">
+                    <button type="button" class="db-backup-btn db-backup-btn--primary">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                        Create Manual Backup
+                    </button>
+                    <button type="button" class="db-backup-btn">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 5.5A4 4 0 105.5 1.5H3.5M3.5 1.5L1.5 3.5M3.5 1.5L5 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Restore from Backup
+                    </button>
+                </div>
+            </div>
+            <div class="db-results-wrap">
+                <table class="db-grid db-grid--backups">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="db-grid__rownum">1</td>
+                            <td>2026-04-16 03:00 UTC</td>
+                            <td><code class="db-type-code">Full</code></td>
+                            <td>2.4 GB</td>
+                            <td><span class="db-backup-status db-backup-status--ok">Completed</span></td>
+                            <td class="db-mono-cell">4m 12s</td>
+                        </tr>
+                        <tr>
+                            <td class="db-grid__rownum">2</td>
+                            <td>2026-04-15 03:00 UTC</td>
+                            <td><code class="db-type-code">Full</code></td>
+                            <td>2.3 GB</td>
+                            <td><span class="db-backup-status db-backup-status--ok">Completed</span></td>
+                            <td class="db-mono-cell">3m 58s</td>
+                        </tr>
+                        <tr>
+                            <td class="db-grid__rownum">3</td>
+                            <td>2026-04-14 03:00 UTC</td>
+                            <td><code class="db-type-code">Full</code></td>
+                            <td>2.3 GB</td>
+                            <td><span class="db-backup-status db-backup-status--ok">Completed</span></td>
+                            <td class="db-mono-cell">4m 05s</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{else}}
+        <!-- ── Query Mode ── -->
+        <div class="db-panel-header">
+            <div class="db-panel-tabs">
+                <button class="db-ptab db-ptab--active">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M2 4l3 2.5L2 9M7 9h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    SQL Query
+                </button>
+            </div>
+            {{if and .Result .Result.Executed (not .Result.Err)}}
+            <div class="db-panel-meta">
+                <span class="db-meta-pill db-meta-pill--ok">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                        <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{.Result.RowCount}} rows
+                </span>
+                <span class="db-meta-pill">{{.Result.Duration}}</span>
+            </div>
+            {{end}}
+            {{if and .Result .Result.Err}}
+            <div class="db-panel-meta">
+                <span class="db-meta-pill db-meta-pill--err">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                        <circle cx="5.5" cy="5.5" r="4.5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M5.5 3.5v2.5M5.5 7.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/>
+                    </svg>
+                    Error
+                </span>
+            </div>
+            {{end}}
+        </div>
+
+        <form method="POST" action="/s/database/" class="db-query-form" id="dbQueryForm">
+            <div class="db-editor-wrap">
+                <div class="db-editor-gutter" id="dbGutter">1</div>
+                <textarea
+                    class="db-editor"
+                    name="sql"
+                    id="dbEditor"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="SELECT t.name, COUNT(w.id) as workspaces FROM public.tenants t LEFT JOIN public.workspaces w ON w.tenant_id = t.id GROUP BY t.name;"
+                    oninput="dbUpdateGutter()"
+                    onkeydown="dbHandleKey(event)"
+                >{{if and .Result .Result.SQL}}{{.Result.SQL}}{{end}}</textarea>
+            </div>
+            <div class="db-query-bar">
+                <button type="submit" class="db-run-btn">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M3 2l8 4.5L3 11V2z" fill="currentColor"/>
+                    </svg>
+                    Run
+                    <kbd>Ctrl+Enter</kbd>
+                </button>
+                <button type="button" class="db-clear-btn" onclick="dbClear()">Clear</button>
+                <div class="db-query-bar__spacer"></div>
+                <select class="db-table-select" onchange="dbSetTable(this.value)">
+                    <option value="">Quick insert table…</option>
+                    {{range .Schemas}}{{$schema := .Name}}{{range .Tables}}
+                    <option value="{{$schema}}.{{.Name}}">{{$schema}}.{{.Name}}</option>
+                    {{end}}{{end}}
+                </select>
+            </div>
+        </form>
+
+        <!-- Results area -->
+        {{if .Result}}
+        {{if .Result.Err}}
+        <div class="db-error-banner">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M7.5 4.5v3.5M7.5 10h.01" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+            <span>{{.Result.Err}}</span>
+        </div>
+        {{else if .Result.Columns}}
+        <div class="db-results-wrap">
+            <table class="db-grid">
+                <thead>
+                    <tr>
+                        <th class="db-grid__rownum">#</th>
+                        {{range .Result.Columns}}
+                        <th>{{.}}</th>
+                        {{end}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $i, $row := .Result.Rows}}
+                    <tr>
+                        <td class="db-grid__rownum">{{$i | rownum}}</td>
+                        {{range $row}}
+                        <td class="{{if eq . "NULL"}}db-null{{end}}">{{.}}</td>
+                        {{end}}
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="db-results-footer">
+            {{.Result.RowCount}} row{{if ne .Result.RowCount 1}}s{{end}} &middot; {{.Result.Duration}}
+            <span class="db-results-footer__note">(simulated)</span>
+            <button type="button" class="db-copy-results" onclick="dbCopyResults()" title="Copy results to clipboard" style="margin-left:auto;padding:3px 10px;border:1px solid var(--border,#e5e7eb);border-radius:6px;background:transparent;color:var(--text-muted,#6b7280);font-size:11px;cursor:pointer">Copy</button>
+        </div>
+        {{end}}
+        {{else}}
+        <div class="db-empty db-empty--query">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <path d="M6 10l6 5-6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 20h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <p>Write a query and press <kbd>Run</kbd> to see results</p>
+            <p class="db-empty__hint">Try: <code>SELECT * FROM information_schema.tables WHERE table_schema = 'public';</code></p>
+            <p class="db-empty__hint" style="margin-top:4px">Press <kbd>/</kbd> anywhere to focus the filter, <kbd>Tab</kbd> inserts spaces</p>
+        </div>
+        {{end}}
+        {{end}}
+
+    </div><!-- /db-main -->
+
+    </div><!-- /db-layout__inner -->
+
+    <!-- ── Status Bar ── -->
+    <div class="db-status-bar">
+        <div class="db-status-item">
+            <span class="db-status-label">Connection Pool</span>
+            <span class="db-status-value">23/100</span>
+            <span class="db-status-minibar"><span class="db-status-minibar__fill" style="width:23%"></span></span>
+        </div>
+        <span class="db-status-sep"></span>
+        <div class="db-status-item">
+            <span class="db-status-label">Queries/sec</span>
+            <span class="db-status-value db-status-value--live">847</span>
+        </div>
+        <span class="db-status-sep"></span>
+        <div class="db-status-item">
+            <span class="db-status-label">Avg Latency</span>
+            <span class="db-status-value">2.1 ms</span>
+        </div>
+        <span class="db-status-sep"></span>
+        <div class="db-status-item">
+            <span class="db-status-label">Replication Lag</span>
+            <span class="db-status-value">11 ms</span>
+        </div>
+        <span class="db-status-sep"></span>
+        <div class="db-status-item">
+            <span class="db-status-label">Cache Hit Ratio</span>
+            <span class="db-status-value db-status-value--good">99.2%</span>
+        </div>
+        <span class="db-status-sep"></span>
+        <div class="db-status-item">
+            <span class="db-status-label">DB Size</span>
+            <span class="db-status-value">14.8 GB</span>
+        </div>
+    </div>
+
+</div>
+
+<style>
+/* ── Status Bar ── */
+.db-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 6px 16px;
+    border-top: 1px solid var(--border, #e5e7eb);
+    background: var(--bg-soft, #f7f8fa);
+    font-size: 11px;
+    width: 100%;
+    min-height: 32px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    z-index: 5;
+}
+.db-status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+}
+.db-status-label {
+    color: var(--text-muted, #6b7280);
+    font-weight: 500;
+    white-space: nowrap;
+}
+.db-status-value {
+    color: var(--text, #111827);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.db-status-value--good { color: #059669; }
+.db-status-value--live { animation: db-pulse 2s ease-in-out infinite; }
+@keyframes db-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .55; }
+}
+.db-status-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--border, #e5e7eb);
+    flex-shrink: 0;
+}
+.db-status-minibar {
+    display: inline-block;
+    width: 48px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--border, #e5e7eb);
+    overflow: hidden;
+    vertical-align: middle;
+}
+.db-status-minibar__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #10b981, #3b82f6);
+}
+
+/* ── Active tab indicator ── */
+.db-ptab { position: relative; }
+.db-ptab--active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+
+/* ── Schema tree filter ── */
+.db-tree-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 10px 6px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #e5e7eb);
+    background: var(--surface, #fff);
+    color: var(--text-muted, #6b7280);
+}
+.db-tree-filter__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    color: var(--text, #111827);
+    font-family: inherit;
+    min-width: 0;
+}
+.db-tree-filter__input::placeholder { color: var(--text-muted, #9ca3af); }
+
+/* ── Backups tab ── */
+.db-backups-info {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.db-backups-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+.db-backups-meta__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted, #6b7280);
+}
+.db-backups-meta__label {
+    font-weight: 600;
+    color: var(--text-muted, #6b7280);
+}
+.db-backups-meta__val {
+    color: var(--text, #111827);
+    font-weight: 500;
+}
+.db-backups-meta__val--ok { color: #059669; }
+.db-backups-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.db-backup-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border, #e5e7eb);
+    background: var(--surface, #fff);
+    color: var(--text-muted, #6b7280);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+}
+.db-backup-btn:hover {
+    border-color: var(--text-muted, #9ca3af);
+    color: var(--text, #111827);
+}
+.db-backup-btn--primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(99,102,241,.3);
+}
+.db-backup-btn--primary:hover {
+    box-shadow: 0 4px 12px rgba(99,102,241,.35);
+    color: #fff;
+    border-color: transparent;
+}
+.db-backup-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.db-backup-status--ok {
+    color: #059669;
+    background: rgba(16,185,129,.1);
+}
+.db-mono-cell {
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    font-size: 12px;
+    color: var(--text-muted, #6b7280);
+}
+
+/* ── Dark theme overrides (consolidated) ── */
+[data-theme="dark"] .db-status-bar { background: #13151b; border-color: #262932; }
+[data-theme="dark"] .db-status-sep,
+[data-theme="dark"] .db-backups-info { border-color: #262932; }
+[data-theme="dark"] .db-status-minibar { background: #1f2229; }
+[data-theme="dark"] .db-status-value--good,
+[data-theme="dark"] .db-backups-meta__val--ok,
+[data-theme="dark"] .db-backup-status--ok { color: #34d399; }
+[data-theme="dark"] .db-backup-status--ok { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .db-backup-btn { background: #181a20; border-color: #262932; }
+[data-theme="dark"] .db-tree-filter { background: #181a20; border-color: #262932; }
+[data-theme="dark"] .db-tree-filter__input { color: #e5e7eb; }
+
+/* ── ERD visualizer ─────────────────────────────────────────── */
+.db-new-query-btn--erd {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+.db-new-query-btn--erd:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+.db-new-query-btn--active {
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+}
+.db-erd-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--surface, #fff);
+}
+.db-erd-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    background: var(--surface-2, #f8fafc);
+    flex-shrink: 0;
+}
+.db-erd-search {
+    flex: 0 1 260px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    color: var(--text-muted, #6b7280);
+}
+.db-erd-search:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,.15);
+}
+.db-erd-search input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text, #111827);
+    font-size: 13px;
+    min-width: 0;
+}
+.db-erd-pk, .db-erd-fk {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    margin-right: 4px;
+}
+.db-erd-pk { background: #f59e0b; }
+.db-erd-fk { background: #10b981; }
+.db-erd-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted, #6b7280);
+    font-size: 10px;
+    font-style: italic;
+}
+.db-erd-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    color: var(--text, #111827);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .12s, border-color .12s;
+}
+.db-erd-btn:hover {
+    background: var(--surface-2, #f3f4f6);
+    border-color: #6366f1;
+}
+.db-erd-btn svg { width: 14px; height: 14px; }
+.db-erd-stats {
+    margin-left: auto;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(99,102,241,.1);
+    color: #4f46e5;
+    font-size: 12px;
+    font-weight: 600;
+}
+.db-erd-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(0,0,0,.08) 1px, transparent 0) 0 0 / 22px 22px,
+        var(--surface, #fafafa);
+    cursor: grab;
+}
+.db-erd-stage:active { cursor: grabbing; }
+.db-erd-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+}
+.db-erd-node-bg {
+    fill: var(--surface, #fff);
+    stroke: var(--border, #d1d5db);
+    stroke-width: 1;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.08));
+}
+.db-erd-node--highlight .db-erd-node-bg {
+    stroke: #6366f1;
+    stroke-width: 2;
+}
+.db-erd-node--dim { opacity: .25; }
+.db-erd-node-header {
+    fill: #4f46e5;
+}
+.db-erd-node-title {
+    fill: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    dominant-baseline: middle;
+}
+.db-erd-node-schema {
+    fill: rgba(255,255,255,.7);
+    font-size: 10px;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    dominant-baseline: middle;
+}
+.db-erd-row-bg {
+    fill: transparent;
+}
+.db-erd-row-bg--alt {
+    fill: rgba(0,0,0,.02);
+}
+.db-erd-col-name {
+    fill: var(--text, #111827);
+    font-size: 11px;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    dominant-baseline: middle;
+}
+.db-erd-col-type {
+    fill: var(--text-muted, #6b7280);
+    font-size: 10px;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    dominant-baseline: middle;
+    text-anchor: end;
+}
+.db-erd-badge-pk {
+    fill: #f59e0b;
+}
+.db-erd-badge-fk {
+    fill: #10b981;
+}
+.db-erd-badge-text {
+    fill: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+.db-erd-edge {
+    fill: none;
+    stroke: #9ca3af;
+    stroke-width: 1.5;
+    opacity: .65;
+    pointer-events: stroke;
+    transition: stroke .12s, opacity .12s, stroke-width .12s;
+}
+.db-erd-edge:hover {
+    stroke: #6366f1;
+    opacity: 1;
+    stroke-width: 2;
+}
+.db-erd-edge--highlight {
+    stroke: #6366f1;
+    stroke-width: 2.5;
+    opacity: 1;
+}
+.db-erd-edge--dim { opacity: .1; }
+.db-erd-legend {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.94);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text, #111827);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.db-erd-legend__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 3px 0;
+}
+.db-erd-legend__swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.db-erd-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.85);
+    color: var(--text-muted, #6b7280);
+    font-size: 13px;
+    z-index: 10;
+}
+.db-erd-loading--hidden { display: none; }
+.db-erd-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(99,102,241,.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: db-erd-spin .6s linear infinite;
+    margin-right: 8px;
+}
+@keyframes db-erd-spin { to { transform: rotate(360deg); } }
+
+[data-theme="dark"] .db-erd-stage {
+    background:
+        radial-gradient(circle at 1px 1px, rgba(255,255,255,.08) 1px, transparent 0) 0 0 / 22px 22px,
+        #0f1116;
+}
+[data-theme="dark"] .db-erd-toolbar { background: #13151b; border-color: #262932; }
+[data-theme="dark"] .db-erd-search { background: #181a20; border-color: #262932; color: #e5e7eb; }
+[data-theme="dark"] .db-erd-btn { background: #181a20; border-color: #262932; color: #e5e7eb; }
+[data-theme="dark"] .db-erd-btn:hover { background: #1f2229; border-color: #6366f1; }
+[data-theme="dark"] .db-erd-node-bg { fill: #181a20; stroke: #2d3140; }
+[data-theme="dark"] .db-erd-node-header { fill: #4338ca; }
+[data-theme="dark"] .db-erd-row-bg--alt { fill: rgba(255,255,255,.03); }
+[data-theme="dark"] .db-erd-col-name { fill: #e5e7eb; }
+[data-theme="dark"] .db-erd-col-type { fill: #9ca3af; }
+[data-theme="dark"] .db-erd-edge { stroke: #6b7280; }
+[data-theme="dark"] .db-erd-legend { background: rgba(19,21,27,.94); border-color: #262932; color: #e5e7eb; }
+[data-theme="dark"] .db-erd-loading { background: rgba(15,17,22,.9); color: #9ca3af; }
+</style>
+
+<script>
+// ── Line-number gutter ──────────────────────────────────────
+function dbUpdateGutter() {
+    const ta = document.getElementById('dbEditor');
+    const gutter = document.getElementById('dbGutter');
+    if (!ta || !gutter) return;
+    const lines = ta.value.split('\n').length;
+    gutter.textContent = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+    gutter.scrollTop = ta.scrollTop;
+}
+
+// Keep gutter in sync on scroll
+document.addEventListener('DOMContentLoaded', function () {
+    const ta = document.getElementById('dbEditor');
+    const gutter = document.getElementById('dbGutter');
+    if (ta) {
+        ta.addEventListener('scroll', () => { if (gutter) gutter.scrollTop = ta.scrollTop; });
+        dbUpdateGutter();
+        if (!document.querySelector('.db-panel-tabs .db-ptab--active#tab-data')) {
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+        }
+    }
+});
+
+// ── Ctrl+Enter submits form ─────────────────────────────────
+function dbHandleKey(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('dbQueryForm').submit();
+    }
+    // Tab inserts spaces
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const ta = e.target;
+        const start = ta.selectionStart;
+        ta.value = ta.value.slice(0, start) + '    ' + ta.value.slice(ta.selectionEnd);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        dbUpdateGutter();
+    }
+}
+
+// ── Clear editor ────────────────────────────────────────────
+function dbClear() {
+    const ta = document.getElementById('dbEditor');
+    if (ta) { ta.value = ''; ta.focus(); dbUpdateGutter(); }
+}
+
+// ── Copy query results to clipboard ────────────────────────
+function dbCopyResults() {
+    var table = document.querySelector('.db-results-wrap table');
+    if (!table) return;
+    var text = '';
+    table.querySelectorAll('tr').forEach(function(tr) {
+        var cells = [];
+        tr.querySelectorAll('th, td').forEach(function(c) { cells.push(c.textContent.trim()); });
+        text += cells.join('\t') + '\n';
+    });
+    navigator.clipboard.writeText(text);
+    var btn = document.querySelector('.db-copy-results');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = 'Copy'; }, 1500); }
+}
+
+// ── Quick-insert table name ─────────────────────────────────
+function dbSetTable(val) {
+    if (!val) return;
+    const ta = document.getElementById('dbEditor');
+    if (!ta) return;
+    const q = 'SELECT *\nFROM ' + val + '\nLIMIT 100;';
+    ta.value = q;
+    dbUpdateGutter();
+    ta.focus();
+    // reset select
+    const sel = document.querySelector('.db-table-select');
+    if (sel) sel.value = '';
+}
+
+// ── Filter tables in schema tree ────────────────────────────
+function dbFilterTables(query) {
+    const q = query.toLowerCase().trim();
+    document.querySelectorAll('.db-schema-group').forEach(function(group) {
+        var rows = group.querySelectorAll('.db-table-row');
+        var visibleCount = 0;
+        rows.forEach(function(row) {
+            var name = row.querySelector('.db-table-name');
+            var match = !q || (name && name.textContent.toLowerCase().indexOf(q) !== -1);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+        group.style.display = (!q || visibleCount > 0) ? '' : 'none';
+        // Auto-open groups with matches when filtering
+        if (q && visibleCount > 0) {
+            var list = group.querySelector('.db-table-list');
+            var chevron = group.querySelector('.db-schema-chevron');
+            if (list) list.classList.add('db-table-list--open');
+            if (chevron) chevron.style.transform = 'rotate(90deg)';
+        }
+    });
+}
+
+// ── Schema tree toggle ──────────────────────────────────────
+function dbToggleSchema(btn) {
+    const list = btn.nextElementSibling;
+    const chevron = btn.querySelector('.db-schema-chevron');
+    const open = list.classList.toggle('db-table-list--open');
+    if (chevron) chevron.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+// ── Browse sub-tabs ─────────────────────────────────────────
+function dbSwitchTab(name) {
+    const panels = ['data', 'structure', 'backups'];
+    panels.forEach(p => {
+        const panel = document.getElementById('panel-' + p);
+        const tab   = document.getElementById('tab-' + p);
+        if (!panel || !tab) return;
+        const active = p === name;
+        panel.style.display = active ? '' : 'none';
+        tab.classList.toggle('db-ptab--active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+}
+
+// Initialize: open all schema groups
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.db-schema-chevron').forEach(c => {
+        c.style.transform = 'rotate(90deg)';
+    });
+});
+
+// ── ERD visualizer ──────────────────────────────────────────
+(function initERD() {
+    var stage = document.getElementById('erdStage');
+    if (!stage) return;
+
+    var SVG_NS    = 'http://www.w3.org/2000/svg';
+    var svg       = document.getElementById('erdCanvas');
+    var viewport  = document.getElementById('erdViewport');
+    var edgesG    = document.getElementById('erdEdges');
+    var nodesG    = document.getElementById('erdNodes');
+    var loading   = document.getElementById('erdLoading');
+    var stats     = document.getElementById('erdStats');
+    var search    = document.getElementById('erdSearch');
+    var btnFit    = document.getElementById('erdFit');
+    var btnArr    = document.getElementById('erdArrange');
+    var btnReset  = document.getElementById('erdReset');
+
+    var ROW_H = 18;
+    var HDR_H = 32;
+    var NODE_W = 220;
+    var PAD = 10;
+
+    var tables = [];          // [{full, schema, name, cols, w, h, x, y, vx, vy, el, colYs:{col:y}}]
+    var tableByFull = {};
+    var edges = [];           // [{from, to, fromCol, toCol, onDelete, el}]
+
+    // ── pan / zoom state ────────────────────────────────
+    var zoom = 1, panX = 0, panY = 0;
+    function applyViewport() {
+        viewport.setAttribute('transform', 'translate(' + panX + ',' + panY + ') scale(' + zoom + ')');
+    }
+
+    stage.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var rect = stage.getBoundingClientRect();
+        var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        var dir = e.deltaY > 0 ? 0.9 : 1.1;
+        var newZoom = Math.min(3, Math.max(0.15, zoom * dir));
+        // zoom toward cursor
+        panX = mx - (mx - panX) * (newZoom / zoom);
+        panY = my - (my - panY) * (newZoom / zoom);
+        zoom = newZoom;
+        applyViewport();
+    }, { passive: false });
+
+    var isPanning = false, panStartX = 0, panStartY = 0, panStartPX = 0, panStartPY = 0;
+    stage.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.db-erd-node')) return; // node drag handles itself
+        isPanning = true;
+        panStartX = e.clientX; panStartY = e.clientY;
+        panStartPX = panX; panStartPY = panY;
+    });
+    window.addEventListener('mousemove', function(e) {
+        if (!isPanning) return;
+        panX = panStartPX + (e.clientX - panStartX);
+        panY = panStartPY + (e.clientY - panStartY);
+        applyViewport();
+    });
+    window.addEventListener('mouseup', function() { isPanning = false; });
+
+    // ── build table node SVG ────────────────────────────
+    function buildNode(t) {
+        var g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('class', 'db-erd-node');
+        g.setAttribute('data-table', t.full);
+
+        var h = HDR_H + (t.cols.length * ROW_H) + 6;
+        t.w = NODE_W; t.h = h;
+
+        var bg = document.createElementNS(SVG_NS, 'rect');
+        bg.setAttribute('class', 'db-erd-node-bg');
+        bg.setAttribute('width', NODE_W); bg.setAttribute('height', h);
+        bg.setAttribute('rx', 6);
+        g.appendChild(bg);
+
+        var hdr = document.createElementNS(SVG_NS, 'rect');
+        hdr.setAttribute('class', 'db-erd-node-header');
+        hdr.setAttribute('width', NODE_W); hdr.setAttribute('height', HDR_H);
+        hdr.setAttribute('rx', 6);
+        g.appendChild(hdr);
+        // square off bottom of header
+        var hdrMask = document.createElementNS(SVG_NS, 'rect');
+        hdrMask.setAttribute('class', 'db-erd-node-header');
+        hdrMask.setAttribute('y', HDR_H - 6);
+        hdrMask.setAttribute('width', NODE_W); hdrMask.setAttribute('height', 6);
+        g.appendChild(hdrMask);
+
+        var schema = document.createElementNS(SVG_NS, 'text');
+        schema.setAttribute('class', 'db-erd-node-schema');
+        schema.setAttribute('x', PAD); schema.setAttribute('y', 11);
+        schema.textContent = t.schema;
+        g.appendChild(schema);
+
+        var title = document.createElementNS(SVG_NS, 'text');
+        title.setAttribute('class', 'db-erd-node-title');
+        title.setAttribute('x', PAD); title.setAttribute('y', 23);
+        title.textContent = t.name;
+        g.appendChild(title);
+
+        var pill = document.createElementNS(SVG_NS, 'text');
+        pill.setAttribute('class', 'db-erd-node-schema');
+        pill.setAttribute('x', NODE_W - PAD); pill.setAttribute('y', 17);
+        pill.setAttribute('text-anchor', 'end');
+        pill.textContent = t.cols.length + ' cols';
+        g.appendChild(pill);
+
+        t.colYs = {};
+        t.cols.forEach(function(c, i) {
+            var rowY = HDR_H + 3 + i * ROW_H;
+            t.colYs[c.name] = rowY + ROW_H / 2;
+
+            if (i % 2 === 1) {
+                var rb = document.createElementNS(SVG_NS, 'rect');
+                rb.setAttribute('class', 'db-erd-row-bg db-erd-row-bg--alt');
+                rb.setAttribute('x', 1); rb.setAttribute('y', rowY);
+                rb.setAttribute('width', NODE_W - 2); rb.setAttribute('height', ROW_H);
+                g.appendChild(rb);
+            }
+
+            var isFK = !!t.fkCols[c.name];
+            var badgeX = PAD;
+            if (c.primary_key) {
+                var bpk = document.createElementNS(SVG_NS, 'rect');
+                bpk.setAttribute('class', 'db-erd-badge-pk');
+                bpk.setAttribute('x', badgeX); bpk.setAttribute('y', rowY + 4);
+                bpk.setAttribute('width', 18); bpk.setAttribute('height', 10);
+                bpk.setAttribute('rx', 2);
+                g.appendChild(bpk);
+                var tpk = document.createElementNS(SVG_NS, 'text');
+                tpk.setAttribute('class', 'db-erd-badge-text');
+                tpk.setAttribute('x', badgeX + 9); tpk.setAttribute('y', rowY + 9.5);
+                tpk.textContent = 'PK';
+                g.appendChild(tpk);
+                badgeX += 22;
+            }
+            if (isFK) {
+                var bfk = document.createElementNS(SVG_NS, 'rect');
+                bfk.setAttribute('class', 'db-erd-badge-fk');
+                bfk.setAttribute('x', badgeX); bfk.setAttribute('y', rowY + 4);
+                bfk.setAttribute('width', 18); bfk.setAttribute('height', 10);
+                bfk.setAttribute('rx', 2);
+                g.appendChild(bfk);
+                var tfk = document.createElementNS(SVG_NS, 'text');
+                tfk.setAttribute('class', 'db-erd-badge-text');
+                tfk.setAttribute('x', badgeX + 9); tfk.setAttribute('y', rowY + 9.5);
+                tfk.textContent = 'FK';
+                g.appendChild(tfk);
+                badgeX += 22;
+            }
+
+            var nm = document.createElementNS(SVG_NS, 'text');
+            nm.setAttribute('class', 'db-erd-col-name');
+            nm.setAttribute('x', badgeX); nm.setAttribute('y', rowY + ROW_H / 2);
+            nm.textContent = c.name;
+            g.appendChild(nm);
+
+            var ty = document.createElementNS(SVG_NS, 'text');
+            ty.setAttribute('class', 'db-erd-col-type');
+            ty.setAttribute('x', NODE_W - PAD); ty.setAttribute('y', rowY + ROW_H / 2);
+            ty.textContent = shortType(c.type);
+            g.appendChild(ty);
+        });
+
+        nodesG.appendChild(g);
+        t.el = g;
+
+        // drag
+        g.style.cursor = 'grab';
+        g.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            g.style.cursor = 'grabbing';
+            var startX = e.clientX, startY = e.clientY;
+            var ox = t.x, oy = t.y;
+            function move(ev) {
+                t.x = ox + (ev.clientX - startX) / zoom;
+                t.y = oy + (ev.clientY - startY) / zoom;
+                positionNode(t);
+                redrawEdgesFor(t);
+            }
+            function up() {
+                g.style.cursor = 'grab';
+                window.removeEventListener('mousemove', move);
+                window.removeEventListener('mouseup', up);
+            }
+            window.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', up);
+        });
+        g.addEventListener('mouseenter', function() { highlightRelated(t.full); });
+        g.addEventListener('mouseleave', function() { clearHighlight(); });
+    }
+
+    function shortType(t) {
+        if (!t) return '';
+        return t.replace('character varying', 'varchar')
+                .replace('timestamp with time zone', 'timestamptz')
+                .replace('timestamp without time zone', 'timestamp')
+                .replace('double precision', 'float8');
+    }
+
+    function positionNode(t) {
+        t.el.setAttribute('transform', 'translate(' + t.x + ',' + t.y + ')');
+    }
+
+    // ── edges ────────────────────────────────────────────
+    function edgePath(e) {
+        var from = tableByFull[e.from], to = tableByFull[e.to];
+        if (!from || !to) return '';
+        var fYOff = from.colYs[e.fromCol] || HDR_H + ROW_H / 2;
+        var tYOff = to.colYs[e.toCol]     || HDR_H + ROW_H / 2;
+        // choose left/right side of each node
+        var fromRight = (from.x + from.w / 2) < (to.x + to.w / 2);
+        var fx = fromRight ? from.x + from.w : from.x;
+        var fy = from.y + fYOff;
+        var tx = fromRight ? to.x : to.x + to.w;
+        var ty = to.y + tYOff;
+        var dx = Math.max(40, Math.abs(tx - fx) * 0.4);
+        var c1x = fromRight ? fx + dx : fx - dx;
+        var c2x = fromRight ? tx - dx : tx + dx;
+        return 'M' + fx + ' ' + fy + ' C ' + c1x + ' ' + fy + ',' + c2x + ' ' + ty + ',' + tx + ' ' + ty;
+    }
+
+    function buildEdge(e) {
+        var p = document.createElementNS(SVG_NS, 'path');
+        p.setAttribute('class', 'db-erd-edge');
+        p.setAttribute('marker-end', 'url(#erd-arrow)');
+        p.setAttribute('d', edgePath(e));
+        var title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = e.from + '.' + e.fromCol + ' → ' + e.to + '.' + e.toCol + ' (' + onDeleteLabel(e.onDelete) + ')';
+        p.appendChild(title);
+        edgesG.appendChild(p);
+        e.el = p;
+    }
+
+    function onDeleteLabel(c) {
+        return ({ 'a': 'no action', 'r': 'restrict', 'c': 'cascade', 'n': 'set null', 'd': 'set default' }[c] || c);
+    }
+
+    function redrawAllEdges() {
+        edges.forEach(function(e) { e.el.setAttribute('d', edgePath(e)); });
+    }
+    function redrawEdgesFor(t) {
+        edges.forEach(function(e) {
+            if (e.from === t.full || e.to === t.full) e.el.setAttribute('d', edgePath(e));
+        });
+    }
+
+    // ── layout: force-directed ───────────────────────────
+    function layout() {
+        var w = stage.clientWidth || 1000;
+        var h = stage.clientHeight || 700;
+        // initial: grid
+        var cols = Math.ceil(Math.sqrt(tables.length));
+        tables.forEach(function(t, i) {
+            t.x = (i % cols) * (NODE_W + 60) + 40;
+            t.y = Math.floor(i / cols) * 220 + 40;
+            t.vx = 0; t.vy = 0;
+        });
+
+        var ITER = 200;
+        var REPEL = 80000;
+        var SPRING = 0.015;
+        var DAMP = 0.82;
+        var IDEAL = 320;
+
+        for (var step = 0; step < ITER; step++) {
+            // repulsion between all pairs
+            for (var i = 0; i < tables.length; i++) {
+                var a = tables[i];
+                for (var j = i + 1; j < tables.length; j++) {
+                    var b = tables[j];
+                    var dx = (a.x + a.w / 2) - (b.x + b.w / 2);
+                    var dy = (a.y + a.h / 2) - (b.y + b.h / 2);
+                    var d2 = dx * dx + dy * dy + 0.01;
+                    var f = REPEL / d2;
+                    var d = Math.sqrt(d2);
+                    var fx = (dx / d) * f, fy = (dy / d) * f;
+                    a.vx += fx; a.vy += fy;
+                    b.vx -= fx; b.vy -= fy;
+                }
+            }
+            // spring along edges
+            edges.forEach(function(e) {
+                var a = tableByFull[e.from], b = tableByFull[e.to];
+                if (!a || !b || a === b) return;
+                var dx = (b.x + b.w / 2) - (a.x + a.w / 2);
+                var dy = (b.y + b.h / 2) - (a.y + a.h / 2);
+                var d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+                var f = (d - IDEAL) * SPRING;
+                var fx = (dx / d) * f, fy = (dy / d) * f;
+                a.vx += fx; a.vy += fy;
+                b.vx -= fx; b.vy -= fy;
+            });
+            // integrate
+            tables.forEach(function(t) {
+                t.vx *= DAMP; t.vy *= DAMP;
+                t.x += t.vx; t.y += t.vy;
+            });
+        }
+
+        tables.forEach(positionNode);
+        redrawAllEdges();
+        fit();
+    }
+
+    function fit() {
+        if (!tables.length) return;
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        tables.forEach(function(t) {
+            if (t.x < minX) minX = t.x;
+            if (t.y < minY) minY = t.y;
+            if (t.x + t.w > maxX) maxX = t.x + t.w;
+            if (t.y + t.h > maxY) maxY = t.y + t.h;
+        });
+        var pad = 60;
+        var cw = stage.clientWidth || 1000;
+        var ch = stage.clientHeight || 700;
+        var bw = (maxX - minX) + pad * 2;
+        var bh = (maxY - minY) + pad * 2;
+        zoom = Math.min(cw / bw, ch / bh, 1.2);
+        panX = (cw - bw * zoom) / 2 - (minX - pad) * zoom;
+        panY = (ch - bh * zoom) / 2 - (minY - pad) * zoom;
+        applyViewport();
+    }
+
+    function reset() {
+        zoom = 1; panX = 0; panY = 0; applyViewport();
+        layout();
+    }
+
+    // ── highlight ────────────────────────────────────────
+    function highlightRelated(full) {
+        var related = { [full]: true };
+        edges.forEach(function(e) {
+            if (e.from === full) related[e.to] = true;
+            if (e.to === full) related[e.from] = true;
+        });
+        tables.forEach(function(t) {
+            if (related[t.full]) {
+                t.el.classList.add('db-erd-node--highlight');
+                t.el.classList.remove('db-erd-node--dim');
+            } else {
+                t.el.classList.add('db-erd-node--dim');
+                t.el.classList.remove('db-erd-node--highlight');
+            }
+        });
+        edges.forEach(function(e) {
+            if (e.from === full || e.to === full) {
+                e.el.classList.add('db-erd-edge--highlight');
+                e.el.classList.remove('db-erd-edge--dim');
+            } else {
+                e.el.classList.add('db-erd-edge--dim');
+                e.el.classList.remove('db-erd-edge--highlight');
+            }
+        });
+    }
+    function clearHighlight() {
+        tables.forEach(function(t) {
+            t.el.classList.remove('db-erd-node--highlight', 'db-erd-node--dim');
+        });
+        edges.forEach(function(e) {
+            e.el.classList.remove('db-erd-edge--highlight', 'db-erd-edge--dim');
+        });
+    }
+
+    function applySearch(q) {
+        q = (q || '').toLowerCase().trim();
+        if (!q) { clearHighlight(); return; }
+        var matchFulls = {};
+        tables.forEach(function(t) {
+            if (t.full.toLowerCase().indexOf(q) !== -1 || t.name.toLowerCase().indexOf(q) !== -1) {
+                matchFulls[t.full] = true;
+            }
+        });
+        tables.forEach(function(t) {
+            if (matchFulls[t.full]) {
+                t.el.classList.add('db-erd-node--highlight');
+                t.el.classList.remove('db-erd-node--dim');
+            } else {
+                t.el.classList.add('db-erd-node--dim');
+                t.el.classList.remove('db-erd-node--highlight');
+            }
+        });
+        edges.forEach(function(e) {
+            if (matchFulls[e.from] || matchFulls[e.to]) {
+                e.el.classList.add('db-erd-edge--highlight');
+                e.el.classList.remove('db-erd-edge--dim');
+            } else {
+                e.el.classList.add('db-erd-edge--dim');
+                e.el.classList.remove('db-erd-edge--highlight');
+            }
+        });
+    }
+
+    // ── fetch and build ──────────────────────────────────
+    fetch('/api/sysadmin/database/erd', { credentials: 'same-origin' })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function(body) {
+            var data = body.data || body;
+            var ts = data.tables || [];
+            var rs = data.relationships || [];
+
+            // pre-compute FK column sets per table
+            var fkMap = {};
+            rs.forEach(function(r) {
+                if (!fkMap[r.from_table]) fkMap[r.from_table] = {};
+                (r.from_columns || []).forEach(function(c) { fkMap[r.from_table][c] = true; });
+            });
+
+            ts.forEach(function(t) {
+                var obj = {
+                    full: t.full_name,
+                    schema: t.schema,
+                    name: t.name,
+                    cols: t.columns || [],
+                    fkCols: fkMap[t.full_name] || {},
+                    x: 0, y: 0, vx: 0, vy: 0
+                };
+                tables.push(obj);
+                tableByFull[obj.full] = obj;
+            });
+
+            tables.forEach(buildNode);
+
+            rs.forEach(function(r) {
+                // use first column pair for edge endpoint
+                var fc = (r.from_columns || [])[0] || '';
+                var tc = (r.to_columns   || [])[0] || '';
+                var e = {
+                    from: r.from_table, to: r.to_table,
+                    fromCol: fc, toCol: tc,
+                    onDelete: r.on_delete
+                };
+                edges.push(e);
+                buildEdge(e);
+            });
+
+            stats.textContent = tables.length + ' tables · ' + edges.length + ' relationships';
+            loading.classList.add('db-erd-loading--hidden');
+            layout();
+        })
+        .catch(function(err) {
+            loading.innerHTML = '<span style="color:#ef4444">Failed to load schema: ' + (err.message || err) + '</span>';
+        });
+
+    if (btnFit)   btnFit.addEventListener('click', fit);
+    if (btnArr)   btnArr.addEventListener('click', layout);
+    if (btnReset) btnReset.addEventListener('click', reset);
+    if (search) {
+        var st;
+        search.addEventListener('input', function() {
+            clearTimeout(st);
+            st = setTimeout(function() { applySearch(search.value); }, 120);
+        });
+    }
+})();
+</script>
+{{end}}
+
+{{/* Custom funcmap — rownum helper injected via FuncMap */}}

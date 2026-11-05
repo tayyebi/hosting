@@ -1,0 +1,2 @@
+-- Extensions are left installed on downgrade; dropping them would fail if any
+-- object still depends on them. Intentional no-op.

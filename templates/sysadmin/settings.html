@@ -1,0 +1,452 @@
+{{define "settings-shell"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — Platform Sysadmin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <script>
+        (function(){
+            var t = localStorage.getItem('platform_theme') || 'dark';
+            var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+            document.documentElement.setAttribute('data-theme', r);
+        })();
+    </script>
+</head>
+<body class="dashboard-body">
+<div class="ds-layout">
+
+    <!-- Sidebar -->
+    <aside class="ds-sidebar" id="sidebar">
+        <div class="ds-sidebar__header">
+            <a href="/s/" class="ds-logo">
+                <div class="ds-logo__mark">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path d="M4 11L8 7L12 11L16 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 15L8 11L12 15L16 11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+                    </svg>
+                </div>
+                <span class="ds-logo__name">Platform</span>
+            </a>
+            <button class="ds-sidebar__collapse" onclick="toggleSidebar()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
+
+        <div class="ds-sidebar__section-label">System</div>
+
+        <nav class="ds-nav">
+            {{range .Nav}}
+            <a href="{{.Path}}" class="ds-nav__item" title="{{.Label}}">
+                <span class="ds-nav__icon">
+                    {{if eq .Icon "overall"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                    {{else if eq .Icon "tenants"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 15V7l7-4.5L16 7v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.5" y="10" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+                    {{else if eq .Icon "logs"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 6.5h7M5.5 9h7M5.5 11.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    {{else if eq .Icon "replicas"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9.5" y="9.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M8.5 5H13a2 2 0 012 2v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    {{else if eq .Icon "database"}}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><ellipse cx="9" cy="5" rx="6" ry="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V5" stroke="currentColor" stroke-width="1.2"/><path d="M3 9v4c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V9" stroke="currentColor" stroke-width="1.2"/></svg>
+                    {{end}}
+                </span>
+                <span class="ds-nav__label">{{.Label}}</span>
+            </a>
+            {{end}}
+        </nav>
+
+        <div class="ds-sidebar__footer">
+            <button class="ds-user-card" id="profileTrigger" onclick="toggleUserMenu()" title="Account">
+                <div class="ds-user-card__avatar">{{slice .User.Name 0 1}}</div>
+                <div class="ds-user-card__info">
+                    <span class="ds-user-card__name">{{.User.Name}}</span>
+                    <span class="ds-user-card__role">Sysadmin</span>
+                </div>
+                <span class="ds-user-card__chevron">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 9l4-4 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- User menu dropdown -->
+    <div class="user-menu" id="userMenu" hidden>
+        <a href="/s/settings/" class="user-menu__item">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1v1.2M7.5 12.8V14M1 7.5h1.2M12.8 7.5H14M3.1 3.1l.85.85M11.05 11.05l.85.85M3.1 11.9l.85-.85M11.05 3.95l.85-.85" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            Settings
+        </a>
+        <div class="user-menu__divider"></div>
+        <a href="/logout" class="user-menu__item user-menu__item--danger">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M5 2H3a1 1 0 00-1 1v9a1 1 0 001 1h2M10 10l3-2.5L10 5M13 7.5H6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Log out
+        </a>
+    </div>
+
+    <!-- Main -->
+    <div class="ds-main">
+        <header class="ds-topbar">
+            <div class="ds-topbar__left">
+                <button class="ds-topbar__menu-btn" onclick="toggleSidebar()">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 5h13M2.5 9h13M2.5 13h13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+                <div class="ds-breadcrumb">
+                    <a href="/s/" style="color:inherit;text-decoration:none;" class="ds-breadcrumb__root">Sysadmin</a>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="ds-breadcrumb__current">Settings</span>
+                </div>
+            </div>
+            <div class="ds-topbar__right">
+                <div class="ds-topbar__avatar">{{slice .User.Name 0 1}}</div>
+            </div>
+        </header>
+
+        <main class="ds-content" style="padding:0;">
+            <div class="settings-layout">
+
+                <!-- Settings sidebar nav -->
+                <aside class="settings-sidebar">
+                    <div class="settings-sidebar__title">Account</div>
+                    <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'sec-profile')">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.1"/><path d="M2 13c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        Profile
+                    </button>
+                    <button class="settings-nav__item" onclick="switchSection(this,'sec-security')">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="6.5" width="9" height="7" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 6.5V4.5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        Security
+                    </button>
+                    <button class="settings-nav__item" onclick="switchSection(this,'sec-prefs')">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1v1.2M7.5 12.8V14M1 7.5h1.2M12.8 7.5H14M3.1 3.1l.85.85M11.05 11.05l.85.85M3.1 11.9l.85-.85M11.05 3.95l.85-.85" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        Preferences
+                    </button>
+                    <button class="settings-nav__item" onclick="switchSection(this,'sec-apikeys')">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="5.5" cy="8.5" r="3" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 6.5L13 1M11 3l1.5 1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        API Keys
+                    </button>
+                    <button class="settings-nav__item" onclick="switchSection(this,'sec-audit')">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="1.5" width="11" height="12" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                        Audit Log
+                    </button>
+                </aside>
+
+                <!-- Settings content -->
+                <div class="settings-content">
+
+                    <!-- Profile -->
+                    <section class="settings-section settings-section--active" id="sec-profile">
+                        <h2 class="settings-section__title">Profile</h2>
+                        <p class="settings-section__sub">Manage your name, email address and avatar.</p>
+
+                        <div class="st-avatar-row">
+                            <div class="st-avatar">{{slice .User.Name 0 1}}</div>
+                            <div class="st-avatar-meta">
+                                <div class="st-avatar-name">{{.User.Name}}</div>
+                                <div class="st-avatar-hint">JPG, PNG or GIF · max 2 MB</div>
+                            </div>
+                            <button class="st-btn-secondary">Upload photo</button>
+                        </div>
+
+                        <div class="st-group">
+                            <label class="st-label">Display name</label>
+                            <input class="st-input" type="text" value="{{.User.Name}}" />
+                        </div>
+                        <div class="st-group">
+                            <label class="st-label">Email address</label>
+                            <input class="st-input" type="email" value="{{.User.Email}}" />
+                        </div>
+                        <div class="st-group">
+                            <label class="st-label">Role</label>
+                            <input class="st-input" type="text" value="Sysadmin" readonly />
+                        </div>
+                        <div class="st-btn-row">
+                            <button class="st-btn-primary">Save changes</button>
+                        </div>
+                    </section>
+
+                    <!-- Security -->
+                    <section class="settings-section" id="sec-security">
+                        <h2 class="settings-section__title">Security</h2>
+                        <p class="settings-section__sub">Manage your password, two-factor authentication and active sessions.</p>
+
+                        <div class="st-group">
+                            <label class="st-label">Current password</label>
+                            <input class="st-input" type="password" placeholder="••••••••" />
+                        </div>
+                        <div class="st-group">
+                            <label class="st-label">New password</label>
+                            <input class="st-input" type="password" placeholder="••••••••" />
+                        </div>
+                        <div class="st-group">
+                            <label class="st-label">Confirm new password</label>
+                            <input class="st-input" type="password" placeholder="••••••••" />
+                        </div>
+                        <div class="st-btn-row" style="margin-bottom:0;">
+                            <button class="st-btn-primary">Update password</button>
+                        </div>
+
+                        <div class="settings-divider"></div>
+
+                        <h3 style="font-size:15px;font-weight:700;color:var(--ds-text);margin-bottom:12px;">Two-factor authentication</h3>
+                        <div class="st-card">
+                            <div>
+                                <div class="st-card__label">Authenticator app</div>
+                                <div class="st-card__sub">Use an app like 1Password or Authy</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <span class="st-status st-status--off">Not enabled</span>
+                                <button class="st-btn-secondary">Enable</button>
+                            </div>
+                        </div>
+                        <div class="st-card">
+                            <div>
+                                <div class="st-card__label">Passkeys</div>
+                                <div class="st-card__sub">0 keys registered</div>
+                            </div>
+                            <button class="st-btn-secondary">Add passkey</button>
+                        </div>
+
+                        <div class="settings-divider"></div>
+
+                        <h3 style="font-size:15px;font-weight:700;color:var(--ds-text);margin-bottom:12px;">Active sessions</h3>
+                        <div class="st-card">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <span class="st-session-dot"></span>
+                                <div>
+                                    <div class="st-card__label">This device</div>
+                                    <div class="st-card__sub">Windows · Chrome · now</div>
+                                </div>
+                            </div>
+                            <span class="st-status st-status--on">Current</span>
+                        </div>
+                        <div class="st-btn-row">
+                            <a href="/logout" class="st-btn-danger">Sign out all sessions</a>
+                        </div>
+                    </section>
+
+                    <!-- Preferences -->
+                    <section class="settings-section" id="sec-prefs">
+                        <h2 class="settings-section__title">Preferences</h2>
+                        <p class="settings-section__sub">Customise the look and behaviour of the dashboard.</p>
+
+                        <h3 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">Theme</h3>
+                        <div class="st-theme-picker">
+                            <button class="st-theme-opt" data-theme="dark" onclick="setTheme('dark')">
+                                <span class="st-theme-opt__preview st-theme-opt__preview--dark"></span>
+                                <span class="st-theme-opt__label">Dark</span>
+                            </button>
+                            <button class="st-theme-opt" data-theme="light" onclick="setTheme('light')">
+                                <span class="st-theme-opt__preview st-theme-opt__preview--light"></span>
+                                <span class="st-theme-opt__label">Light</span>
+                            </button>
+                            <button class="st-theme-opt" data-theme="system" onclick="setTheme('system')">
+                                <span class="st-theme-opt__preview st-theme-opt__preview--system"></span>
+                                <span class="st-theme-opt__label">System</span>
+                            </button>
+                        </div>
+
+                        <div class="settings-divider"></div>
+
+                        <h3 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:4px;">Appearance</h3>
+                        <div class="st-toggle-row">
+                            <div>
+                                <div class="st-toggle-label">Compact density</div>
+                                <div class="st-toggle-sub">Reduce spacing in tables and lists</div>
+                            </div>
+                            <label class="st-toggle"><input type="checkbox" /><span class="st-toggle__track"></span></label>
+                        </div>
+
+                        <div class="settings-divider"></div>
+
+                        <h3 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:4px;">Notifications</h3>
+                        <div class="st-toggle-row">
+                            <div>
+                                <div class="st-toggle-label">Email alerts</div>
+                                <div class="st-toggle-sub">Critical platform events</div>
+                            </div>
+                            <label class="st-toggle"><input type="checkbox" checked /><span class="st-toggle__track"></span></label>
+                        </div>
+                        <div class="st-toggle-row">
+                            <div>
+                                <div class="st-toggle-label">Replica warnings</div>
+                                <div class="st-toggle-sub">When a replica falls behind</div>
+                            </div>
+                            <label class="st-toggle"><input type="checkbox" checked /><span class="st-toggle__track"></span></label>
+                        </div>
+                        <div class="st-toggle-row">
+                            <div>
+                                <div class="st-toggle-label">New tenant sign-ups</div>
+                                <div class="st-toggle-sub">Notify on registration</div>
+                            </div>
+                            <label class="st-toggle"><input type="checkbox" /><span class="st-toggle__track"></span></label>
+                        </div>
+
+                        <div class="settings-divider"></div>
+
+                        <h3 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">Timezone</h3>
+                        <div class="st-group">
+                            <select class="st-input st-select">
+                                <option>UTC+0 — London</option>
+                                <option selected>UTC+3:30 — Tehran</option>
+                                <option>UTC-5 — New York</option>
+                                <option>UTC-8 — Los Angeles</option>
+                                <option>UTC+8 — Singapore</option>
+                            </select>
+                        </div>
+                        <div class="st-btn-row">
+                            <button class="st-btn-primary">Save preferences</button>
+                        </div>
+                    </section>
+
+                    <!-- API Keys -->
+                    <section class="settings-section" id="sec-apikeys">
+                        <h2 class="settings-section__title">API Keys</h2>
+                        <p class="settings-section__sub">Personal tokens for authenticating against the Platform API. Keys inherit your sysadmin permissions — keep them secret.</p>
+
+                        <div class="st-apikey">
+                            <div>
+                                <div class="st-apikey__name">prod-automation</div>
+                                <div class="st-apikey__meta">Created Apr 1 · Last used 2h ago</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <span class="st-apikey__badge st-apikey__badge--active">Active</span>
+                                <button class="st-apikey__revoke">Revoke</button>
+                            </div>
+                        </div>
+                        <div class="st-apikey">
+                            <div>
+                                <div class="st-apikey__name">local-dev</div>
+                                <div class="st-apikey__meta">Created Mar 10 · Last used 3d ago</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <span class="st-apikey__badge st-apikey__badge--active">Active</span>
+                                <button class="st-apikey__revoke">Revoke</button>
+                            </div>
+                        </div>
+                        <div class="st-apikey st-apikey--revoked">
+                            <div>
+                                <div class="st-apikey__name">ci-pipeline</div>
+                                <div class="st-apikey__meta">Revoked Mar 22</div>
+                            </div>
+                            <span class="st-apikey__badge st-apikey__badge--revoked">Revoked</span>
+                        </div>
+
+                        <div class="st-btn-row" style="margin-top:8px;">
+                            <button class="st-btn-primary">
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                                Generate new key
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Audit Log -->
+                    <section class="settings-section" id="sec-audit">
+                        <h2 class="settings-section__title">Audit Log</h2>
+                        <p class="settings-section__sub">Recent administrative actions performed on this platform.</p>
+
+                        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+                            <div class="st-group" style="margin-bottom:0;flex:1;min-width:160px;">
+                                <select class="st-input st-select">
+                                    <option selected>Last 24 hours</option>
+                                    <option>Last 7 days</option>
+                                    <option>Last 30 days</option>
+                                </select>
+                            </div>
+                            <div class="st-group" style="margin-bottom:0;flex:1;min-width:160px;">
+                                <select class="st-input st-select">
+                                    <option selected>All actions</option>
+                                    <option>Settings</option>
+                                    <option>Tenants</option>
+                                    <option>Users</option>
+                                    <option>Replicas</option>
+                                    <option>SSO</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="tenant-table-wrap">
+                        <table class="tenant-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Category</th>
+                                    <th>Action</th>
+                                    <th>Actor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2 min ago</td>
+                                    <td><span class="st-apikey__badge st-apikey__badge--active" style="font-size:11px;">Settings</span></td>
+                                    <td>Changed timezone to UTC+3:30</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>18 min ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:var(--ds-accent);color:#fff;">Tenants</span></td>
+                                    <td>Created tenant "Acme Corp"</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>1 hr ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:#8b5cf6;color:#fff;">Users</span></td>
+                                    <td>Reset password for alice@acme.com</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>2 hr ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:#0ea5e9;color:#fff;">SSO</span></td>
+                                    <td>Registered OAuth client "CI Pipeline"</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>5 hr ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:#f59e0b;color:#fff;">Replicas</span></td>
+                                    <td>On-boarded replica replica-03.platform.internal</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>8 hr ago</td>
+                                    <td><span class="st-apikey__badge st-apikey__badge--active" style="font-size:11px;">Settings</span></td>
+                                    <td>Enabled email alerts</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>1 day ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:var(--ds-accent);color:#fff;">Tenants</span></td>
+                                    <td>Deleted tenant "test-sandbox"</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                                <tr>
+                                    <td>1 day ago</td>
+                                    <td><span class="st-apikey__badge" style="font-size:11px;background:#0ea5e9;color:#fff;">SSO</span></td>
+                                    <td>Revoked token for bob@example.com</td>
+                                    <td>admin@platform.io</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/static/js/dashboard.js"></script>
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('.settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('settings-section--active'));
+    btn.classList.add('settings-nav__item--active');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+</script>
+</body>
+</html>
+{{end}}

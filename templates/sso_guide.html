@@ -1,0 +1,675 @@
+{{define "title"}}SSO Developer Guide — Platform{{end}}
+
+{{define "body"}}
+<div class="auth-layout login-page">
+
+    <!-- Left panel: branding -->
+    <aside class="auth-brand">
+        <div class="auth-brand__inner">
+            <div class="brand-logo">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                    <path d="M10 18L16 12L22 18L28 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 24L16 18L22 24L28 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+                </svg>
+                <span class="brand-name">Platform</span>
+            </div>
+
+            <div class="brand-content">
+                <h1 class="brand-headline">Single Sign-On<br/>made simple.</h1>
+                <p class="brand-sub">Integrate your app with Platform's identity provider using industry-standard protocols — OAuth 2.0, OIDC, and SAML 2.0.</p>
+            </div>
+
+            <ul class="brand-features">
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    OAuth 2.0 &amp; OIDC
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    SAML 2.0 for enterprise
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    PKCE for SPAs &amp; mobile
+                </li>
+            </ul>
+
+            <div class="brand-footer">
+                <div class="brand-stats">
+                    <div class="stat">
+                        <span class="stat-value">3</span>
+                        <span class="stat-label">Protocols</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">RS256</span>
+                        <span class="stat-label">Token signing</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">REST</span>
+                        <span class="stat-label">API style</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right panel: guide content -->
+    <main class="auth-form-panel">
+        <div class="auth-form-container sso-guide-container login-form-anim">
+
+            <div class="auth-form-header">
+                <h2 class="auth-form-title">SSO Developer Guide</h2>
+                <p class="auth-form-subtitle">Integrate your app with Platform as an identity provider</p>
+            </div>
+
+            <!-- Progress stepper -->
+            <div class="guide-progress" role="tablist">
+                <button class="guide-progress__step guide-progress__step--active" onclick="showStep(this,'step-overview')" role="tab">
+                    <span class="guide-progress__num">★</span>
+                    <span class="guide-progress__label">Overview</span>
+                </button>
+                <div class="guide-progress__line"></div>
+                <button class="guide-progress__step" onclick="showStep(this,'step-register')" role="tab">
+                    <span class="guide-progress__num">1</span>
+                    <span class="guide-progress__label">Register</span>
+                </button>
+                <div class="guide-progress__line"></div>
+                <button class="guide-progress__step" onclick="showStep(this,'step-oauth')" role="tab">
+                    <span class="guide-progress__num">2</span>
+                    <span class="guide-progress__label">OAuth 2.0</span>
+                </button>
+                <div class="guide-progress__line"></div>
+                <button class="guide-progress__step" onclick="showStep(this,'step-oidc')" role="tab">
+                    <span class="guide-progress__num">3</span>
+                    <span class="guide-progress__label">OIDC</span>
+                </button>
+                <div class="guide-progress__line"></div>
+                <button class="guide-progress__step" onclick="showStep(this,'step-saml')" role="tab">
+                    <span class="guide-progress__num">4</span>
+                    <span class="guide-progress__label">SAML</span>
+                </button>
+                <div class="guide-progress__line"></div>
+                <button class="guide-progress__step" onclick="showStep(this,'step-tokens')" role="tab">
+                    <span class="guide-progress__num">5</span>
+                    <span class="guide-progress__label">Tokens</span>
+                </button>
+            </div>
+
+            <!-- ── Overview ── -->
+            <div class="sso-guide-step sso-guide-step--active" id="step-overview">
+                <p class="sso-guide-intro">Platform acts as an <strong>Identity Provider (IdP)</strong>. Your app is the <strong>Relying Party (RP)</strong> or <strong>Service Provider (SP)</strong>. Users authenticate once with Platform; your app receives a verified identity token.</p>
+
+                <div class="guide-flow">
+                    <div class="guide-flow__node">Your App</div>
+                    <div class="guide-flow__arrow">
+                        <span class="guide-flow__label">auth request</span>
+                        <svg width="48" height="14" viewBox="0 0 48 14" fill="none"><path d="M2 7h44" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M38 3l8 4-8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="guide-flow__node guide-flow__node--accent">Platform IdP</div>
+                    <div class="guide-flow__arrow">
+                        <span class="guide-flow__label">token / assertion</span>
+                        <svg width="48" height="14" viewBox="0 0 48 14" fill="none"><path d="M2 7h44" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M38 3l8 4-8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="guide-flow__node">Your App</div>
+                </div>
+
+                <h3 class="guide-subhead">Choose a protocol</h3>
+                <div class="guide-protocol-grid">
+                    <div class="guide-protocol-card">
+                        <div class="guide-protocol-card__icon guide-protocol-card__icon--indigo">
+                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="8" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 8V6a4 4 0 018 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="9.5" cy="13" r="1.5" fill="currentColor"/><path d="M9.5 14.5V16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="guide-protocol-card__name">OAuth 2.0</div>
+                        <div class="guide-protocol-card__desc">Token-based authorization for API access and delegated permissions.</div>
+                        <div class="guide-protocol-card__tag">Recommended for APIs</div>
+                    </div>
+                    <div class="guide-protocol-card">
+                        <div class="guide-protocol-card__icon guide-protocol-card__icon--violet">
+                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.2"/><circle cx="11" cy="8" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 18c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="guide-protocol-card__name">OIDC</div>
+                        <div class="guide-protocol-card__desc">Identity layer on OAuth 2.0 with signed ID tokens and user profile claims.</div>
+                        <div class="guide-protocol-card__tag">Recommended for web apps</div>
+                    </div>
+                    <div class="guide-protocol-card">
+                        <div class="guide-protocol-card__icon guide-protocol-card__icon--amber">
+                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="7.5" y="12" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 10v2.5M15.5 10v2.5M6.5 12.5h9" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="guide-protocol-card__name">SAML 2.0</div>
+                        <div class="guide-protocol-card__desc">XML-based federation for enterprise integrations and legacy systems.</div>
+                        <div class="guide-protocol-card__tag">Enterprise / legacy</div>
+                    </div>
+                </div>
+
+                <h3 class="guide-subhead">Base URLs</h3>
+                <div class="guide-endpoint-table">
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Issuer</span><code class="guide-endpoint-row__val">https://platform.internal/sso</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Discovery</span><code class="guide-endpoint-row__val">https://platform.internal/sso/.well-known/openid-configuration</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">JWKS</span><code class="guide-endpoint-row__val">https://platform.internal/sso/.well-known/jwks.json</code></div>
+                </div>
+            </div>
+
+            <!-- ── Step 1: Register ── -->
+            <div class="sso-guide-step" id="step-register">
+                <div class="guide-step-header">
+                    <span class="guide-step-header__num">1</span>
+                    <div>
+                        <div class="guide-step-header__title">Register your application</div>
+                        <div class="guide-step-header__sub">Get a Client ID and Secret from the SSO → Clients panel</div>
+                    </div>
+                </div>
+
+                <ol class="guide-numbered-list">
+                    <li>Go to <strong>Sysadmin → SSO → Clients</strong> and click <em>Register client</em>.</li>
+                    <li>Enter your application name and choose a protocol.</li>
+                    <li>Add one or more <strong>redirect URIs</strong> — must exactly match what your app sends.</li>
+                    <li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong>. The secret is shown once.</li>
+                </ol>
+
+                <div class="guide-callout guide-callout--warn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 6v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".75" fill="currentColor"/><path d="M2 13.5L8 2l6 11.5H2z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+                    <div>Never expose your <strong>Client Secret</strong> in frontend code or public repositories. Store it in environment variables or a secrets manager.</div>
+                </div>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Redirect URI rules</h3>
+                <ul class="guide-bullet-list">
+                    <li>Exact string match — no wildcards.</li>
+                    <li><code>http://localhost</code> is allowed for local development only.</li>
+                    <li>Production URIs must use <code>https://</code>.</li>
+                    <li>Up to 10 redirect URIs per client.</li>
+                </ul>
+            </div>
+
+            <!-- ── Step 2: OAuth 2.0 ── -->
+            <div class="sso-guide-step" id="step-oauth">
+                <div class="guide-step-header">
+                    <span class="guide-step-header__num">2</span>
+                    <div>
+                        <div class="guide-step-header__title">OAuth 2.0</div>
+                        <div class="guide-step-header__sub">Authorization Code flow — the recommended approach for server-side apps</div>
+                    </div>
+                </div>
+
+                <div class="guide-endpoint-table">
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Authorize</span><code class="guide-endpoint-row__val">/sso/oauth2/authorize</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Token</span><code class="guide-endpoint-row__val">/sso/oauth2/token</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Revoke</span><code class="guide-endpoint-row__val">/sso/oauth2/revoke</code></div>
+                </div>
+
+                <h3 class="guide-subhead">Step 1 — Redirect the user</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">HTTP</div><pre>GET /sso/oauth2/authorize
+  ?response_type=code
+  &amp;client_id=YOUR_CLIENT_ID
+  &amp;redirect_uri=https://yourapp.com/callback
+  &amp;scope=openid+email+profile
+  &amp;state=RANDOM_CSRF_TOKEN</pre></div>
+
+                <h3 class="guide-subhead">Step 2 — Exchange the code</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">HTTP</div><pre>POST /sso/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&amp;code=AUTH_CODE
+&amp;redirect_uri=https://yourapp.com/callback
+&amp;client_id=YOUR_CLIENT_ID
+&amp;client_secret=YOUR_CLIENT_SECRET</pre></div>
+
+                <h3 class="guide-subhead">Response</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">JSON</div><pre>{
+  "access_token":  "eyJ...",
+  "token_type":    "Bearer",
+  "expires_in":    3600,
+  "refresh_token": "dGhp...",
+  "scope":         "openid email profile"
+}</pre></div>
+
+                <h3 class="guide-subhead guide-subhead--spaced">PKCE — for SPAs &amp; mobile</h3>
+                <p class="sso-guide-intro">Generate a <code>code_verifier</code> (43–128 random chars) and <code>code_challenge&nbsp;=&nbsp;BASE64URL(SHA256(verifier))</code>. Include both in the authorize request; send only the verifier in the token exchange.</p>
+                <div class="guide-code-block"><div class="guide-code-block__lang">HTTP</div><pre>GET /sso/oauth2/authorize
+  ?response_type=code
+  &amp;client_id=YOUR_CLIENT_ID
+  &amp;redirect_uri=https://yourapp.com/callback
+  &amp;scope=openid+email
+  &amp;state=RANDOM_STATE
+  &amp;code_challenge=BASE64URL_SHA256_OF_VERIFIER
+  &amp;code_challenge_method=S256</pre></div>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Available scopes</h3>
+                <div class="guide-kv-table">
+                    <div class="guide-kv-row"><code>openid</code><span>Required for OIDC. Returns an ID token.</span></div>
+                    <div class="guide-kv-row"><code>email</code><span>User's email address.</span></div>
+                    <div class="guide-kv-row"><code>profile</code><span>Display name and avatar.</span></div>
+                    <div class="guide-kv-row"><code>roles</code><span>Platform roles assigned to the user.</span></div>
+                    <div class="guide-kv-row"><code>tenant</code><span>Tenant identifier and metadata.</span></div>
+                    <div class="guide-kv-row"><code>offline_access</code><span>Issues a refresh token.</span></div>
+                </div>
+            </div>
+
+            <!-- ── Step 3: OIDC ── -->
+            <div class="sso-guide-step" id="step-oidc">
+                <div class="guide-step-header">
+                    <span class="guide-step-header__num">3</span>
+                    <div>
+                        <div class="guide-step-header__title">OpenID Connect</div>
+                        <div class="guide-step-header__sub">Identity layer on top of OAuth 2.0 — signed ID tokens with user claims</div>
+                    </div>
+                </div>
+
+                <div class="guide-callout">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M8 7v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="5.5" r=".75" fill="currentColor"/></svg>
+                    <div>Your OIDC library can auto-configure from the discovery document at<br/><code>https://platform.internal/sso/.well-known/openid-configuration</code></div>
+                </div>
+
+                <h3 class="guide-subhead">ID Token payload</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">JWT payload</div><pre>{
+  "iss":   "https://platform.internal/sso",
+  "sub":   "usr_4a9f2e8b",
+  "aud":   "YOUR_CLIENT_ID",
+  "exp":   1713000000,
+  "iat":   1712996400,
+  "email": "alice@example.com",
+  "name":  "Alice Smith",
+  "roles": ["tenant:admin"],
+  "tid":   "tenant_xyz"
+}</pre></div>
+
+                <h3 class="guide-subhead">Validation checklist</h3>
+                <ol class="guide-numbered-list">
+                    <li>Fetch the public key from <code>/sso/.well-known/jwks.json</code> matching the <code>kid</code> header.</li>
+                    <li>Verify the signature using <strong>RS256</strong>.</li>
+                    <li>Check <code>iss</code> equals <code>https://platform.internal/sso</code>.</li>
+                    <li>Check <code>aud</code> contains your Client ID.</li>
+                    <li>Check <code>exp</code> has not passed.</li>
+                </ol>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Library quick-start</h3>
+                <div class="guide-lang-tabs" role="tablist">
+                    <button class="guide-lang-tab guide-lang-tab--active" onclick="showLang(this,'lang-node')" role="tab">Node.js</button>
+                    <button class="guide-lang-tab" onclick="showLang(this,'lang-python')" role="tab">Python</button>
+                    <button class="guide-lang-tab" onclick="showLang(this,'lang-go')" role="tab">Go</button>
+                </div>
+                <div class="sso-lang-block sso-lang-block--active" id="lang-node">
+                    <div class="guide-code-block"><div class="guide-code-block__lang">JS</div><pre>import { Issuer } from 'openid-client';
+
+const issuer = await Issuer.discover(
+  'https://platform.internal/sso'
+);
+const client = new issuer.Client({
+  client_id:      'YOUR_CLIENT_ID',
+  client_secret:  'YOUR_CLIENT_SECRET',
+  redirect_uris:  ['https://yourapp.com/callback'],
+  response_types: ['code'],
+});</pre></div>
+                </div>
+                <div class="sso-lang-block" id="lang-python">
+                    <div class="guide-code-block"><div class="guide-code-block__lang">Python</div><pre>from authlib.integrations.requests_client import OAuth2Session
+
+client = OAuth2Session(
+    client_id='YOUR_CLIENT_ID',
+    client_secret='YOUR_CLIENT_SECRET',
+    scope='openid email profile',
+    redirect_uri='https://yourapp.com/callback',
+)
+uri, state = client.create_authorization_url(
+    'https://platform.internal/sso/oauth2/authorize'
+)</pre></div>
+                </div>
+                <div class="sso-lang-block" id="lang-go">
+                    <div class="guide-code-block"><div class="guide-code-block__lang">Go</div><pre>import "github.com/coreos/go-oidc/v3/oidc"
+
+provider, _ := oidc.NewProvider(ctx,
+    "https://platform.internal/sso",
+)
+config := &amp;oauth2.Config{
+    ClientID:     "YOUR_CLIENT_ID",
+    ClientSecret: "YOUR_CLIENT_SECRET",
+    RedirectURL:  "https://yourapp.com/callback",
+    Endpoint:     provider.Endpoint(),
+    Scopes:       []string{oidc.ScopeOpenID, "email"},
+}</pre></div>
+                </div>
+            </div>
+
+            <!-- ── Step 4: SAML ── -->
+            <div class="sso-guide-step" id="step-saml">
+                <div class="guide-step-header">
+                    <span class="guide-step-header__num">4</span>
+                    <div>
+                        <div class="guide-step-header__title">SAML 2.0</div>
+                        <div class="guide-step-header__sub">Platform as an XML-based Identity Provider for enterprise SPs</div>
+                    </div>
+                </div>
+
+                <div class="guide-endpoint-table">
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">IdP metadata</span><code class="guide-endpoint-row__val">/sso/saml/metadata</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">SSO service</span><code class="guide-endpoint-row__val">/sso/saml/sso</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">SLO service</span><code class="guide-endpoint-row__val">/sso/saml/slo</code></div>
+                    <div class="guide-endpoint-row"><span class="guide-endpoint-row__key">Entity ID</span><code class="guide-endpoint-row__val">https://platform.internal/sso/saml</code></div>
+                </div>
+
+                <h3 class="guide-subhead">SP setup checklist</h3>
+                <ol class="guide-numbered-list">
+                    <li>Download the IdP metadata from <code>/sso/saml/metadata</code> and import it into your SP.</li>
+                    <li>Provide your SP metadata (Entity ID + ACS URL) to a sysadmin for registration.</li>
+                    <li>Ensure your SP trusts assertions signed with <strong>RSA-SHA256</strong>.</li>
+                    <li>Set <strong>NameID format</strong> to <code>emailAddress</code>.</li>
+                </ol>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Assertion attributes</h3>
+                <div class="guide-kv-table">
+                    <div class="guide-kv-row"><code>NameID</code><span>User's email address.</span></div>
+                    <div class="guide-kv-row"><code>displayName</code><span>Full name of the user.</span></div>
+                    <div class="guide-kv-row"><code>roles</code><span>Comma-separated platform roles.</span></div>
+                    <div class="guide-kv-row"><code>tenantId</code><span>Tenant identifier string.</span></div>
+                </div>
+
+                <div class="guide-callout guide-callout--warn guide-callout--spaced">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 6v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".75" fill="currentColor"/><path d="M2 13.5L8 2l6 11.5H2z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+                    <div>Always validate <code>InResponseTo</code> to prevent replay attacks. Check <code>NotOnOrAfter</code> and <code>NotBefore</code> before accepting any assertion.</div>
+                </div>
+            </div>
+
+            <!-- ── Step 5: Tokens ── -->
+            <div class="sso-guide-step" id="step-tokens">
+                <div class="guide-step-header">
+                    <span class="guide-step-header__num">5</span>
+                    <div>
+                        <div class="guide-step-header__title">Token management</div>
+                        <div class="guide-step-header__sub">Refresh, revoke, and understand token lifetimes</div>
+                    </div>
+                </div>
+
+                <h3 class="guide-subhead">Refresh an access token</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">HTTP</div><pre>POST /sso/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&amp;refresh_token=REFRESH_TOKEN
+&amp;client_id=YOUR_CLIENT_ID
+&amp;client_secret=YOUR_CLIENT_SECRET</pre></div>
+
+                <h3 class="guide-subhead">Revoke a token</h3>
+                <div class="guide-code-block"><div class="guide-code-block__lang">HTTP</div><pre>POST /sso/oauth2/revoke
+Content-Type: application/x-www-form-urlencoded
+
+token=TOKEN_TO_REVOKE
+&amp;token_type_hint=refresh_token
+&amp;client_id=YOUR_CLIENT_ID
+&amp;client_secret=YOUR_CLIENT_SECRET</pre></div>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Token lifetimes</h3>
+                <div class="guide-kv-table">
+                    <div class="guide-kv-row"><code>Access token</code><span>1 hour (configurable)</span></div>
+                    <div class="guide-kv-row"><code>Refresh token</code><span>30 days (configurable)</span></div>
+                    <div class="guide-kv-row"><code>ID token</code><span>1 hour</span></div>
+                    <div class="guide-kv-row"><code>Auth code</code><span>5 minutes — one-time use</span></div>
+                </div>
+
+                <h3 class="guide-subhead guide-subhead--spaced">Error reference</h3>
+                <div class="guide-kv-table">
+                    <div class="guide-kv-row"><code>invalid_client</code><span>Wrong Client ID or secret.</span></div>
+                    <div class="guide-kv-row"><code>invalid_grant</code><span>Code expired, used, or wrong <code>redirect_uri</code>.</span></div>
+                    <div class="guide-kv-row"><code>invalid_scope</code><span>Scope not allowed for this client.</span></div>
+                    <div class="guide-kv-row"><code>unauthorized_client</code><span>Grant type not enabled.</span></div>
+                    <div class="guide-kv-row"><code>access_denied</code><span>User denied the request.</span></div>
+                </div>
+
+                <div class="guide-callout guide-callout--spaced">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M8 7v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="5.5" r=".75" fill="currentColor"/></svg>
+                    <div>Need help? Email <strong>sso-support@platform.internal</strong> with your Client ID and a description of the issue.</div>
+                </div>
+            </div>
+
+            <!-- ── Token Inspector ── -->
+            <div class="guide-tool-section" id="guide-token-inspector">
+                <div class="guide-tool-header">
+                    <div class="guide-tool-header__icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M6 8h8M6 11h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="guide-tool-header__title">Token Inspector</div>
+                        <div class="guide-tool-header__sub">Paste a JWT to decode its header and payload in real time</div>
+                    </div>
+                </div>
+
+                <label class="guide-tool-label" for="guideJwtInput">Encoded JWT</label>
+                <textarea class="guide-tool-textarea" id="guideJwtInput" rows="4" spellcheck="false" placeholder="Paste a JWT token here...">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InBsYXRmb3JtLWtleS0xIn0.eyJpc3MiOiJodHRwczovL3BsYXRmb3JtLmludGVybmFsL3NzbyIsInN1YiI6InVzcl80YTlmMmU4YiIsImF1ZCI6ImNsaWVudF9hYmMxMjMiLCJleHAiOjE3MTMwMDAwMDAsImlhdCI6MTcxMjk5NjQwMCwiZW1haWwiOiJhbGljZUBleGFtcGxlLmNvbSIsIm5hbWUiOiJBbGljZSBTbWl0aCIsInJvbGVzIjpbInRlbmFudDphZG1pbiJdLCJ0aWQiOiJ0ZW5hbnRfeHl6In0.SIGNATURE_PLACEHOLDER_RS256</textarea>
+
+                <div class="guide-tool-decoded">
+                    <div class="guide-tool-decoded__panel">
+                        <div class="guide-tool-decoded__label">Header</div>
+                        <pre class="guide-tool-decoded__code" id="guideJwtHeader">{ }</pre>
+                    </div>
+                    <div class="guide-tool-decoded__panel">
+                        <div class="guide-tool-decoded__label">Payload</div>
+                        <pre class="guide-tool-decoded__code" id="guideJwtPayload">{ }</pre>
+                    </div>
+                </div>
+
+                <div class="guide-callout" style="margin-top:12px">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M8 7v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="5.5" r=".75" fill="currentColor"/></svg>
+                    <div>Signatures are not validated in the browser. Always verify tokens server-side using the JWKS endpoint.</div>
+                </div>
+            </div>
+
+            <!-- ── SDK Quick-Start Cards ── -->
+            <div class="guide-tool-section" id="guide-sdk-cards">
+                <div class="guide-tool-header">
+                    <div class="guide-tool-header__icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 7l-4 3 4 3M14 7l4 3-4 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 4l-2 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="guide-tool-header__title">SDK Quick-Start</div>
+                        <div class="guide-tool-header__sub">Install and initialize the Platform SSO client in one step</div>
+                    </div>
+                </div>
+
+                <div class="guide-sdk-grid">
+                    <!-- Node.js -->
+                    <div class="guide-sdk-card">
+                        <div class="guide-sdk-card__head">
+                            <span class="guide-sdk-card__lang">Node.js</span>
+                            <button class="guide-sdk-card__copy" onclick="guideCopySnippet(this)" aria-label="Copy snippet">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M9.5 4.5V3a1.2 1.2 0 00-1.2-1.2H3a1.2 1.2 0 00-1.2 1.2v5.3A1.2 1.2 0 003 9.5h1.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                            </button>
+                        </div>
+                        <pre class="guide-sdk-card__code"><code>npm install @platform/sso-client</code></pre>
+                        <pre class="guide-sdk-card__code"><code>import { SSOClient } from '@platform/sso-client';
+const sso = new SSOClient({ clientId: 'YOUR_CLIENT_ID' });
+const loginUrl = sso.buildAuthorizeUrl({ scope: 'openid email' });</code></pre>
+                    </div>
+
+                    <!-- Python -->
+                    <div class="guide-sdk-card">
+                        <div class="guide-sdk-card__head">
+                            <span class="guide-sdk-card__lang">Python</span>
+                            <button class="guide-sdk-card__copy" onclick="guideCopySnippet(this)" aria-label="Copy snippet">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M9.5 4.5V3a1.2 1.2 0 00-1.2-1.2H3a1.2 1.2 0 00-1.2 1.2v5.3A1.2 1.2 0 003 9.5h1.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                            </button>
+                        </div>
+                        <pre class="guide-sdk-card__code"><code>pip install platform-sso</code></pre>
+                        <pre class="guide-sdk-card__code"><code>from platform_sso import SSOClient
+sso = SSOClient(client_id="YOUR_CLIENT_ID")
+login_url = sso.build_authorize_url(scope="openid email")</code></pre>
+                    </div>
+
+                    <!-- Go -->
+                    <div class="guide-sdk-card">
+                        <div class="guide-sdk-card__head">
+                            <span class="guide-sdk-card__lang">Go</span>
+                            <button class="guide-sdk-card__copy" onclick="guideCopySnippet(this)" aria-label="Copy snippet">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M9.5 4.5V3a1.2 1.2 0 00-1.2-1.2H3a1.2 1.2 0 00-1.2 1.2v5.3A1.2 1.2 0 003 9.5h1.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                            </button>
+                        </div>
+                        <pre class="guide-sdk-card__code"><code>go get github.com/platform/sso-go</code></pre>
+                        <pre class="guide-sdk-card__code"><code>client := sso.NewClient("YOUR_CLIENT_ID", sso.WithPKCE())
+url := client.AuthorizeURL("openid", "email")
+http.Redirect(w, r, url, http.StatusFound)</code></pre>
+                    </div>
+
+                    <!-- Java -->
+                    <div class="guide-sdk-card">
+                        <div class="guide-sdk-card__head">
+                            <span class="guide-sdk-card__lang">Java</span>
+                            <button class="guide-sdk-card__copy" onclick="guideCopySnippet(this)" aria-label="Copy snippet">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4.5" y="4.5" width="7" height="7" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M9.5 4.5V3a1.2 1.2 0 00-1.2-1.2H3a1.2 1.2 0 00-1.2 1.2v5.3A1.2 1.2 0 003 9.5h1.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                            </button>
+                        </div>
+                        <pre class="guide-sdk-card__code"><code>implementation 'com.platform:sso-client:1.0.0'</code></pre>
+                        <pre class="guide-sdk-card__code"><code>var sso = SSOClient.builder("YOUR_CLIENT_ID").build();
+var url = sso.authorizeUrl().scopes("openid","email").build();
+response.sendRedirect(url.toString());</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Rate Limit Info Box ── -->
+            <div class="guide-tool-section" id="guide-rate-limits">
+                <div class="guide-tool-header">
+                    <div class="guide-tool-header__icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 6v4.5l3 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="guide-tool-header__title">API Rate Limits</div>
+                        <div class="guide-tool-header__sub">Per-client request limits enforced across all SSO endpoints</div>
+                    </div>
+                </div>
+
+                <div class="guide-rate-table">
+                    <div class="guide-rate-table__head">
+                        <span>Endpoint</span>
+                        <span>Limit</span>
+                        <span>Window</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/oauth/token</code>
+                        <span>100 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/oauth/authorize</code>
+                        <span>200 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/userinfo</code>
+                        <span>300 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/oauth/revoke</code>
+                        <span>50 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/.well-known/*</code>
+                        <span>600 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                    <div class="guide-rate-table__row">
+                        <code>/saml/sso</code>
+                        <span>150 requests</span>
+                        <span>1 minute</span>
+                    </div>
+                </div>
+
+                <div class="guide-callout guide-callout--warn" style="margin-top:12px">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 6v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".75" fill="currentColor"/><path d="M2 13.5L8 2l6 11.5H2z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+                    <div>Exceeding rate limits returns <code>429 Too Many Requests</code> with a <code>Retry-After</code> header. Implement exponential back-off in production clients.</div>
+                </div>
+            </div>
+
+            <p class="auth-form-footer sso-guide-back">
+                <a href="/" class="form-link">← Back to sign in</a>
+            </p>
+
+        </div>
+
+        <footer class="page-footer">
+            <a href="/status">Status</a>
+            <span>&copy; 2026 Platform, Inc.</span>
+        </footer>
+    </main>
+
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+/* ── Step / tab navigation ── */
+function showStep(btn, id) {
+    document.querySelectorAll('.guide-progress__step').forEach(b => b.classList.remove('guide-progress__step--active'));
+    document.querySelectorAll('.sso-guide-step').forEach(s => s.classList.remove('sso-guide-step--active'));
+    btn.classList.add('guide-progress__step--active');
+    document.getElementById(id).classList.add('sso-guide-step--active');
+    const steps = [...document.querySelectorAll('.guide-progress__step')];
+    const idx = steps.indexOf(btn);
+    steps.forEach((s, i) => s.classList.toggle('guide-progress__step--done', i < idx));
+}
+function showLang(btn, id) {
+    btn.closest('.guide-lang-tabs').querySelectorAll('.guide-lang-tab').forEach(b => b.classList.remove('guide-lang-tab--active'));
+    document.querySelectorAll('.sso-lang-block').forEach(b => b.classList.remove('sso-lang-block--active'));
+    btn.classList.add('guide-lang-tab--active');
+    document.getElementById(id).classList.add('sso-lang-block--active');
+}
+
+/* ── JWT Token Inspector ── */
+(function () {
+    var input  = document.getElementById('guideJwtInput');
+    var hdrEl  = document.getElementById('guideJwtHeader');
+    var payEl  = document.getElementById('guideJwtPayload');
+    if (!input || !hdrEl || !payEl) return;
+
+    function b64decode(str) {
+        /* Handle URL-safe base64 */
+        var s = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) s += '=';
+        try { return atob(s); } catch (e) { return null; }
+    }
+
+    function prettyJSON(raw) {
+        try { return JSON.stringify(JSON.parse(raw), null, 2); }
+        catch (e) { return raw || '{ }'; }
+    }
+
+    function decode() {
+        var jwt = input.value.trim();
+        var parts = jwt.split('.');
+        if (parts.length < 2) {
+            hdrEl.textContent = '// Enter a valid JWT (header.payload.signature)';
+            payEl.textContent = '// Enter a valid JWT (header.payload.signature)';
+            return;
+        }
+        var header  = b64decode(parts[0]);
+        var payload = b64decode(parts[1]);
+        hdrEl.textContent = header ? prettyJSON(header) : '// Could not decode header';
+        payEl.textContent = payload ? prettyJSON(payload) : '// Could not decode payload';
+    }
+
+    input.addEventListener('input', decode);
+    decode(); /* decode the sample on load */
+})();
+
+/* ── SDK card copy button ── */
+function guideCopySnippet(btn) {
+    var card = btn.closest('.guide-sdk-card');
+    var codes = card.querySelectorAll('.guide-sdk-card__code code');
+    var text = Array.prototype.map.call(codes, function (c) { return c.textContent; }).join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+            btn.classList.add('guide-sdk-card__copy--done');
+            setTimeout(function () { btn.classList.remove('guide-sdk-card__copy--done'); }, 1500);
+        });
+    }
+}
+</script>
+{{end}}

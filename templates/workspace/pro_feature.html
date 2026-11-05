@@ -1,0 +1,593 @@
+{{define "workspace-page-content"}}
+{{with .Feature}}
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Pro Feature Page — scoped under .pf
+   ───────────────────────────────────────────────────────────── */
+.pf {
+  --pf-accent: {{.Accent}};
+  --pf-accent-soft: {{.AccentSoft}};
+  --pf-bg:       var(--surface, #fff);
+  --pf-bg-soft:  var(--bg-soft, #f7f8fa);
+  --pf-border:   var(--border, #e5e7eb);
+  --pf-border-s: var(--border-subtle, #eef0f3);
+  --pf-text:     var(--text, #111827);
+  --pf-text-2:   var(--text-muted, #6b7280);
+  --pf-text-3:   var(--text-faint, #9ca3af);
+
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--pf-text);
+}
+[data-theme="dark"] .pf {
+  --pf-bg:       #181a20;
+  --pf-bg-soft:  #13151b;
+  --pf-border:   #262932;
+  --pf-border-s: #1f2229;
+  --pf-text:     #e5e7eb;
+  --pf-text-2:   #9ca3af;
+  --pf-text-3:   #6b7280;
+}
+
+@keyframes pfFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pf-fade { animation: pfFade .55s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Hero ────────────────────────────────────────────────── */
+.pf-hero {
+  position: relative;
+  padding: 28px 30px;
+  background: var(--pf-bg);
+  border: 1px solid var(--pf-border);
+  border-radius: 16px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.pf-hero::before {
+  content: "";
+  position: absolute;
+  top: -50px; right: -40px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, var(--pf-accent-soft), transparent 65%);
+  pointer-events: none;
+}
+.pf-hero__row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.pf-hero__icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--pf-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px -4px var(--pf-accent-soft);
+}
+.pf-hero__icon svg { width: 26px; height: 26px; }
+.pf-hero__body { flex: 1; min-width: 0; }
+.pf-hero__kicker {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--pf-accent);
+  margin-bottom: 4px;
+}
+.pf-hero__title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--pf-text);
+  margin: 0 0 6px 0;
+}
+.pf-hero__lead {
+  font-size: 14px;
+  color: var(--pf-text-2);
+  line-height: 1.55;
+  max-width: 680px;
+  margin: 0;
+}
+.pf-hero__cta {
+  display: inline-flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.pf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--pf-border);
+  background: var(--pf-bg);
+  color: var(--pf-text);
+  text-decoration: none;
+  transition: all .15s;
+}
+.pf-btn:hover { border-color: var(--pf-text-2); background: var(--pf-bg-soft); }
+.pf-btn--primary {
+  background: var(--pf-accent);
+  color: white;
+  border-color: var(--pf-accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,.1), 0 4px 12px var(--pf-accent-soft);
+}
+.pf-btn--primary:hover {
+  background: var(--pf-accent);
+  filter: brightness(1.08);
+  border-color: var(--pf-accent);
+  transform: translateY(-1px);
+}
+
+/* ── KPI strip ───────────────────────────────────────────── */
+.pf-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.pf-kpi {
+  background: var(--pf-bg);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  padding: 16px 18px 0;
+  overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+}
+.pf-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(17,24,39,.05); }
+.pf-kpi__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--pf-text-2);
+}
+.pf-kpi__row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 5px;
+}
+.pf-kpi__value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.pf-kpi__unit {
+  font-size: 12px;
+  color: var(--pf-text-3);
+  font-weight: 500;
+}
+.pf-kpi__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.pf-kpi__delta--good { color: #059669; background: rgba(16,185,129,.1); }
+.pf-kpi__delta--bad  { color: #dc2626; background: rgba(239,68,68,.1); }
+[data-theme="dark"] .pf-kpi__delta--good { color: #34d399; background: rgba(16,185,129,.15); }
+[data-theme="dark"] .pf-kpi__delta--bad  { color: #f87171; background: rgba(239,68,68,.15); }
+
+/* ── Main layout ───────────────────────────────────────── */
+.pf-main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.pf-main__left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.pf-card {
+  background: var(--pf-bg);
+  border: 1px solid var(--pf-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pf-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--pf-border-s);
+}
+.pf-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pf-text);
+}
+.pf-card__meta {
+  font-size: 11px;
+  color: var(--pf-text-3);
+  font-weight: 500;
+}
+
+/* ── Resource table ──────────────────────────────────────── */
+.pf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: var(--pf-bg-soft);
+  border-bottom: 1px solid var(--pf-border-s);
+}
+.pf-search {
+  flex: 1;
+  position: relative;
+}
+.pf-search svg {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--pf-text-3);
+  pointer-events: none;
+}
+.pf-search input {
+  width: 100%;
+  height: 30px;
+  padding: 0 12px 0 32px;
+  border: 1px solid var(--pf-border-s);
+  border-radius: 7px;
+  background: var(--pf-bg);
+  color: var(--pf-text);
+  font-size: 12.5px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.pf-search input:focus {
+  outline: none;
+  border-color: var(--pf-accent);
+  box-shadow: 0 0 0 3px var(--pf-accent-soft);
+}
+.pf-search input::placeholder { color: var(--pf-text-3); }
+
+.pf-table { width: 100%; border-collapse: collapse; }
+.pf-table th {
+  text-align: left;
+  padding: 10px 18px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--pf-text-3);
+  background: var(--pf-bg-soft);
+  border-bottom: 1px solid var(--pf-border-s);
+}
+.pf-table td {
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--pf-text);
+  border-bottom: 1px solid var(--pf-border-s);
+  vertical-align: middle;
+}
+.pf-table tr:hover td { background: var(--pf-bg-soft); }
+.pf-table tr:last-child td { border-bottom: 0; }
+.pf-table td:first-child { font-weight: 600; }
+.pf-table td.pf-td-status { width: 1%; white-space: nowrap; }
+
+.pf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pf-chip__dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.pf-chip--healthy, .pf-chip--running, .pf-chip--active {
+  color: #059669;
+  background: rgba(16,185,129,.12);
+}
+.pf-chip--pending {
+  color: #d97706;
+  background: rgba(245,158,11,.12);
+}
+.pf-chip--error {
+  color: #dc2626;
+  background: rgba(239,68,68,.12);
+}
+.pf-chip--stopped, .pf-chip--inactive {
+  color: #6b7280;
+  background: rgba(107,114,128,.15);
+}
+.pf-chip--healthy .pf-chip__dot,
+.pf-chip--running .pf-chip__dot,
+.pf-chip--active .pf-chip__dot {
+  animation: pfPulse 2s ease-in-out infinite;
+}
+@keyframes pfPulse {
+  0%,100% { opacity: 1; }
+  50%     { opacity: .35; }
+}
+
+.pf-rowact {
+  opacity: 0; transition: opacity .15s;
+  display: inline-flex; gap: 4px;
+}
+.pf-table tr:hover .pf-rowact { opacity: 1; }
+.pf-iconbtn {
+  width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--pf-border-s);
+  background: var(--pf-bg);
+  color: var(--pf-text-2);
+  cursor: pointer;
+  transition: all .12s;
+}
+.pf-iconbtn:hover { color: var(--pf-accent); border-color: var(--pf-accent); background: var(--pf-accent-soft); }
+
+
+/* ── Sparkline ───────────────────────────────────────── */
+.pf-kpi__spark {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin-top: 6px;
+}
+.pf-kpi__spark polyline {
+  fill: none;
+  stroke: var(--pf-accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pf-kpi__spark .pf-spark-fill {
+  fill: var(--pf-accent-soft);
+  stroke: none;
+}
+
+/* ── Activity feed ──────────────────────────────────── */
+.pf-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pf-activity__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--pf-border-s);
+  font-size: 12.5px;
+  color: var(--pf-text-2);
+  transition: background .12s;
+}
+.pf-activity__item:last-child { border-bottom: 0; }
+.pf-activity__item:hover { background: var(--pf-bg-soft); }
+.pf-activity__dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.pf-activity__dot--success { background: #059669; }
+.pf-activity__dot--info { background: #3b82f6; }
+.pf-activity__dot--warn { background: #d97706; }
+.pf-activity__time {
+  width: 70px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--pf-text-3);
+  font-weight: 500;
+}
+.pf-activity__body { flex: 1; min-width: 0; line-height: 1.45; }
+.pf-activity__actor { font-weight: 600; color: var(--pf-text); }
+.pf-activity__target { color: var(--pf-text); font-weight: 500; }
+
+/* ── Empty / footer ───────────────────────────────────── */
+.pf-empty {
+  padding: 50px 20px;
+  text-align: center;
+  color: var(--pf-text-3);
+  font-size: 13px;
+}
+.pf-footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding: 18px 22px;
+  border: 1px dashed var(--pf-border);
+  border-radius: 14px;
+  background: var(--pf-bg-soft);
+}
+.pf-footer-cta__text {
+  font-size: 13px;
+  color: var(--pf-text-2);
+}
+.pf-footer-cta__text strong { color: var(--pf-text); }
+
+@media (max-width: 1100px) {
+  .pf-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+.pf-btn--xs {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+@media (max-width: 780px) {
+  .pf-kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pf-hero__row { flex-direction: column; }
+  .pf-table th:nth-child(n+4), .pf-table td:nth-child(n+4) { display: none; }
+}
+</style>
+
+<div class="pf">
+
+  <!-- ── Hero ── -->
+  <div class="pf-hero pf-fade">
+    <div class="pf-hero__row">
+      <div class="pf-hero__icon">
+        <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+          <path d="{{.IconPath}}" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="pf-hero__body">
+        <div class="pf-hero__kicker">{{.Subtitle}}</div>
+        <h1 class="pf-hero__title">{{.Title}}</h1>
+        <p class="pf-hero__lead">{{.Lead}}</p>
+        <div class="pf-hero__cta">
+          {{range .Actions}}
+          <a href="{{.Href}}" class="pf-btn {{if .Primary}}pf-btn--primary{{end}}">
+            {{actionIcon .Icon}}
+            {{.Label}}
+          </a>
+          {{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KPIs ── -->
+  <div class="pf-kpis">
+    {{range $i, $k := .Stats}}
+    <div class="pf-kpi pf-fade" style="animation-delay: {{$i}}80ms">
+      <div class="pf-kpi__label">{{$k.Label}}</div>
+      <div class="pf-kpi__row">
+        <span class="pf-kpi__value">{{$k.Value}}</span>
+        {{if $k.Unit}}<span class="pf-kpi__unit">{{$k.Unit}}</span>{{end}}
+      </div>
+      <div class="pf-kpi__delta {{if $k.Good}}pf-kpi__delta--good{{else}}pf-kpi__delta--bad{{end}}">
+        {{if $k.Up}}
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 2v5M4.5 2L2 4.5M4.5 2L7 4.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{else}}
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 7V2M4.5 7L2 4.5M4.5 7L7 4.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{end}}
+        {{$k.Delta}}
+      </div>
+      {{if $k.Spark}}
+      <svg class="pf-kpi__spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+        <polyline points="{{sparkPoints $k.Spark 100 28}}"/>
+      </svg>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+  <!-- ── Resources ── -->
+  <div class="pf-main">
+
+    <!-- Left column -->
+    <div class="pf-main__left">
+
+    <!-- Resource table -->
+    <div class="pf-card pf-fade" style="animation-delay: 400ms">
+      <div class="pf-card__head">
+        <div class="pf-card__title">Resources</div>
+        <span class="pf-card__meta">{{len .Resources}} items</span>
+      </div>
+      <div class="pf-toolbar">
+        <div class="pf-search">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.1"/><path d="M9 9l2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          <input type="text" id="pfSearch" placeholder="Filter resources…" onkeyup="pfFilter()" />
+        </div>
+      </div>
+      <table class="pf-table">
+        <thead>
+          <tr>
+            {{range .Columns}}<th>{{.}}</th>{{end}}
+            <th>Status</th>
+            <th style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody id="pfBody">
+          {{$feat := .}}
+          {{if eq (len .Resources) 0}}
+          <tr><td colspan="{{add (len .Columns) 2}}" class="pf-empty">No resources yet.</td></tr>
+          {{else}}
+          {{range .Resources}}
+          {{$res := .}}
+          <tr>
+            {{range .Columns}}
+            <td>{{.}}</td>
+            {{end}}
+            <td class="pf-td-status">
+              <span class="pf-chip pf-chip--{{$res.Status}}"><span class="pf-chip__dot"></span>{{$res.StatusLabel}}</span>
+            </td>
+            <td style="text-align:right; padding-right:16px;">
+              <span class="pf-rowact">
+                <button class="pf-iconbtn" title="Actions">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="2" r="1" fill="currentColor"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="10" r="1" fill="currentColor"/></svg>
+                </button>
+              </span>
+            </td>
+          </tr>
+          {{end}}
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    {{if .Activities}}
+    <div class="pf-card pf-fade" style="animation-delay: 500ms">
+      <div class="pf-card__head">
+        <div class="pf-card__title">Recent Activity</div>
+        <span class="pf-card__meta">{{len .Activities}} events</span>
+      </div>
+      <div class="pf-activity">
+        {{range .Activities}}
+        <div class="pf-activity__item">
+          <span class="pf-activity__dot pf-activity__dot--{{.Level}}"></span>
+          <span class="pf-activity__time">{{.Time}}</span>
+          <div class="pf-activity__body">
+            <span class="pf-activity__actor">{{.Actor}}</span> {{.Event}} <span class="pf-activity__target">{{.Target}}</span>
+          </div>
+        </div>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+
+    </div><!-- /.pf-main__left -->
+
+  </div>
+
+  <!-- ── Footer CTA ── -->
+  <div class="pf-footer-cta pf-fade" style="animation-delay: 600ms">
+    <div class="pf-footer-cta__text">
+      New to {{.Title}}? <strong>{{.CallToAction}}</strong> or read the documentation to learn more.
+    </div>
+    <a href="{{.DocsLink}}" class="pf-btn">
+      View Documentation
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+</div>
+
+<script>
+function pfFilter() {
+  var q = (document.getElementById('pfSearch').value || '').toLowerCase();
+  var body = document.getElementById('pfBody');
+  if (!body) return;
+  [].slice.call(body.querySelectorAll('tr')).forEach(function(tr) {
+    var text = tr.textContent.toLowerCase();
+    tr.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+  });
+}
+</script>
+{{end}}
+{{end}}

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wizard — One-click App Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --wz-bg:#0a0b10;
+  --wz-bg-2:#0f1118;
+  --wz-bg-3:#151824;
+  --wz-surface:#1a1e2e;
+  --wz-surface-2:#222739;
+  --wz-border:rgba(255,255,255,.08);
+  --wz-border-strong:rgba(255,255,255,.14);
+  --wz-text:#eef0f6;
+  --wz-text-dim:#9aa0b4;
+  --wz-text-faint:#6b7189;
+  --wz-accent:#7c5cff;
+  --wz-accent-2:#22d3ee;
+  --wz-accent-3:#f472b6;
+  --wz-green:#34d399;
+  --wz-amber:#fbbf24;
+  --wz-glow:0 0 40px rgba(124,92,255,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--wz-bg);color:var(--wz-text);font-family:'Inter',system-ui,-apple-system,sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;font-weight:400;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ── Ambient background ───────────────────────────────── */
+.wz-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.wz-bg::before,.wz-bg::after{content:'';position:absolute;border-radius:50%;filter:blur(120px);opacity:.4}
+.wz-bg::before{width:640px;height:640px;background:radial-gradient(circle,#7c5cff 0%,transparent 70%);top:-200px;left:-100px;animation:wzFloat 24s ease-in-out infinite}
+.wz-bg::after{width:720px;height:720px;background:radial-gradient(circle,#22d3ee 0%,transparent 70%);bottom:-260px;right:-120px;animation:wzFloat 30s ease-in-out infinite reverse}
+.wz-bg__grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 0%,transparent 75%)}
+@keyframes wzFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.1)}}
+
+/* ── Top nav ──────────────────────────────────────────── */
+.wz-nav{position:relative;z-index:10;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px);border-bottom:1px solid var(--wz-border)}
+.wz-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:500;letter-spacing:-.01em}
+.wz-brand__mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--wz-accent),var(--wz-accent-2));display:grid;place-items:center;font-weight:700;color:#fff;box-shadow:var(--wz-glow)}
+.wz-nav__links{display:flex;gap:28px;font-size:13px;color:var(--wz-text-dim);font-weight:300}
+.wz-nav__links a:hover{color:var(--wz-text)}
+.wz-nav__cta{display:flex;gap:10px}
+.wz-nav__cta .btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:400;transition:all .18s}
+.wz-btn-ghost{color:var(--wz-text-dim)}
+.wz-btn-ghost:hover{color:var(--wz-text)}
+.wz-btn-primary{background:linear-gradient(135deg,var(--wz-accent),#6344dd);color:#fff;box-shadow:0 6px 20px rgba(124,92,255,.4)}
+.wz-btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(124,92,255,.55)}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.wz-hero{position:relative;z-index:2;padding:80px 40px 40px;max-width:1400px;margin:0 auto;text-align:center}
+.wz-hero__eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;border:1px solid var(--wz-border-strong);background:rgba(255,255,255,.03);font-size:12px;color:var(--wz-text-dim);margin-bottom:24px;font-weight:400}
+.wz-hero__eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--wz-green);box-shadow:0 0 10px var(--wz-green);animation:wzPulse 2s ease-in-out infinite}
+@keyframes wzPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.wz-hero__title{font-size:clamp(40px,6vw,72px);font-weight:600;letter-spacing:-.035em;line-height:1.05;margin-bottom:20px;background:linear-gradient(180deg,#fff 0%,#9aa0b4 120%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.wz-hero__title em{font-style:normal;background:linear-gradient(135deg,var(--wz-accent) 0%,var(--wz-accent-2) 50%,var(--wz-accent-3) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.wz-hero__sub{font-size:18px;color:var(--wz-text-dim);font-weight:300;max-width:640px;margin:0 auto 36px;line-height:1.6}
+
+.wz-hero__search{max-width:640px;margin:0 auto 48px;position:relative}
+.wz-hero__search input{width:100%;padding:18px 24px 18px 56px;border-radius:14px;background:var(--wz-surface);border:1px solid var(--wz-border-strong);color:var(--wz-text);font-size:15px;font-weight:300;font-family:inherit;outline:none;transition:all .2s;box-shadow:0 4px 30px rgba(0,0,0,.3)}
+.wz-hero__search input:focus{border-color:var(--wz-accent);box-shadow:0 0 0 4px rgba(124,92,255,.15),0 4px 30px rgba(0,0,0,.3)}
+.wz-hero__search svg{position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--wz-text-faint)}
+.wz-hero__kbd{position:absolute;right:16px;top:50%;transform:translateY(-50%);padding:3px 8px;border:1px solid var(--wz-border-strong);border-radius:5px;font-size:11px;color:var(--wz-text-faint);font-family:'JetBrains Mono',monospace}
+
+.wz-hero__stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;margin-top:48px}
+.wz-stat{text-align:center}
+.wz-stat__num{font-size:32px;font-weight:500;letter-spacing:-.02em;background:linear-gradient(135deg,var(--wz-accent-2),var(--wz-accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.wz-stat__lbl{font-size:12px;color:var(--wz-text-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;font-weight:400}
+
+/* ── Featured rail ────────────────────────────────────── */
+.wz-section{position:relative;z-index:2;max-width:1400px;margin:0 auto;padding:40px}
+.wz-section__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.wz-section__title{font-size:24px;font-weight:500;letter-spacing:-.02em}
+.wz-section__title span{color:var(--wz-text-faint);font-weight:300;margin-left:8px}
+.wz-section__link{font-size:13px;color:var(--wz-text-dim);display:inline-flex;align-items:center;gap:6px}
+.wz-section__link:hover{color:var(--wz-accent-2)}
+
+.wz-featured{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.wz-feat{position:relative;border-radius:20px;background:linear-gradient(180deg,var(--wz-surface) 0%,var(--wz-surface-2) 100%);border:1px solid var(--wz-border);padding:28px;overflow:hidden;transition:all .25s;cursor:pointer}
+.wz-feat::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;background:linear-gradient(135deg,transparent 0%,rgba(124,92,255,.3) 100%);border-radius:20px;opacity:0;transition:opacity .25s;z-index:0;pointer-events:none}
+.wz-feat:hover{transform:translateY(-3px);border-color:transparent}
+.wz-feat:hover::before{opacity:1}
+.wz-feat__inner{position:relative;z-index:1}
+.wz-feat__top{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px}
+.wz-feat__ico{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:22px;font-weight:600;letter-spacing:-.02em;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.wz-feat__meta{flex:1;min-width:0}
+.wz-feat__name{font-size:18px;font-weight:500;letter-spacing:-.01em;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.wz-feat__verified{width:14px;height:14px;color:var(--wz-accent-2)}
+.wz-feat__tagline{font-size:13px;color:var(--wz-text-dim);font-weight:300}
+.wz-feat__hero{font-size:14px;color:var(--wz-text);line-height:1.55;margin-bottom:18px;font-weight:300}
+.wz-feat__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--wz-border)}
+.wz-feat__tags{display:flex;gap:6px;flex-wrap:wrap}
+.wz-feat__tag{padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--wz-border);font-size:11px;color:var(--wz-text-dim);font-weight:400}
+.wz-feat__cta{padding:8px 16px;border-radius:8px;background:linear-gradient(135deg,var(--wz-accent),#6344dd);color:#fff;font-size:12px;font-weight:400;display:inline-flex;align-items:center;gap:6px;transition:all .18s}
+.wz-feat__cta:hover{transform:translateX(2px)}
+
+/* ── Category pills ──────────────────────────────────── */
+.wz-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.wz-cat{padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--wz-border);font-size:13px;color:var(--wz-text-dim);font-weight:400;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.wz-cat:hover{background:rgba(255,255,255,.07);color:var(--wz-text)}
+.wz-cat--active{background:linear-gradient(135deg,var(--wz-accent),#6344dd);border-color:transparent;color:#fff;box-shadow:0 6px 20px rgba(124,92,255,.3)}
+.wz-cat__count{padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.1);font-size:11px;font-weight:500}
+.wz-cat--active .wz-cat__count{background:rgba(255,255,255,.25)}
+
+/* ── App grid ─────────────────────────────────────────── */
+.wz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.wz-app{background:var(--wz-surface);border:1px solid var(--wz-border);border-radius:14px;padding:20px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+.wz-app::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--wz-accent),var(--wz-accent-2));transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.wz-app:hover{transform:translateY(-2px);border-color:var(--wz-border-strong);background:var(--wz-surface-2)}
+.wz-app:hover::after{transform:scaleX(1)}
+.wz-app__top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.wz-app__ico{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-size:17px;font-weight:600;letter-spacing:-.02em;flex-shrink:0}
+.wz-app__name-wrap{flex:1;min-width:0}
+.wz-app__name{font-size:15px;font-weight:500;letter-spacing:-.01em;display:flex;align-items:center;gap:5px}
+.wz-app__pub{font-size:12px;color:var(--wz-text-faint);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wz-app__tag{font-size:12px;color:var(--wz-text-dim);line-height:1.5;margin-bottom:14px;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.wz-app__bottom{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--wz-border)}
+.wz-app__rating{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--wz-text-dim);font-weight:400}
+.wz-app__star{color:var(--wz-amber)}
+.wz-app__install{font-size:11px;color:var(--wz-text-faint);font-weight:300}
+.wz-app__deploy{padding:5px 10px;border-radius:6px;background:rgba(124,92,255,.12);color:var(--wz-accent);font-size:11px;font-weight:400;border:1px solid rgba(124,92,255,.25);transition:all .15s}
+.wz-app__deploy:hover{background:var(--wz-accent);color:#fff}
+
+/* ── Deploy modal ─────────────────────────────────────── */
+.wz-modal{position:fixed;inset:0;z-index:100;background:rgba(10,11,16,.8);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s}
+.wz-modal.open{display:flex;opacity:1}
+.wz-modal__card{background:var(--wz-bg-2);border:1px solid var(--wz-border-strong);border-radius:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.96);transition:transform .2s}
+.wz-modal.open .wz-modal__card{transform:scale(1)}
+.wz-modal__head{padding:24px 28px;border-bottom:1px solid var(--wz-border);display:flex;align-items:center;gap:16px;position:relative}
+.wz-modal__close{position:absolute;top:18px;right:18px;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--wz-text-faint);transition:all .15s}
+.wz-modal__close:hover{background:rgba(255,255,255,.06);color:var(--wz-text)}
+.wz-modal__ico{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:20px;font-weight:600;flex-shrink:0}
+.wz-modal__name{font-size:19px;font-weight:500;letter-spacing:-.01em}
+.wz-modal__tag{font-size:13px;color:var(--wz-text-dim);font-weight:300}
+.wz-modal__body{padding:24px 28px}
+.wz-modal__desc{font-size:14px;color:var(--wz-text-dim);line-height:1.65;margin-bottom:24px;font-weight:300}
+.wz-modal__specs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.wz-spec{padding:14px;background:var(--wz-surface);border:1px solid var(--wz-border);border-radius:10px;text-align:center}
+.wz-spec__lbl{font-size:11px;color:var(--wz-text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:400}
+.wz-spec__val{font-size:15px;font-weight:500;color:var(--wz-text)}
+.wz-modal__form{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+.wz-field{display:flex;flex-direction:column;gap:6px}
+.wz-field label{font-size:12px;color:var(--wz-text-dim);font-weight:400;text-transform:uppercase;letter-spacing:.04em}
+.wz-field input,.wz-field select{padding:11px 14px;background:var(--wz-surface);border:1px solid var(--wz-border-strong);border-radius:8px;color:var(--wz-text);font-size:14px;font-family:inherit;font-weight:300;outline:none;transition:all .15s}
+.wz-field input:focus,.wz-field select:focus{border-color:var(--wz-accent);box-shadow:0 0 0 3px rgba(124,92,255,.12)}
+.wz-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wz-plan{padding:14px;background:var(--wz-surface);border:1px solid var(--wz-border);border-radius:10px;cursor:pointer;transition:all .15s}
+.wz-plan:hover{border-color:var(--wz-border-strong)}
+.wz-plan--sel{border-color:var(--wz-accent);background:rgba(124,92,255,.08);box-shadow:0 0 0 3px rgba(124,92,255,.1)}
+.wz-plan__n{font-size:13px;font-weight:500;margin-bottom:4px}
+.wz-plan__p{font-size:16px;font-weight:600;color:var(--wz-accent-2)}
+.wz-plan__s{font-size:11px;color:var(--wz-text-faint);margin-top:4px;font-weight:300}
+.wz-modal__foot{padding:20px 28px;border-top:1px solid var(--wz-border);display:flex;gap:10px;justify-content:flex-end}
+.wz-btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:400;transition:all .18s;font-family:inherit}
+.wz-btn--cancel{background:rgba(255,255,255,.04);color:var(--wz-text-dim)}
+.wz-btn--cancel:hover{background:rgba(255,255,255,.08);color:var(--wz-text)}
+.wz-btn--deploy{background:linear-gradient(135deg,var(--wz-accent),#6344dd);color:#fff;box-shadow:0 6px 20px rgba(124,92,255,.35);padding:10px 24px}
+.wz-btn--deploy:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(124,92,255,.5)}
+
+/* ── Provision overlay ────────────────────────────────── */
+.wz-provision{display:none;flex-direction:column;align-items:center;padding:48px 28px;gap:16px}
+.wz-provision.on{display:flex}
+.wz-spinner{width:64px;height:64px;border-radius:50%;border:3px solid rgba(124,92,255,.15);border-top-color:var(--wz-accent);animation:wzSpin 1s linear infinite}
+@keyframes wzSpin{to{transform:rotate(360deg)}}
+.wz-provision__t{font-size:18px;font-weight:500;letter-spacing:-.01em}
+.wz-provision__s{font-size:13px;color:var(--wz-text-dim);font-weight:300;text-align:center;max-width:360px;line-height:1.55}
+.wz-provision__steps{margin-top:14px;width:100%;max-width:340px}
+.wz-pstep{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--wz-text-faint);font-weight:300}
+.wz-pstep.done{color:var(--wz-green)}
+.wz-pstep.active{color:var(--wz-text)}
+.wz-pstep__c{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;flex-shrink:0;font-size:9px}
+.wz-pstep.done .wz-pstep__c{background:var(--wz-green);border-color:var(--wz-green);color:#0a0b10}
+
+.wz-success{display:none;flex-direction:column;align-items:center;padding:40px 28px;gap:14px;text-align:center}
+.wz-success.on{display:flex}
+.wz-success__ic{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--wz-green),#10b981);display:grid;place-items:center;color:#0a0b10;box-shadow:0 10px 40px rgba(52,211,153,.4);animation:wzPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes wzPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.wz-success__t{font-size:20px;font-weight:500;letter-spacing:-.01em}
+.wz-success__s{font-size:14px;color:var(--wz-text-dim);font-weight:300;max-width:400px;line-height:1.55}
+.wz-success__url{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--wz-surface);border:1px solid var(--wz-border-strong);border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--wz-accent-2);margin:6px 0;font-weight:400}
+.wz-success__btns{display:flex;gap:10px;margin-top:8px}
+
+/* ── Footer ───────────────────────────────────────────── */
+.wz-footer{position:relative;z-index:2;border-top:1px solid var(--wz-border);margin-top:60px;padding:32px 40px;text-align:center;color:var(--wz-text-faint);font-size:12px;font-weight:300}
+
+/* ── Focus-visible outlines (keyboard users) ─────────── */
+.wz-app:focus-visible,.wz-feat:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px;border-radius:14px}
+.wz-cat:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px}
+.wz-modal__close:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px}
+.wz-btn:focus-visible,.wz-btn-primary:focus-visible,.wz-btn-ghost:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px}
+.wz-plan:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px}
+.wz-app__deploy:focus-visible{outline:2px solid var(--wz-accent);outline-offset:2px}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media(max-width:720px){
+  .wz-nav{padding:16px 20px}
+  .wz-nav__links{display:none}
+  .wz-hero{padding:48px 20px 24px}
+  .wz-section{padding:24px 20px}
+  .wz-hero__stats{gap:24px}
+  .wz-modal__specs,.wz-plans{grid-template-columns:1fr}
+  .wz-featured{grid-template-columns:1fr}
+  .wz-app__tag{min-height:auto}
+}
+@media(max-width:480px){
+  .wz-modal__specs{grid-template-columns:1fr}
+  .wz-plans{grid-template-columns:1fr}
+  .wz-featured{grid-template-columns:1fr}
+  .wz-grid{grid-template-columns:1fr}
+  .wz-hero__stats{flex-direction:column;gap:16px}
+  .wz-modal__card{border-radius:12px}
+}
+</style>
+</head>
+<body>
+<div class="wz-bg"><div class="wz-bg__grid"></div></div>
+
+<nav class="wz-nav">
+  <a href="/wizard" class="wz-brand">
+    <span class="wz-brand__mark">W</span>
+    <span>Wizard</span>
+  </a>
+  <div class="wz-nav__links">
+    <a href="#featured">Featured</a>
+    <a href="#apps">All apps</a>
+    <a href="#">Docs</a>
+    <a href="#">Pricing</a>
+  </div>
+  <div class="wz-nav__cta">
+    <a href="/login" class="btn wz-btn-ghost">Sign in</a>
+    <a href="#apps" class="btn wz-btn-primary">Browse apps</a>
+  </div>
+</nav>
+
+<section class="wz-hero">
+  <div class="wz-hero__eyebrow"><span class="dot"></span>&nbsp;{{.TotalApps}} production-ready apps · Updated daily</div>
+  <h1 class="wz-hero__title">Launch your next <em>stack</em><br/>in under 60 seconds</h1>
+  <p class="wz-hero__sub">Deploy WordPress, Nextcloud, GitLab and {{.TotalApps}}+ curated apps with a single click. Automatic SSL, daily backups, and one-click upgrades included.</p>
+
+  <div class="wz-hero__search" role="search" aria-label="Search apps">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="wzSearch" placeholder="Search for WordPress, Postgres, Grafana…" aria-label="Search apps by name or tag" />
+    <span class="wz-hero__kbd">⌘K</span>
+  </div>
+
+  <div class="wz-hero__stats">
+    <div class="wz-stat"><div class="wz-stat__num">{{.TotalApps}}+</div><div class="wz-stat__lbl">Curated apps</div></div>
+    <div class="wz-stat"><div class="wz-stat__num">60s</div><div class="wz-stat__lbl">Avg. deploy time</div></div>
+    <div class="wz-stat"><div class="wz-stat__num">2M+</div><div class="wz-stat__lbl">Deployments</div></div>
+    <div class="wz-stat"><div class="wz-stat__num">99.99%</div><div class="wz-stat__lbl">Uptime SLA</div></div>
+  </div>
+</section>
+
+<section class="wz-section" id="featured">
+  <div class="wz-section__head">
+    <h2 class="wz-section__title">Featured <span>· hand-picked, production-ready</span></h2>
+    <a href="#apps" class="wz-section__link">See all → </a>
+  </div>
+  <div class="wz-featured">
+    {{range .Featured}}
+    <div class="wz-feat" onclick="wzOpen('{{.Slug}}')" tabindex="0" role="button" aria-label="Deploy {{.Name}}">
+      <div class="wz-feat__inner">
+        <div class="wz-feat__top">
+          <div class="wz-feat__ico" style="background:{{.IconColor}};color:{{.IconFG}}">{{.IconLetter}}</div>
+          <div class="wz-feat__meta">
+            <div class="wz-feat__name">
+              {{.Name}}
+              {{if .Verified}}<svg class="wz-feat__verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>{{end}}
+            </div>
+            <div class="wz-feat__tagline">{{.Tagline}}</div>
+          </div>
+        </div>
+        <p class="wz-feat__hero">{{.Hero}}</p>
+        <div class="wz-feat__foot">
+          <div class="wz-feat__tags">
+            {{range .Tags}}<span class="wz-feat__tag">{{.}}</span>{{end}}
+          </div>
+          <span class="wz-feat__cta">Deploy →</span>
+        </div>
+      </div>
+    </div>
+    {{end}}
+  </div>
+</section>
+
+<section class="wz-section" id="apps">
+  <div class="wz-section__head">
+    <h2 class="wz-section__title">All apps <span>· {{.TotalApps}} total</span></h2>
+  </div>
+
+  <div class="wz-cats" id="wzCats" role="listbox" aria-label="Filter apps by category">
+    {{range .Categories}}
+    <button class="wz-cat{{if eq .ID "all"}} wz-cat--active{{end}}" data-cat="{{.ID}}" onclick="wzSetCat('{{.ID}}')" role="option" aria-selected="{{if eq .ID "all"}}true{{else}}false{{end}}" aria-label="{{.Label}} ({{.Count}} apps)">
+      {{.Label}}<span class="wz-cat__count">{{.Count}}</span>
+    </button>
+    {{end}}
+  </div>
+
+  <div class="wz-grid" id="wzGrid" role="grid" aria-label="Available apps">
+    {{range .Apps}}
+    <div class="wz-app" data-cat="{{.Category}}" data-name="{{.Name}}" data-tags="{{range .Tags}}{{.}} {{end}}" onclick="wzOpen('{{.Slug}}')" tabindex="0" role="button" aria-label="Deploy {{.Name}}">
+      <div class="wz-app__top">
+        <div class="wz-app__ico" style="background:{{.IconColor}};color:{{.IconFG}}">{{.IconLetter}}</div>
+        <div class="wz-app__name-wrap">
+          <div class="wz-app__name">
+            {{.Name}}
+            {{if .Verified}}<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:#22d3ee"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>{{end}}
+          </div>
+          <div class="wz-app__pub">{{.Publisher}}</div>
+        </div>
+      </div>
+      <p class="wz-app__tag">{{.Tagline}}</p>
+      <div class="wz-app__bottom">
+        <div class="wz-app__rating">
+          <span class="wz-app__star">★</span>{{printf "%.1f" .Rating}}
+          <span class="wz-app__install">· {{.Installs}}</span>
+        </div>
+        <button class="wz-app__deploy" onclick="event.stopPropagation();wzOpen('{{.Slug}}')">Install</button>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  <div id="wzEmpty" aria-live="polite" style="display:none;text-align:center;padding:60px 20px;color:var(--wz-text-faint);font-weight:300;transition:opacity .25s">No apps match your search.</div>
+</section>
+
+<footer class="wz-footer">
+  © 2026 Wizard · The fast, friendly app marketplace · <a href="#" style="color:var(--wz-text-dim)">Terms</a> · <a href="#" style="color:var(--wz-text-dim)">Privacy</a>
+</footer>
+
+<!-- Deploy modal -->
+<div class="wz-modal" id="wzModal" onclick="if(event.target===this)wzClose()" role="dialog" aria-modal="true" aria-label="Deploy application">
+  <div class="wz-modal__card">
+    <button class="wz-modal__close" onclick="wzClose()" aria-label="Close deploy dialog">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div id="wzModalForm">
+      <div class="wz-modal__head">
+        <div class="wz-modal__ico" id="wzMIco"></div>
+        <div>
+          <div class="wz-modal__name" id="wzMName"></div>
+          <div class="wz-modal__tag" id="wzMTag"></div>
+        </div>
+      </div>
+      <div class="wz-modal__body">
+        <p class="wz-modal__desc" id="wzMDesc"></p>
+
+        <div class="wz-modal__specs">
+          <div class="wz-spec"><div class="wz-spec__lbl">Min RAM</div><div class="wz-spec__val" id="wzMRam"></div></div>
+          <div class="wz-spec"><div class="wz-spec__lbl">Min CPU</div><div class="wz-spec__val" id="wzMCpu"></div></div>
+          <div class="wz-spec"><div class="wz-spec__lbl">Min Disk</div><div class="wz-spec__val" id="wzMDisk"></div></div>
+        </div>
+
+        <div class="wz-modal__form">
+          <div class="wz-field">
+            <label>Hostname</label>
+            <input type="text" id="wzHost" placeholder="myapp.example.com" />
+          </div>
+          <div class="wz-field">
+            <label>Region</label>
+            <select>
+              <option>Frankfurt (eu-central-1)</option>
+              <option>Virginia (us-east-1)</option>
+              <option>Singapore (ap-southeast-1)</option>
+              <option>Sydney (ap-southeast-2)</option>
+            </select>
+          </div>
+          <div class="wz-field">
+            <label>Plan</label>
+            <div class="wz-plans">
+              <div class="wz-plan" onclick="wzPlan(this)"><div class="wz-plan__n">Starter</div><div class="wz-plan__p">$6/mo</div><div class="wz-plan__s">1 vCPU · 1 GB</div></div>
+              <div class="wz-plan wz-plan--sel" onclick="wzPlan(this)"><div class="wz-plan__n">Standard</div><div class="wz-plan__p">$18/mo</div><div class="wz-plan__s">2 vCPU · 4 GB</div></div>
+              <div class="wz-plan" onclick="wzPlan(this)"><div class="wz-plan__n">Pro</div><div class="wz-plan__p">$48/mo</div><div class="wz-plan__s">4 vCPU · 8 GB</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wz-modal__foot">
+        <button class="wz-btn wz-btn--cancel" onclick="wzClose()">Cancel</button>
+        <button class="wz-btn wz-btn--deploy" onclick="wzDeploy()">Deploy now →</button>
+      </div>
+    </div>
+
+    <div class="wz-provision" id="wzProv">
+      <div class="wz-spinner"></div>
+      <div class="wz-provision__t">Provisioning your app</div>
+      <div class="wz-provision__s">Standing up infrastructure, configuring DNS and SSL. This usually takes 30–60 seconds.</div>
+      <div class="wz-provision__steps" id="wzSteps">
+        <div class="wz-pstep active" data-i="0"><span class="wz-pstep__c">1</span> Allocating compute</div>
+        <div class="wz-pstep" data-i="1"><span class="wz-pstep__c">2</span> Attaching storage volume</div>
+        <div class="wz-pstep" data-i="2"><span class="wz-pstep__c">3</span> Installing application</div>
+        <div class="wz-pstep" data-i="3"><span class="wz-pstep__c">4</span> Configuring DNS & SSL</div>
+        <div class="wz-pstep" data-i="4"><span class="wz-pstep__c">5</span> Running health checks</div>
+      </div>
+    </div>
+
+    <div class="wz-success" id="wzSucc">
+      <div class="wz-success__ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="wz-success__t">Your app is live!</div>
+      <div class="wz-success__s">Deployment complete. Your application is reachable at the URL below.</div>
+      <div class="wz-success__url" id="wzURL"></div>
+      <div class="wz-success__btns">
+        <button class="wz-btn wz-btn--cancel" onclick="wzClose()">Close</button>
+        <a class="wz-btn wz-btn--deploy" id="wzOpenApp" target="_blank" rel="noopener">Open app →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// App data (small, flat, indexed by slug)
+const WZ_APPS = {
+{{range .Apps}}"{{.Slug}}":{name:"{{.Name}}",tagline:"{{.Tagline}}",desc:"{{.Description}}",color:"{{.IconColor}}",fg:"{{.IconFG}}",letter:"{{.IconLetter}}",ram:"{{.MinRAM}}",cpu:"{{.MinCPU}}",disk:"{{.MinDisk}}"},
+{{end}}
+};
+
+// Filter
+let wzCat='all',wzQ='';
+function wzSetCat(c){
+  wzCat=c;
+  document.querySelectorAll('.wz-cat').forEach(b=>{
+    const isActive=b.dataset.cat===c;
+    b.classList.toggle('wz-cat--active',isActive);
+    b.setAttribute('aria-selected',isActive?'true':'false');
+  });
+  wzFilter();
+}
+function wzFilter(){
+  const q=wzQ.toLowerCase();
+  let shown=0;
+  document.querySelectorAll('.wz-app').forEach(a=>{
+    const catOk=wzCat==='all'||a.dataset.cat===wzCat;
+    const qOk=!q||a.dataset.name.toLowerCase().includes(q)||a.dataset.tags.toLowerCase().includes(q);
+    const v=catOk&&qOk;
+    a.style.display=v?'':'none';
+    if(v)shown++;
+  });
+  document.getElementById('wzEmpty').style.display=shown?'none':'block';
+}
+document.getElementById('wzSearch').addEventListener('input',e=>{wzQ=e.target.value;wzFilter()});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('wzSearch').focus()}
+  if(e.key==='Escape')wzClose();
+});
+
+// Keyboard: Enter activates app cards and featured cards
+document.querySelectorAll('.wz-app, .wz-feat').forEach(el=>{
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}
+  });
+});
+
+// Keyboard: Arrow keys navigate category pills
+document.getElementById('wzCats').addEventListener('keydown',e=>{
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  const pills=[...document.querySelectorAll('.wz-cat')];
+  const idx=pills.indexOf(document.activeElement);
+  if(idx===-1)return;
+  e.preventDefault();
+  let next=e.key==='ArrowRight'?idx+1:idx-1;
+  if(next<0)next=pills.length-1;
+  if(next>=pills.length)next=0;
+  pills[next].focus();
+});
+
+// Modal
+function wzOpen(slug){
+  const a=WZ_APPS[slug];if(!a)return;
+  document.getElementById('wzMIco').textContent=a.letter;
+  document.getElementById('wzMIco').style.background=a.color;
+  document.getElementById('wzMIco').style.color=a.fg;
+  document.getElementById('wzMName').textContent=a.name;
+  document.getElementById('wzMTag').textContent=a.tagline;
+  document.getElementById('wzMDesc').textContent=a.desc;
+  document.getElementById('wzMRam').textContent=a.ram;
+  document.getElementById('wzMCpu').textContent=a.cpu;
+  document.getElementById('wzMDisk').textContent=a.disk;
+  document.getElementById('wzHost').value=slug+'.demo.app';
+  document.getElementById('wzModalForm').style.display='';
+  document.getElementById('wzProv').classList.remove('on');
+  document.getElementById('wzSucc').classList.remove('on');
+  document.getElementById('wzModal').classList.add('open');
+  window.__wzSlug=slug;
+  document.body.style.overflow='hidden';
+}
+function wzClose(){
+  document.getElementById('wzModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function wzPlan(el){
+  document.querySelectorAll('.wz-plan').forEach(p=>p.classList.remove('wz-plan--sel'));
+  el.classList.add('wz-plan--sel');
+}
+function wzDeploy(){
+  document.getElementById('wzModalForm').style.display='none';
+  document.getElementById('wzProv').classList.add('on');
+  const steps=document.querySelectorAll('.wz-pstep');
+  let i=0;
+  const tick=()=>{
+    if(i>0){steps[i-1].classList.remove('active');steps[i-1].classList.add('done');steps[i-1].querySelector('.wz-pstep__c').innerHTML='✓';}
+    if(i<steps.length){steps[i].classList.add('active');i++;setTimeout(tick,700+Math.random()*500);}
+    else{
+      document.getElementById('wzProv').classList.remove('on');
+      document.getElementById('wzSucc').classList.add('on');
+      const host=document.getElementById('wzHost').value||'app.demo.app';
+      document.getElementById('wzURL').textContent='https://'+host;
+      document.getElementById('wzOpenApp').href='https://'+host;
+    }
+  };
+  tick();
+}
+</script>
+</body>
+</html>

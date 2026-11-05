@@ -1,0 +1,662 @@
+{{define "clients-content"}}
+<style>
+/* ── Clients page — scoped under .cl-* ── */
+
+/* Two-column grid for Resource Consumption & Health panels */
+.cl-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+@media (max-width: 768px) {
+    .cl-panels-grid { grid-template-columns: 1fr; }
+}
+
+/* Panel (shared card wrapper for resource & health) */
+.cl-panel {
+    margin-bottom: 0;
+}
+.cl-panel__header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ds-border, rgba(0,0,0,.08));
+}
+.cl-panel__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ds-text, #1d1d1f);
+}
+.cl-panel__subtitle {
+    font-size: 11.5px;
+    color: var(--ds-text-muted, #6e6e73);
+    font-weight: 300;
+}
+.cl-panel__body {
+    padding: 16px 18px;
+}
+
+/* Resource bar rows */
+.cl-bar {
+    margin-bottom: 14px;
+}
+.cl-bar:last-child {
+    margin-bottom: 0;
+}
+.cl-bar__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.cl-bar__label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ds-text, #1d1d1f);
+}
+.cl-bar__value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ds-text, #1d1d1f);
+}
+.cl-bar__value-dim {
+    color: var(--ds-text-muted, #6e6e73);
+    font-weight: 300;
+}
+.cl-bar__track {
+    height: 6px;
+    background: var(--ds-hover, rgba(0,0,0,.04));
+    border-radius: 999px;
+    overflow: hidden;
+}
+.cl-bar__fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.cl-bar__fill--indigo  { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.cl-bar__fill--emerald { background: linear-gradient(90deg, #10b981, #34d399); }
+.cl-bar__fill--violet  { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.cl-bar__fill--amber   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+/* Client Health Signals */
+.cl-health__list {
+    padding: 0;
+}
+.cl-health__item {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cl-health__item:last-child {
+    border-bottom: none;
+}
+.cl-health__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+.cl-health__icon--emerald  { background: rgba(16,185,129,.08); }
+.cl-health__icon--indigo   { background: rgba(99,102,241,.08); }
+.cl-health__icon--amber    { background: rgba(245,158,11,.08); }
+.cl-health__icon--red      { background: rgba(239,68,68,.08); }
+.cl-health__info {
+    flex: 1;
+    min-width: 0;
+}
+.cl-health__info-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ds-text, #1d1d1f);
+}
+.cl-health__info-desc {
+    font-size: 11px;
+    color: var(--ds-text-muted, #6e6e73);
+    font-weight: 300;
+}
+.cl-health__count {
+    font-size: 14px;
+    font-weight: 500;
+}
+.cl-health__count--emerald { color: #10b981; }
+.cl-health__count--indigo  { color: #6366f1; }
+.cl-health__count--amber   { color: #f59e0b; }
+.cl-health__count--red     { color: #ef4444; }
+
+/* Usage column in table */
+.cl-usage__primary {
+    font-size: 12px;
+    color: var(--ds-text, #1d1d1f);
+    font-weight: 400;
+}
+.cl-usage__secondary {
+    font-size: 11px;
+    color: var(--ds-text-muted, #6e6e73);
+}
+
+/* Plan badge in table */
+.cl-plan {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.cl-plan--pro {
+    background: rgba(99,102,241,.1);
+    color: #6366f1;
+}
+.cl-plan--suspended {
+    background: rgba(107,114,128,.1);
+    color: #6b7280;
+}
+.cl-plan--starter {
+    background: rgba(16,185,129,.1);
+    color: #10b981;
+}
+.cl-plan--business {
+    background: rgba(245,158,11,.1);
+    color: #f59e0b;
+}
+.cl-plan--enterprise {
+    background: rgba(139,92,246,.1);
+    color: #8b5cf6;
+}
+
+/* KPI unit suffix (K, %, etc.) */
+.cl-kpi-unit {
+    font-size: 14px;
+    color: var(--ds-text-muted, #6e6e73);
+}
+
+/* Dark-mode adjustments */
+[data-theme="dark"] .cl-bar__track {
+    background: var(--ds-hover, rgba(255,255,255,.06));
+}
+</style>
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Clients</h1>
+    <p class="ds-page-subtitle">Client accounts, workspaces, infrastructure usage and API access.</p>
+</div>
+
+{{if .ResetResult}}
+<div class="tenant-reset-result">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {{.ResetResult}}&nbsp;<strong>{{.ResetEmail}}</strong>
+</div>
+{{end}}
+
+{{if .FormError}}
+<div class="tenant-error">{{.FormError}}</div>
+{{end}}
+
+<!-- Toolbar -->
+<div class="clients-toolbar">
+    <form class="clients-search" method="GET" action="" role="search" aria-label="Filter clients">
+        <div class="clients-search__input-wrap">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/><path d="M10 10l3 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <input class="clients-search__input" type="text" name="q" value="{{.Search}}" placeholder="Search name, email or company…" aria-label="Search clients by name, email or company">
+        </div>
+        <select class="clients-filter" name="status" onchange="this.form.submit()" aria-label="Filter by status">
+            <option value="" {{if eq .StatusFilter ""}}selected{{end}}>All statuses</option>
+            <option value="active" {{if eq .StatusFilter "active"}}selected{{end}}>Active</option>
+            <option value="suspended" {{if eq .StatusFilter "suspended"}}selected{{end}}>Suspended</option>
+        </select>
+        <button type="submit" class="btn btn--ghost btn--sm">Search</button>
+        {{if or .Search .StatusFilter}}
+        <a href="/t/{{.TenantSlug}}/clients/" class="btn btn--ghost btn--sm">Clear</a>
+        {{end}}
+    </form>
+    <button class="btn btn--primary" onclick="openClientModal('add')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add Client
+    </button>
+</div>
+
+<!-- ── Client Portfolio KPIs ── -->
+<div class="ws-kpi-grid" style="margin-bottom:20px;">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="6" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 15c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 8c1.66 0 3 1.34 3 3v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">{{len .Clients}}</div>
+            <div class="ws-kpi-card__label">Total clients</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M6 6h3.5a2 2 0 110 4H8a2 2 0 100 4h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">$18,420</div>
+            <div class="ws-kpi-card__label">Monthly recurring revenue</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 7h4v4H7z" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v2M11 1v2M7 15v2M11 15v2M1 7h2M1 11h2M15 7h2M15 11h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">142.8<span class="cl-kpi-unit"> K</span></div>
+            <div class="ws-kpi-card__label">Compute hours (30 d)</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 12l3-3 3 3 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 6h5v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2.4<span class="cl-kpi-unit"> %</span></div>
+            <div class="ws-kpi-card__label">Churn rate (trailing 90 d)</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Resource Consumption & Client Health ── -->
+<div class="cl-panels-grid">
+    <div class="clients-table-wrap cl-panel">
+        <div class="cl-panel__header">
+            <div class="cl-panel__title">Resource Consumption</div>
+            <div class="cl-panel__subtitle">Aggregate usage across all client workspaces (30 d)</div>
+        </div>
+        <div class="cl-panel__body">
+            <div class="cl-bar">
+                <div class="cl-bar__row">
+                    <span class="cl-bar__label">vCPU utilisation</span>
+                    <span class="cl-bar__value">72% <span class="cl-bar__value-dim">of 480 allocated</span></span>
+                </div>
+                <div class="cl-bar__track">
+                    <div class="cl-bar__fill cl-bar__fill--indigo" style="width:72%;"></div>
+                </div>
+            </div>
+            <div class="cl-bar">
+                <div class="cl-bar__row">
+                    <span class="cl-bar__label">Memory</span>
+                    <span class="cl-bar__value">58% <span class="cl-bar__value-dim">of 1.92 TB allocated</span></span>
+                </div>
+                <div class="cl-bar__track">
+                    <div class="cl-bar__fill cl-bar__fill--emerald" style="width:58%;"></div>
+                </div>
+            </div>
+            <div class="cl-bar">
+                <div class="cl-bar__row">
+                    <span class="cl-bar__label">Block storage</span>
+                    <span class="cl-bar__value">41% <span class="cl-bar__value-dim">of 24 TB provisioned</span></span>
+                </div>
+                <div class="cl-bar__track">
+                    <div class="cl-bar__fill cl-bar__fill--violet" style="width:41%;"></div>
+                </div>
+            </div>
+            <div class="cl-bar">
+                <div class="cl-bar__row">
+                    <span class="cl-bar__label">Egress bandwidth</span>
+                    <span class="cl-bar__value">2.4 TB <span class="cl-bar__value-dim">of 5 TB included</span></span>
+                </div>
+                <div class="cl-bar__track">
+                    <div class="cl-bar__fill cl-bar__fill--amber" style="width:48%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="clients-table-wrap cl-panel">
+        <div class="cl-panel__header">
+            <div class="cl-panel__title">Client Health Signals</div>
+            <div class="cl-panel__subtitle">Engagement and risk indicators for proactive retention</div>
+        </div>
+        <div class="cl-health__list">
+            <div class="cl-health__item">
+                <div class="cl-health__icon cl-health__icon--emerald">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5.5" stroke="#10b981" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="cl-health__info">
+                    <div class="cl-health__info-title">High engagement</div>
+                    <div class="cl-health__info-desc">Daily logins, API activity above p75, scaling usage</div>
+                </div>
+                <span class="cl-health__count cl-health__count--emerald">3</span>
+            </div>
+            <div class="cl-health__item">
+                <div class="cl-health__icon cl-health__icon--indigo">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8" stroke="#6366f1" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="cl-health__info">
+                    <div class="cl-health__info-title">Steady state</div>
+                    <div class="cl-health__info-desc">Consistent usage pattern, no churn signals</div>
+                </div>
+                <span class="cl-health__count cl-health__count--indigo">2</span>
+            </div>
+            <div class="cl-health__item">
+                <div class="cl-health__icon cl-health__icon--amber">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 3v4M6 9h.01" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="cl-health__info">
+                    <div class="cl-health__info-title">At risk</div>
+                    <div class="cl-health__info-desc">Declining logins, open support tickets, usage drop &gt; 30%</div>
+                </div>
+                <span class="cl-health__count cl-health__count--amber">1</span>
+            </div>
+            <div class="cl-health__item">
+                <div class="cl-health__icon cl-health__icon--red">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#ef4444" stroke-width="1.3" stroke-linecap="round"/></svg>
+                </div>
+                <div class="cl-health__info">
+                    <div class="cl-health__info-title">Churned / suspended</div>
+                    <div class="cl-health__info-desc">Account suspended or no activity &gt; 30 days</div>
+                </div>
+                <span class="cl-health__count cl-health__count--red">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{if .Clients}}
+<div class="clients-table-wrap">
+    <table class="tenant-table clients-table">
+        <caption class="sr-only">Client accounts with status, plan, usage and workspace details</caption>
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Plan</th>
+                <th>Usage (30d)</th>
+                <th>Workspaces</th>
+            </tr>
+        </thead>
+        {{range .Clients}}
+        <tbody class="client-group {{if eq .Status "suspended"}}client-group--suspended{{end}}">
+            <!-- Info row -->
+            <tr class="client-info-row {{if eq .Status "suspended"}}client-row--suspended{{end}}">
+                <td>
+                    <div class="emp-name-cell">
+                        <div class="emp-avatar">{{slice .Name 0 1}}</div>
+                        <div>
+                            <div class="client-name">{{.Name}}</div>
+                            <div class="client-email">{{.Email}}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="client-company">{{if .Company}}{{.Company}}{{else}}<span class="tenant-none">—</span>{{end}}</td>
+                <td>
+                    {{if eq .Status "active"}}
+                    <span class="emp-status emp-status--active">Active</span>
+                    {{else}}
+                    <span class="emp-status emp-status--suspended">Suspended</span>
+                    {{end}}
+                </td>
+                <td>
+                    {{if eq .Status "active"}}
+                    <span class="cl-plan cl-plan--pro">Pro</span>
+                    {{else}}
+                    <span class="cl-plan cl-plan--suspended">Suspended</span>
+                    {{end}}
+                </td>
+                <td class="client-usage">
+                    <div class="cl-usage__primary">4.2 vCPU·hrs</div>
+                    <div class="cl-usage__secondary">128 GB egress</div>
+                </td>
+                <td>
+                    <span class="ws-count">{{len .Workspaces}} workspace{{if ne (len .Workspaces) 1}}s{{end}}</span>
+                </td>
+            </tr>
+            <!-- Actions row -->
+            <tr class="client-actions-row {{if eq .Status "suspended"}}client-row--suspended{{end}}">
+                <td colspan="6" class="client-actions-td"><div class="client-actions-flex">
+
+                    <!-- Reset password -->
+                    <form method="POST" action="/t/{{$.TenantSlug}}/clients/{{.ID}}/reset-password/" class="inline-form">
+                        <button type="submit" class="btn btn--ghost btn--sm" title="Send password reset email">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M4 5.5V3.5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/><circle cx="6.5" cy="9" r="1" fill="currentColor"/></svg>
+                            Reset PW
+                        </button>
+                    </form>
+
+                    <!-- Suspend / Unsuspend -->
+                    <form method="POST" action="/t/{{$.TenantSlug}}/clients/{{.ID}}/suspend/" class="inline-form">
+                        {{if eq .Status "active"}}
+                        <button type="submit" class="btn btn--warning btn--sm"
+                                onclick="return confirm('Suspend {{.Name}}?')" title="Suspend this client">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M4.5 4.5v4M8.5 4.5v4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                            Suspend
+                        </button>
+                        {{else}}
+                        <button type="submit" class="btn btn--accent btn--sm"
+                                onclick="return confirm('Reactivate {{.Name}}?')" title="Reactivate this client">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M4.5 6.5l2 2 3-3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Reactivate
+                        </button>
+                        {{end}}
+                    </form>
+
+                    <!-- Edit -->
+                    <a href="/t/{{$.TenantSlug}}/clients/{{.ID}}/edit/" class="btn btn--ghost btn--sm">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9 2l2 2-7 7H2V9L9 2z" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Edit
+                    </a>
+
+                    <!-- Delete -->
+                    <form method="POST" action="/t/{{$.TenantSlug}}/clients/{{.ID}}/delete/" class="inline-form"
+                          onsubmit="return confirm('Delete client «{{.Name}}»? This cannot be undone.')">
+                        <button type="submit" class="btn btn--danger btn--sm">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 3.5h9M5 3.5V2h3v1.5M4.5 3.5v6.5M8.5 3.5v6.5M3 3.5l.5 7h6l.5-7" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Delete
+                        </button>
+                    </form>
+
+                    <div class="client-actions-sep"></div>
+
+                    <!-- Open workspace — last because of variable width -->
+                    {{if .Workspaces}}
+                    <div class="ws-open-group">
+                        {{if gt (len .Workspaces) 1}}
+                        <select class="ws-select" id="ws-{{.ID}}" aria-label="Select workspace for {{.Name}}">
+                            {{range .Workspaces}}
+                            <option value="/t/{{$.TenantSlug}}/w/{{.ID}}/">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                        <button class="btn btn--primary btn--sm" title="Open workspace"
+                                onclick="openWsBySelect('{{.ID}}')">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7V4a1 1 0 011-1h4l2 2H11a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/></svg>
+                            Open
+                        </button>
+                        {{else}}
+                        <a href="/t/{{$.TenantSlug}}/w/{{(index .Workspaces 0).ID}}/" class="btn btn--primary btn--sm" title="Open workspace">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7V4a1 1 0 011-1h4l2 2H11a1 1 0 011 1v4a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/></svg>
+                            Open Workspace
+                        </a>
+                        {{end}}
+                    </div>
+                    {{end}}
+
+                    <!-- Missing default workspace — also last -->
+                    {{if not .HasDefaultWorkspace}}
+                    <form method="POST" action="/t/{{$.TenantSlug}}/clients/{{.ID}}/create-default-workspace/" class="inline-form">
+                        <button type="submit" class="btn btn--error btn--sm"
+                                onclick="return confirm('Create missing default workspace for {{.Name}}?')"
+                                title="Default workspace is missing">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2L1 11h11L6.5 2z" stroke="currentColor" stroke-width="1.0" stroke-linejoin="round"/><path d="M6.5 5.5v3M6.5 9.5h.01" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                            Create Default WS
+                        </button>
+                    </form>
+                    {{end}}
+
+                </div></td>
+            </tr>
+        </tbody>
+        {{end}}
+    </table>
+</div>
+<div id="cl-pagination" class="tk-pagination" style="display:none;"></div>
+{{else}}
+<div class="tenant-empty">
+    <svg width="36" height="36" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="6" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 15c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M13 8c1.66 0 3 1.34 3 3v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="13" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/></svg>
+    <p>{{if or .Search .StatusFilter}}No clients match your filters.{{else}}No clients yet. Add one to get started.{{end}}</p>
+</div>
+{{end}}
+
+<!-- ── Add Client modal ── -->
+<div class="modal-backdrop" id="addClientBackdrop" hidden onclick="closeClientModal('add')">
+    <div class="modal" onclick="event.stopPropagation()" role="dialog" aria-labelledby="addClientTitle" aria-modal="true">
+        <div class="modal__header">
+            <h2 class="modal__title" id="addClientTitle">Add Client</h2>
+            <button class="modal__close" onclick="closeClientModal('add')" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/t/{{.TenantSlug}}/clients/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Full name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" name="name" required placeholder="Jane Doe" autofocus maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" name="email" required placeholder="jane@example.com" maxlength="254">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Company <span class="form-opt">(optional)</span></label>
+                <input class="form-input" type="text" name="company" placeholder="Acme Corp" maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Plan</label>
+                <select class="form-input" name="plan">
+                    <option value="starter">Starter — 2 vCPU, 4 GB RAM</option>
+                    <option value="pro" selected>Pro — 8 vCPU, 32 GB RAM</option>
+                    <option value="business">Business — 32 vCPU, 128 GB RAM</option>
+                    <option value="enterprise">Enterprise — Custom</option>
+                </select>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeClientModal('add')">Cancel</button>
+                <button type="submit" class="btn btn--primary">Create Client</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{/* ── Edit modal ── */}}
+{{if .EditClient}}
+<div class="modal-backdrop" id="editClientBackdrop" onclick="window.location='/t/{{.TenantSlug}}/clients/'">
+    <div class="modal" onclick="event.stopPropagation()" role="dialog" aria-labelledby="editClientTitle" aria-modal="true">
+        <div class="modal__header">
+            <h2 class="modal__title" id="editClientTitle">Edit Client</h2>
+            <button class="modal__close" onclick="window.location='/t/{{.TenantSlug}}/clients/'" aria-label="Close dialog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/t/{{.TenantSlug}}/clients/{{.EditClient.ID}}/edit/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Full name <span class="form-req">*</span></label>
+                <input class="form-input" type="text" name="name" required value="{{.EditClient.Name}}" autofocus maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" name="email" required value="{{.EditClient.Email}}" maxlength="254">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Company</label>
+                <input class="form-input" type="text" name="company" value="{{.EditClient.Company}}" maxlength="100">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Plan</label>
+                <select class="form-input" name="plan">
+                    <option value="starter">Starter — 2 vCPU, 4 GB RAM</option>
+                    <option value="pro">Pro — 8 vCPU, 32 GB RAM</option>
+                    <option value="business">Business — 32 vCPU, 128 GB RAM</option>
+                    <option value="enterprise">Enterprise — Custom</option>
+                </select>
+            </div>
+            <div class="modal__footer">
+                <a href="/t/{{.TenantSlug}}/clients/" class="btn btn--ghost">Cancel</a>
+                <button type="submit" class="btn btn--primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}
+
+<script>
+function openClientModal(name) {
+    document.getElementById(name + 'ClientBackdrop').hidden = false;
+}
+function closeClientModal(name) {
+    document.getElementById(name + 'ClientBackdrop').hidden = true;
+}
+function openWsBySelect(clientID) {
+    var sel = document.getElementById('ws-' + clientID);
+    if (sel) window.location = sel.value;
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeClientModal('add');
+});
+{{if .FormError}}openClientModal('add');{{end}}
+{{if .EditClient}}document.getElementById('editClientBackdrop').hidden = false;{{end}}
+
+// Client list pagination
+(function(){
+  var PAGE_SIZE = 15;
+  var currentPage = 1;
+  var groups;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var table = document.querySelector('.clients-table');
+    if (!table) return;
+    groups = Array.from(table.querySelectorAll('tbody.client-group'));
+    if (groups.length <= PAGE_SIZE) return;
+    renderPage(1);
+    var pgEl = document.getElementById('cl-pagination');
+    pgEl.style.display = 'flex';
+  });
+
+  function renderPage(page) {
+    currentPage = page;
+    var total = groups.length;
+    var start = (page - 1) * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+    groups.forEach(function(g, i) { g.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+    var pgEl = document.getElementById('cl-pagination');
+    pgEl.innerHTML = '';
+
+    var info = document.createElement('span');
+    info.className = 'tk-page-info';
+    info.textContent = (start + 1) + '\u2013' + end + ' of ' + total;
+    pgEl.appendChild(info);
+
+    var nav = document.createElement('div');
+    nav.className = 'tk-page-nav';
+
+    var totalPages = Math.ceil(total / PAGE_SIZE);
+    var prev = document.createElement('button');
+    prev.className = 'btn btn--ghost btn--sm';
+    prev.textContent = '\u2190';
+    prev.disabled = page === 1;
+    prev.addEventListener('click', function() { renderPage(currentPage - 1); });
+    nav.appendChild(prev);
+
+    for (var p = 1; p <= totalPages; p++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--sm' + (pg === page ? ' btn--primary' : ' btn--ghost');
+        btn.textContent = pg;
+        btn.addEventListener('click', function() { renderPage(pg); });
+        nav.appendChild(btn);
+      })(p);
+    }
+
+    var next = document.createElement('button');
+    next.className = 'btn btn--ghost btn--sm';
+    next.textContent = '\u2192';
+    next.disabled = page === totalPages;
+    next.addEventListener('click', function() { renderPage(currentPage + 1); });
+    nav.appendChild(next);
+
+    pgEl.appendChild(nav);
+  }
+})();
+</script>
+{{end}}

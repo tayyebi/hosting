@@ -1,0 +1,762 @@
+{{define "jobs-content"}}
+<style>
+/* Background Jobs — scoped under .jm */
+.jm {
+  --jm-bg:        var(--surface, #fff);
+  --jm-bg-soft:   var(--bg-soft, #f7f8fa);
+  --jm-border:    var(--border, #e5e7eb);
+  --jm-border-s:  var(--border-subtle, #eef0f3);
+  --jm-text:      var(--text, #111827);
+  --jm-text-2:    var(--text-muted, #6b7280);
+  --jm-text-3:    var(--text-faint, #9ca3af);
+  --jm-accent:    #6366f1;
+  --jm-accent-2:  #8b5cf6;
+  --jm-running:   #3b82f6;
+  --jm-queued:    #f59e0b;
+  --jm-failed:    #ef4444;
+  --jm-completed: #10b981;
+  --jm-cancelled: #6b7280;
+  --jm-radius:    14px;
+  --jm-shadow:    0 1px 2px rgba(17,24,39,.04), 0 0 0 1px rgba(17,24,39,.04);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--jm-text);
+}
+[data-theme="dark"] .jm {
+  --jm-bg:        #181a20;
+  --jm-bg-soft:   #13151b;
+  --jm-border:    #262932;
+  --jm-border-s:  #1f2229;
+  --jm-text:      #e5e7eb;
+  --jm-text-2:    #9ca3af;
+  --jm-text-3:    #6b7280;
+  --jm-shadow:    0 1px 2px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.04);
+}
+@keyframes jmFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes jmDraw { to { stroke-dashoffset: 0; } }
+@keyframes jmBarGrow { to { width: var(--jm-w, 50%); } }
+@keyframes jmPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
+  50%     { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+@keyframes jmPulse2 {
+  0%,100% { opacity: 1; }
+  50%     { opacity: .3; }
+}
+@keyframes jmPop {
+  from { transform: translateY(12px) scale(.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.jm-fade { animation: jmFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* KPI strip */
+.jm-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.jm-kpi {
+  position: relative; background: var(--jm-bg); border: 1px solid var(--jm-border);
+  border-radius: var(--jm-radius); padding: 14px 20px 0; overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.jm-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(17,24,39,.06); }
+.jm-kpi__label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--jm-text-2); }
+.jm-kpi__row { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+.jm-kpi__value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; color: var(--jm-text); }
+.jm-kpi__unit { font-size: 12px; color: var(--jm-text-3); font-weight: 500; }
+.jm-kpi__delta { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.jm-kpi__delta--good { color: #059669; background: rgba(16,185,129,.1); }
+.jm-kpi__delta--bad  { color: #dc2626; background: rgba(239,68,68,.1); }
+[data-theme="dark"] .jm-kpi__delta--good { color: #34d399; background: rgba(16,185,129,.15); }
+[data-theme="dark"] .jm-kpi__delta--bad  { color: #f87171; background: rgba(239,68,68,.15); }
+.jm-kpi__spark { display: block; margin-top: 10px; width: 100%; height: 36px; }
+.jm-kpi__spark-line {
+  fill: none; stroke: var(--jm-accent); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1000; stroke-dashoffset: 1000;
+  animation: jmDraw 1.4s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.jm-kpi:nth-child(1) .jm-kpi__spark-line { stroke: #3b82f6; }
+.jm-kpi:nth-child(2) .jm-kpi__spark-line { stroke: #10b981; }
+.jm-kpi:nth-child(3) .jm-kpi__spark-line { stroke: #8b5cf6; }
+.jm-kpi:nth-child(4) .jm-kpi__spark-line { stroke: #f59e0b; }
+.jm-kpi__spark-area { opacity: .14; }
+.jm-kpi:nth-child(1) .jm-kpi__spark-area { fill: #3b82f6; }
+.jm-kpi:nth-child(2) .jm-kpi__spark-area { fill: #10b981; }
+.jm-kpi:nth-child(3) .jm-kpi__spark-area { fill: #8b5cf6; }
+.jm-kpi:nth-child(4) .jm-kpi__spark-area { fill: #f59e0b; }
+
+/* Operations panel */
+.jm-ops { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 20px; }
+.jm-card { background: var(--jm-bg); border: 1px solid var(--jm-border); border-radius: var(--jm-radius); overflow: hidden; }
+.jm-card__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--jm-border-s); }
+.jm-card__title { font-size: 13px; font-weight: 600; color: var(--jm-text); display: flex; align-items: center; gap: 8px; }
+.jm-card__title svg { color: var(--jm-text-2); }
+.jm-card__meta { font-size: 11px; color: var(--jm-text-3); font-weight: 500; }
+
+/* Queue health */
+.jm-queues { padding: 6px 0; }
+.jm-queue {
+  display: grid; grid-template-columns: 130px 70px 1fr 72px 90px; align-items: center;
+  gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--jm-border-s); transition: background .15s;
+}
+.jm-queue:last-child { border-bottom: 0; }
+.jm-queue:hover { background: var(--jm-bg-soft); }
+.jm-queue__name { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+.jm-queue__dot { width: 8px; height: 8px; border-radius: 50%; }
+.jm-queue--default    .jm-queue__dot { background: #3b82f6; }
+.jm-queue--critical   .jm-queue__dot { background: #ef4444; }
+.jm-queue--background .jm-queue__dot { background: #8b5cf6; }
+.jm-queue--mailer     .jm-queue__dot { background: #f59e0b; }
+.jm-queue__depth { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 18px; color: var(--jm-text); }
+.jm-queue__depth small { font-size: 11px; font-weight: 500; color: var(--jm-text-3); margin-left: 3px; }
+.jm-queue__bar { position: relative; height: 8px; border-radius: 999px; background: var(--jm-bg-soft); overflow: hidden; }
+[data-theme="dark"] .jm-queue__bar { background: #0f1116; }
+.jm-queue__bar-fill {
+  position: absolute; inset: 0; width: 0; border-radius: 999px;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  animation: jmBarGrow 1s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.jm-queue--hot .jm-queue__bar-fill { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.jm-queue__throughput { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--jm-text-2); text-align: right; }
+.jm-queue__throughput strong { color: var(--jm-text); font-size: 14px; font-weight: 600; }
+.jm-queue__wait { font-size: 12px; color: var(--jm-text-2); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Worker pool */
+.jm-workers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px; }
+.jm-worker {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--jm-border-s); border-radius: 10px;
+  background: var(--jm-bg-soft); transition: transform .15s, border-color .15s;
+}
+.jm-worker:hover { transform: translateY(-1px); border-color: var(--jm-border); }
+.jm-worker__avatar {
+  position: relative; width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.jm-worker--offline .jm-worker__avatar { background: #9ca3af; filter: grayscale(1); }
+.jm-worker--offline { opacity: .55; }
+.jm-worker--offline .jm-worker__name { text-decoration: line-through; text-decoration-color: var(--jm-text-3); }
+.jm-worker__status-dot {
+  position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px;
+  border-radius: 50%; border: 2px solid var(--jm-bg);
+}
+.jm-worker--busy    .jm-worker__status-dot { background: #10b981; animation: jmPulse 1.8s ease-in-out infinite; }
+.jm-worker--idle    .jm-worker__status-dot { background: #3b82f6; }
+.jm-worker--offline .jm-worker__status-dot { background: #ef4444; }
+.jm-worker__body { flex: 1; min-width: 0; }
+.jm-worker__name { font-size: 12px; font-weight: 600; color: var(--jm-text); display: flex; align-items: center; gap: 6px; }
+.jm-worker__pct { font-size: 10px; font-weight: 600; color: var(--jm-text-3); margin-left: auto; }
+.jm-worker__task { font-size: 11px; color: var(--jm-text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.jm-worker__task code {
+  font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 10.5px;
+  background: rgba(99,102,241,.08); color: var(--jm-accent); padding: 1px 5px; border-radius: 4px;
+}
+
+/* Controls bar */
+.jm-controls {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--jm-bg); border: 1px solid var(--jm-border);
+  border-radius: var(--jm-radius); margin-bottom: 14px; flex-wrap: wrap;
+}
+.jm-search { position: relative; flex: 1; min-width: 260px; }
+.jm-search__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--jm-text-3); pointer-events: none; }
+.jm-search__input {
+  width: 100%; height: 36px; padding: 0 36px 0 36px;
+  background: var(--jm-bg-soft); border: 1px solid var(--jm-border-s); border-radius: 8px;
+  font-size: 13px; color: var(--jm-text); transition: border-color .15s, box-shadow .15s;
+}
+.jm-search__input:focus { outline: none; border-color: var(--jm-accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+.jm-search__input::placeholder { color: var(--jm-text-3); }
+.jm-search__clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; color: var(--jm-text-3); cursor: pointer; padding: 6px; border-radius: 4px;
+}
+.jm-search__clear:hover { background: var(--jm-border); color: var(--jm-text); }
+.jm-pills { display: inline-flex; gap: 4px; }
+.jm-pill {
+  padding: 0 12px; height: 32px; font-size: 12px; font-weight: 500;
+  border-radius: 999px; border: 1px solid var(--jm-border-s);
+  background: transparent; color: var(--jm-text-2); cursor: pointer;
+  transition: all .15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+}
+.jm-pill:hover { border-color: var(--jm-border); color: var(--jm-text); }
+.jm-pill.active { background: var(--jm-text); color: var(--jm-bg); border-color: var(--jm-text); }
+.jm-pill__count { background: rgba(0,0,0,.1); padding: 0 6px; border-radius: 10px; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.jm-pill.active .jm-pill__count { background: rgba(255,255,255,.22); }
+[data-theme="dark"] .jm-pill__count { background: rgba(255,255,255,.08); }
+.jm-select {
+  height: 32px; padding: 0 30px 0 12px; border: 1px solid var(--jm-border-s);
+  border-radius: 8px; background: var(--jm-bg-soft); color: var(--jm-text);
+  font-size: 12px; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' stroke='%236b7280' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.jm-dispatch {
+  height: 32px; padding: 0 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: 0; border-radius: 8px; color: white; font-size: 12px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: transform .15s, box-shadow .15s; box-shadow: 0 1px 2px rgba(99,102,241,.4);
+}
+.jm-dispatch:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,.35); }
+.jm-clear { font-size: 12px; color: var(--jm-text-2); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 6px; }
+.jm-clear:hover { background: var(--jm-bg-soft); color: var(--jm-text); }
+
+/* Job list */
+.jm-list { background: var(--jm-bg); border: 1px solid var(--jm-border); border-radius: var(--jm-radius); overflow: hidden; }
+.jm-list__head {
+  display: grid; grid-template-columns: 1.8fr 100px 110px 1fr 110px 110px 200px;
+  gap: 16px; padding: 11px 20px; background: var(--jm-bg-soft);
+  border-bottom: 1px solid var(--jm-border); font-size: 10.5px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--jm-text-3);
+}
+.jm-item {
+  display: grid; grid-template-columns: 1.8fr 100px 110px 1fr 110px 110px 200px;
+  gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--jm-border-s);
+  font-size: 13px; cursor: pointer; transition: background .12s; align-items: center;
+  border-left: 3px solid transparent;
+}
+.jm-item:hover { background: var(--jm-bg-soft); }
+.jm-item:last-child { border-bottom: 0; }
+.jm-item--expanded { background: var(--jm-bg-soft); }
+.jm-item--running   { border-left-color: var(--jm-running); }
+.jm-item--failed    { border-left-color: var(--jm-failed); }
+.jm-item--completed { border-left-color: var(--jm-completed); }
+.jm-item--queued    { border-left-color: var(--jm-queued); }
+.jm-item--cancelled { border-left-color: var(--jm-cancelled); }
+.jm-item__main { min-width: 0; }
+.jm-item__name { font-weight: 600; color: var(--jm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jm-item__meta { font-size: 11px; color: var(--jm-text-3); margin-top: 2px; font-family: ui-monospace, "SF Mono", Monaco, monospace; }
+
+/* Queue badge */
+.jm-qtag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--jm-bg-soft); color: var(--jm-text-2); }
+.jm-qtag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.jm-qtag--default    { color: #3b82f6; }
+.jm-qtag--critical   { color: #ef4444; }
+.jm-qtag--background { color: #8b5cf6; }
+.jm-qtag--mailer     { color: #f59e0b; }
+
+/* Status chip */
+.jm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+.jm-chip__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.jm-chip--running    { color: var(--jm-running);   background: rgba(59,130,246,.1); }
+.jm-chip--queued     { color: #d97706;             background: rgba(245,158,11,.12); }
+.jm-chip--failed     { color: var(--jm-failed);    background: rgba(239,68,68,.1); }
+.jm-chip--completed  { color: #059669;             background: rgba(16,185,129,.12); }
+.jm-chip--cancelled  { color: var(--jm-cancelled); background: rgba(107,114,128,.15); }
+.jm-chip--running .jm-chip__dot { animation: jmPulse2 1.5s ease-in-out infinite; }
+
+/* Progress cell */
+.jm-prog { display: flex; align-items: center; gap: 8px; }
+.jm-prog__bar { flex: 1; height: 6px; border-radius: 999px; background: var(--jm-border-s); overflow: hidden; min-width: 0; }
+.jm-prog__fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 999px; transition: width .5s; }
+.jm-prog__pct { font-size: 11px; font-weight: 600; color: var(--jm-text-2); font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+.jm-prog__na { color: var(--jm-text-3); font-size: 16px; }
+.jm-prog__check { color: #10b981; font-weight: 700; }
+.jm-mono { font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 12px; color: var(--jm-text-2); }
+
+/* Action buttons */
+.jm-actions { display: inline-flex; gap: 6px; justify-content: flex-end; }
+.jm-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px;
+  border-radius: 6px; border: 1px solid var(--jm-border-s); background: var(--jm-bg);
+  color: var(--jm-text-2); font-size: 11px; font-weight: 500; cursor: pointer; transition: all .12s;
+}
+.jm-btn:hover { border-color: var(--jm-border); color: var(--jm-text); background: var(--jm-bg-soft); }
+.jm-btn--retry:hover  { color: #059669; border-color: rgba(16,185,129,.3); background: rgba(16,185,129,.06); }
+.jm-btn--cancel:hover { color: #dc2626; border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.06); }
+
+/* Expanded detail */
+.jm-detail { padding: 16px 20px 20px; background: var(--jm-bg-soft); border-bottom: 1px solid var(--jm-border-s); }
+.jm-detail__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 20px; }
+.jm-detail__field { font-size: 12px; }
+.jm-detail__field--full { grid-column: 1 / -1; }
+.jm-detail__key { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--jm-text-3); margin-bottom: 3px; }
+.jm-detail__val { color: var(--jm-text); font-size: 12.5px; word-break: break-all; }
+.jm-detail__mono { font-family: ui-monospace, "SF Mono", Monaco, monospace; }
+.jm-detail__pre {
+  background: var(--jm-bg); border: 1px solid var(--jm-border-s); padding: 10px 12px;
+  border-radius: 8px; margin: 2px 0 0; white-space: pre-wrap; font-size: 11.5px;
+  line-height: 1.5; color: var(--jm-text); overflow-x: auto;
+}
+.jm-detail__pre--error { background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.25); color: #dc2626; }
+[data-theme="dark"] .jm-detail__pre--error { color: #f87171; }
+
+/* Empty state */
+.jm-empty { padding: 60px 20px; text-align: center; color: var(--jm-text-3); font-size: 13px; }
+.jm-empty__icon { color: var(--jm-text-3); opacity: .45; margin-bottom: 12px; }
+.jm-empty__msg { font-size: 14px; font-weight: 500; color: var(--jm-text-2); margin-bottom: 4px; }
+.jm-empty__sub { font-size: 12px; color: var(--jm-text-3); }
+
+/* Modal */
+.jm-modal-back {
+  position: fixed; inset: 0; background: rgba(17,24,39,.45); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; z-index: 200; animation: jmFade .2s ease;
+}
+.jm-modal-back.open { display: flex; }
+.jm-modal {
+  background: var(--jm-bg); border-radius: 16px; width: 540px; max-width: 90vw;
+  max-height: 88vh; overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 30px 80px rgba(0,0,0,.3); border: 1px solid var(--jm-border);
+  animation: jmPop .25s cubic-bezier(.2,.9,.3,1.15);
+}
+.jm-modal__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--jm-border-s); }
+.jm-modal__title { font-size: 15px; font-weight: 600; color: var(--jm-text); }
+.jm-modal__close { background: none; border: 0; color: var(--jm-text-3); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; }
+.jm-modal__close:hover { background: var(--jm-bg-soft); color: var(--jm-text); }
+.jm-modal__form { padding: 20px 22px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.jm-field { display: flex; flex-direction: column; gap: 5px; }
+.jm-field--full { grid-column: 1 / -1; }
+.jm-field__label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--jm-text-2); }
+.jm-field__label small { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--jm-text-3); }
+.jm-field__input, .jm-field__select, .jm-field__textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--jm-border); border-radius: 8px;
+  font-size: 13px; font-family: inherit; background: var(--jm-bg); color: var(--jm-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+.jm-field__textarea { font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 12px; resize: vertical; min-height: 100px; }
+.jm-field__input:focus, .jm-field__select:focus, .jm-field__textarea:focus { outline: none; border-color: var(--jm-accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+.jm-modal__foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--jm-border-s); background: var(--jm-bg-soft); }
+.jm-mbtn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
+.jm-mbtn--ghost { background: transparent; color: var(--jm-text-2); border-color: var(--jm-border); }
+.jm-mbtn--ghost:hover { background: var(--jm-bg); color: var(--jm-text); }
+.jm-mbtn--primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+.jm-mbtn--primary:hover { box-shadow: 0 6px 16px rgba(99,102,241,.35); }
+
+/* Scheduled Jobs table */
+.jm-sched-wrap { overflow-x: auto; }
+.jm-sched { width: 100%; border-collapse: collapse; font-size: 13px; }
+.jm-sched thead th {
+  padding: 10px 16px; font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--jm-text-3); text-align: left;
+  background: var(--jm-bg-soft); border-bottom: 1px solid var(--jm-border); white-space: nowrap;
+}
+.jm-sched tbody tr { border-bottom: 1px solid var(--jm-border-s); transition: background .12s; }
+.jm-sched tbody tr:last-child { border-bottom: 0; }
+.jm-sched tbody tr:hover { background: var(--jm-bg-soft); }
+.jm-sched td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
+.jm-sched__name { font-weight: 600; color: var(--jm-text); }
+.jm-sched__cron { font-family: ui-monospace, "SF Mono", Monaco, monospace; font-size: 11.5px; background: rgba(99,102,241,.08); color: var(--jm-accent); padding: 2px 7px; border-radius: 4px; }
+[data-theme="dark"] .jm-sched__cron { background: rgba(99,102,241,.15); }
+.jm-sched__time { font-size: 12px; color: var(--jm-text-2); font-variant-numeric: tabular-nums; }
+.jm-sched__act { text-align: right; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .jm-kpis { grid-template-columns: repeat(2, 1fr); }
+  .jm-ops { grid-template-columns: 1fr; }
+  .jm-list__head, .jm-item { grid-template-columns: 1.5fr 90px 100px 1fr 100px 160px; }
+  .jm-list__head .col-worker, .jm-item .col-worker { display: none; }
+}
+@media (max-width: 780px) {
+  .jm-list__head, .jm-item { grid-template-columns: 1fr 90px 100px 130px; }
+  .jm-list__head .col-progress, .jm-item .col-progress,
+  .jm-list__head .col-duration, .jm-item .col-duration { display: none; }
+  .jm-queue { grid-template-columns: 1fr 60px 60px; gap: 10px; }
+  .jm-queue .jm-queue__bar, .jm-queue .jm-queue__wait { display: none; }
+  .jm-workers { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="jm">
+
+  <!-- ── KPI strip ── -->
+  <div class="jm-kpis">
+    {{range $i, $k := .KPIs}}
+    <div class="jm-kpi jm-fade" style="animation-delay: {{$i}}50ms">
+      <div class="jm-kpi__label">{{$k.Label}}</div>
+      <div class="jm-kpi__row">
+        <span class="jm-kpi__value">{{$k.Value}}</span>
+        <span class="jm-kpi__unit">{{$k.Unit}}</span>
+      </div>
+      <div class="jm-kpi__delta {{if or (and $k.DeltaUp $k.Positive) (and (not $k.DeltaUp) (not $k.Positive))}}jm-kpi__delta--good{{else}}jm-kpi__delta--bad{{end}}">
+        {{if $k.DeltaUp}}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M5 2L2 5M5 2l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{else}}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M5 8L2 5M5 8l3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{end}}
+        {{$k.Delta}} <span style="opacity:.6; margin-left:2px">vs last hour</span>
+      </div>
+      <svg class="jm-kpi__spark" viewBox="0 0 220 36" preserveAspectRatio="none">
+        <polygon class="jm-kpi__spark-area" points="{{sparkArea $k.Spark $k.SparkMax 220 36}}"/>
+        <polyline class="jm-kpi__spark-line" points="{{sparkPoints $k.Spark $k.SparkMax 220 36}}"/>
+      </svg>
+    </div>
+    {{end}}
+  </div>
+
+  <!-- ── Operations panel ── -->
+  <div class="jm-ops">
+    <div class="jm-card jm-fade" style="animation-delay: 200ms">
+      <div class="jm-card__head">
+        <div class="jm-card__title">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 11.5V3.5a1 1 0 011-1h9a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.1"/><path d="M5 5.5h5M5 7.5h4M5 9.5h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          Queue Health
+        </div>
+        <span class="jm-card__meta">{{len .QueueHealth}} queues · live</span>
+      </div>
+      <div class="jm-queues">
+        {{range .QueueHealth}}
+        <div class="jm-queue jm-queue--{{.Name}} {{if not .Healthy}}jm-queue--hot{{end}}">
+          <div class="jm-queue__name">
+            <span class="jm-queue__dot"></span>
+            {{.Name}}
+          </div>
+          <div class="jm-queue__depth">{{.Depth}}<small>pending</small></div>
+          <div class="jm-queue__bar">
+            <div class="jm-queue__bar-fill" style="--jm-w: {{.LoadPct}}%"></div>
+          </div>
+          <div class="jm-queue__throughput"><strong>{{.Throughput}}</strong>/min</div>
+          <div class="jm-queue__wait">wait {{.AvgWait}}</div>
+        </div>
+        {{end}}
+      </div>
+    </div>
+
+    <div class="jm-card jm-fade" style="animation-delay: 250ms">
+      <div class="jm-card__head">
+        <div class="jm-card__title">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.1"/><path d="M3 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          Worker Pool
+        </div>
+        <span class="jm-card__meta">{{len .Workers}} workers</span>
+      </div>
+      <div class="jm-workers">
+        {{range .Workers}}
+        <div class="jm-worker jm-worker--{{.Status}}">
+          <div class="jm-worker__avatar">
+            {{substr .ID 7 8}}
+            <span class="jm-worker__status-dot"></span>
+          </div>
+          <div class="jm-worker__body">
+            <div class="jm-worker__name">
+              {{.ID}}
+              <span class="jm-worker__pct">{{.UptimePct}}%</span>
+            </div>
+            <div class="jm-worker__task">
+              {{if eq .Status "busy"}}<code>{{.CurrentJob}}</code> · {{.Queue}}
+              {{else if eq .Status "idle"}}idle · listening on {{.Queue}}
+              {{else}}offline · last seen 4m ago
+              {{end}}
+            </div>
+          </div>
+        </div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scheduled Jobs ── -->
+  <div class="jm-card jm-fade" style="animation-delay: 275ms; margin-bottom: 20px;">
+    <div class="jm-card__head">
+      <div class="jm-card__title">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M7.5 4.5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Scheduled Jobs<span style="font-size:10px;color:var(--jm-text-3);font-weight:400;margin-left:6px">(simulated)</span>
+      </div>
+      <span class="jm-card__meta">4 active</span>
+    </div>
+    <div class="jm-sched-wrap">
+      <table class="jm-sched">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Schedule</th>
+            <th>Queue</th>
+            <th>Next Run</th>
+            <th>Last Run</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="jm-sched__name">cleanup-sessions</td>
+            <td><code class="jm-sched__cron">*/15 * * * *</code></td>
+            <td><span class="jm-qtag jm-qtag--background">background</span></td>
+            <td class="jm-sched__time">in 4 min</td>
+            <td class="jm-sched__time">11 min ago</td>
+            <td><span class="jm-chip jm-chip--running"><span class="jm-chip__dot"></span>Active</span></td>
+            <td class="jm-sched__act"><button type="button" class="jm-btn jm-btn--cancel" title="Pause">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/><rect x="5.8" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/></svg>
+              Pause
+            </button></td>
+          </tr>
+          <tr>
+            <td class="jm-sched__name">sync-billing</td>
+            <td><code class="jm-sched__cron">0 * * * *</code></td>
+            <td><span class="jm-qtag jm-qtag--critical">critical</span></td>
+            <td class="jm-sched__time">in 38 min</td>
+            <td class="jm-sched__time">22 min ago</td>
+            <td><span class="jm-chip jm-chip--running"><span class="jm-chip__dot"></span>Active</span></td>
+            <td class="jm-sched__act"><button type="button" class="jm-btn jm-btn--cancel" title="Pause">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/><rect x="5.8" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/></svg>
+              Pause
+            </button></td>
+          </tr>
+          <tr>
+            <td class="jm-sched__name">rotate-logs</td>
+            <td><code class="jm-sched__cron">0 0 * * 0</code></td>
+            <td><span class="jm-qtag jm-qtag--default">default</span></td>
+            <td class="jm-sched__time">Sun 00:00</td>
+            <td class="jm-sched__time">last Sun</td>
+            <td><span class="jm-chip jm-chip--running"><span class="jm-chip__dot"></span>Active</span></td>
+            <td class="jm-sched__act"><button type="button" class="jm-btn jm-btn--cancel" title="Pause">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/><rect x="5.8" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/></svg>
+              Pause
+            </button></td>
+          </tr>
+          <tr>
+            <td class="jm-sched__name">health-check</td>
+            <td><code class="jm-sched__cron">*/5 * * * *</code></td>
+            <td><span class="jm-qtag jm-qtag--critical">critical</span></td>
+            <td class="jm-sched__time">in 2 min</td>
+            <td class="jm-sched__time">3 min ago</td>
+            <td><span class="jm-chip jm-chip--running"><span class="jm-chip__dot"></span>Active</span></td>
+            <td class="jm-sched__act"><button type="button" class="jm-btn jm-btn--cancel" title="Pause">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/><rect x="5.8" y="1.5" width="2.2" height="7" rx=".6" fill="currentColor"/></svg>
+              Pause
+            </button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Controls ── -->
+  <form class="jm-controls jm-fade" style="animation-delay: 300ms" method="GET" action="/s/jobs/">
+    <div class="jm-search">
+      <svg class="jm-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <input class="jm-search__input" type="text" name="q" value="{{.FilterSearch}}" placeholder="Search jobs, tenants, workers, trace IDs…" autocomplete="off" />
+      {{if .FilterSearch}}
+      <button type="button" class="jm-search__clear" onclick="this.closest('form').querySelector('[name=q]').value='';this.closest('form').submit()">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      {{end}}
+    </div>
+
+    <div class="jm-pills">
+      <button type="submit" name="status" value="" class="jm-pill {{if eq .FilterStatus ""}}active{{end}}">All <span class="jm-pill__count">{{.TotalJobs}}</span></button>
+      <button type="submit" name="status" value="{{if eq .FilterStatus "running"}}{{else}}running{{end}}" class="jm-pill {{if eq .FilterStatus "running"}}active{{end}}">Running <span class="jm-pill__count">{{.RunningCount}}</span></button>
+      <button type="submit" name="status" value="{{if eq .FilterStatus "queued"}}{{else}}queued{{end}}" class="jm-pill {{if eq .FilterStatus "queued"}}active{{end}}">Queued <span class="jm-pill__count">{{.QueuedCount}}</span></button>
+      <button type="submit" name="status" value="{{if eq .FilterStatus "failed"}}{{else}}failed{{end}}" class="jm-pill {{if eq .FilterStatus "failed"}}active{{end}}">Failed <span class="jm-pill__count">{{.FailedCount}}</span></button>
+      <button type="submit" name="status" value="{{if eq .FilterStatus "completed"}}{{else}}completed{{end}}" class="jm-pill {{if eq .FilterStatus "completed"}}active{{end}}">Completed <span class="jm-pill__count">{{.CompletedCount}}</span></button>
+    </div>
+
+    <select class="jm-select" name="queue" onchange="this.form.submit()">
+      <option value="" {{if eq .FilterQueue ""}}selected{{end}}>All queues</option>
+      {{range .Queues}}<option value="{{.}}" {{if eq $.FilterQueue .}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+
+    {{if or .FilterStatus .FilterQueue .FilterSearch}}
+    <a href="/s/jobs/" class="jm-clear">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Clear
+    </a>
+    {{end}}
+
+    <button type="button" class="jm-dispatch" onclick="document.getElementById('jmDispatchModal').classList.add('open')">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Dispatch Job
+    </button>
+  </form>
+
+  <!-- ── Job list ── -->
+  <div class="jm-list jm-fade" style="animation-delay: 350ms">
+    <div class="jm-list__head">
+      <span>Job</span>
+      <span>Queue</span>
+      <span>Status</span>
+      <span class="col-progress">Progress</span>
+      <span class="col-duration">Duration</span>
+      <span class="col-worker">Worker</span>
+      <span style="text-align:right">Actions</span>
+    </div>
+
+    {{if eq (len .Jobs) 0}}
+    <div class="jm-empty">
+      <div class="jm-empty__icon">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="10" width="32" height="28" rx="4" stroke="currentColor" stroke-width="2"/><path d="M16 20h16M16 26h10M16 32h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="38" cy="14" r="6" fill="var(--jm-bg)" stroke="currentColor" stroke-width="2"/><path d="M36 14h4M38 12v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="jm-empty__msg">No jobs match your filters</div>
+      <div class="jm-empty__sub">Try adjusting your search, status filter, or queue selection</div>
+      <button type="button" class="jm-dispatch" style="margin-top:12px" onclick="document.getElementById('jmDispatchModal').classList.add('open')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Dispatch Job
+      </button>
+    </div>
+    {{else}}
+    {{range .Jobs}}
+    <div class="jm-item jm-item--{{.Status}}" onclick="jmToggle(this)" onkeydown="jmKeyToggle(event,this)" tabindex="0" role="button" aria-expanded="false">
+      <div class="jm-item__main">
+        <div class="jm-item__name">{{.Name}}</div>
+        <div class="jm-item__meta">{{.ID}} · tenant:{{.Tenant}}</div>
+      </div>
+      <div><span class="jm-qtag jm-qtag--{{.Queue}}">{{.Queue}}</span></div>
+      <div><span class="jm-chip jm-chip--{{.Status}}"><span class="jm-chip__dot"></span>{{.Status}}</span></div>
+      <div class="col-progress">
+        {{if eq (printf "%s" .Status) "running"}}
+        <div class="jm-prog">
+          <div class="jm-prog__bar"><div class="jm-prog__fill" style="width:{{.Progress}}%"></div></div>
+          <span class="jm-prog__pct">{{.Progress}}%</span>
+        </div>
+        {{else if eq (printf "%s" .Status) "completed"}}
+        <span class="jm-prog__check">✓ done</span>
+        {{else if eq (printf "%s" .Status) "failed"}}
+        <span style="color:#ef4444; font-size:11px; font-weight:500">retry {{.Retries}}/{{.MaxRetries}}</span>
+        {{else}}
+        <span class="jm-prog__na">—</span>
+        {{end}}
+      </div>
+      <div class="col-duration jm-mono">{{.Duration}}</div>
+      <div class="col-worker jm-mono">{{.Worker}}</div>
+      <div class="jm-actions" onclick="event.stopPropagation()">
+        {{if eq (printf "%s" .Status) "failed"}}
+        <button class="jm-btn jm-btn--retry" onclick="jmAction('retry','{{.ID}}')">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5A4 4 0 105.5 1.5H3.5M3.5 1.5L1.5 3.5M3.5 1.5L5 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Retry
+        </button>
+        {{end}}
+        {{if or (eq (printf "%s" .Status) "running") (eq (printf "%s" .Status) "queued")}}
+        <button class="jm-btn jm-btn--cancel" onclick="jmAction('cancel','{{.ID}}')">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.0"/><path d="M4 4l3 3M7 4L4 7" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+          Cancel
+        </button>
+        {{end}}
+        <button class="jm-btn" onclick="window.location.href='/s/logs/?q={{.ID}}'">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1.5" y="1.5" width="8" height="8" rx="1.3" stroke="currentColor" stroke-width="1.0"/><path d="M3.5 4.5h4M3.5 6.5h2.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+          Logs
+        </button>
+      </div>
+    </div>
+    <div class="jm-detail" hidden>
+      <div class="jm-detail__grid">
+        <div class="jm-detail__field">
+          <span class="jm-detail__key">trace_id</span>
+          <span class="jm-detail__val jm-detail__mono">{{.TraceID}}</span>
+        </div>
+        <div class="jm-detail__field">
+          <span class="jm-detail__key">tenant</span>
+          <span class="jm-detail__val">{{.Tenant}}</span>
+        </div>
+        <div class="jm-detail__field">
+          <span class="jm-detail__key">started</span>
+          <span class="jm-detail__val">{{.StartedAt}}</span>
+        </div>
+        <div class="jm-detail__field">
+          <span class="jm-detail__key">retries</span>
+          <span class="jm-detail__val">{{.Retries}} of {{.MaxRetries}}</span>
+        </div>
+        {{if .Input}}
+        <div class="jm-detail__field jm-detail__field--full">
+          <span class="jm-detail__key">input</span>
+          <pre class="jm-detail__pre jm-detail__mono">{{.Input}}</pre>
+        </div>
+        {{end}}
+        {{if .Output}}
+        <div class="jm-detail__field jm-detail__field--full">
+          <span class="jm-detail__key">output</span>
+          <pre class="jm-detail__pre jm-detail__mono">{{.Output}}</pre>
+        </div>
+        {{end}}
+        {{if .Error}}
+        <div class="jm-detail__field jm-detail__field--full">
+          <span class="jm-detail__key">error</span>
+          <pre class="jm-detail__pre jm-detail__pre--error jm-detail__mono">{{.Error}}</pre>
+        </div>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+    {{end}}
+  </div>
+  <div style="padding:8px 16px;font-size:12px;color:var(--jm-text-3);text-align:right">Showing {{len .Jobs}} of {{.TotalJobs}} jobs</div>
+
+</div>
+
+<!-- ── Dispatch Modal ── -->
+<div class="jm-modal-back" id="jmDispatchModal" role="dialog" aria-modal="true" aria-labelledby="jmDispatchTitle" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="jm-modal">
+    <div class="jm-modal__head">
+      <span class="jm-modal__title" id="jmDispatchTitle">Dispatch Background Job</span>
+      <button class="jm-modal__close" onclick="document.getElementById('jmDispatchModal').classList.remove('open')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <form class="jm-modal__form" method="POST" action="/s/jobs/dispatch">
+      <div class="jm-field">
+        <label class="jm-field__label" for="jm-type">Job Type</label>
+        <select class="jm-field__select" id="jm-type" name="job_type" required>
+          <option value="" disabled selected>Select…</option>
+          {{range .JobTypes}}<option value="{{.}}">{{.}}</option>{{end}}
+        </select>
+      </div>
+      <div class="jm-field">
+        <label class="jm-field__label" for="jm-queue">Queue</label>
+        <select class="jm-field__select" id="jm-queue" name="queue" required>
+          <option value="" disabled selected>Select…</option>
+          {{range .Queues}}<option value="{{.}}">{{.}}</option>{{end}}
+        </select>
+      </div>
+      <div class="jm-field">
+        <label class="jm-field__label" for="jm-tenant">Tenant</label>
+        <input class="jm-field__input" type="text" id="jm-tenant" name="tenant" placeholder="e.g. acme-corp" autocomplete="off" />
+      </div>
+      <div class="jm-field">
+        <label class="jm-field__label" for="jm-priority">Priority</label>
+        <select class="jm-field__select" id="jm-priority" name="priority">
+          <option value="normal" selected>Normal</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+      <div class="jm-field jm-field--full">
+        <label class="jm-field__label" for="jm-params">Parameters <small>(JSON)</small></label>
+        <textarea class="jm-field__textarea" id="jm-params" name="params" rows="5" placeholder='{&#10;  "key": "value"&#10;}'></textarea>
+      </div>
+      <div class="jm-modal__foot jm-field--full" style="margin: 4px -22px -20px; padding: 14px 22px;">
+        <button type="button" class="jm-mbtn jm-mbtn--ghost" onclick="document.getElementById('jmDispatchModal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="jm-mbtn jm-mbtn--primary">Dispatch</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function jmToggle(row) {
+  const detail = row.nextElementSibling;
+  if (detail && detail.classList.contains('jm-detail')) {
+    const hidden = detail.hidden;
+    detail.hidden = !hidden;
+    row.classList.toggle('jm-item--expanded', hidden);
+    row.setAttribute('aria-expanded', hidden ? 'true' : 'false');
+  }
+}
+function jmKeyToggle(e, row) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    jmToggle(row);
+  }
+}
+function jmAction(action, jobID) {
+  window.mockConfirm(
+    action.charAt(0).toUpperCase() + action.slice(1) + ' job',
+    'Are you sure you want to ' + action + ' ' + jobID + '?',
+    action.charAt(0).toUpperCase() + action.slice(1),
+    function() {
+      fetch('/s/jobs/' + jobID + '/' + action, { method: 'POST' })
+        .then(function(r) { if (r.ok) location.reload(); else window.mockToast('Action failed'); })
+        .catch(function(e) { window.mockToast('Request error: ' + e); });
+    }
+  );
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('jmDispatchModal').classList.remove('open');
+  }
+});
+</script>
+{{end}}

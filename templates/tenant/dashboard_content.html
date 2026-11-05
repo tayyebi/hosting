@@ -1,0 +1,603 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Panels grid (Region Health + Cost Forecast) ─────────── */
+.db-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+@media (max-width: 860px) { .db-panels-grid { grid-template-columns: 1fr; } }
+
+/* ── Shared panel card ───────────────────────────────────── */
+.db-panel {
+    background: var(--ds-surface, var(--c-surface, #fff));
+    border: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.db-panel__header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.db-panel__title {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--ds-text, inherit);
+}
+.db-panel__subtitle {
+    font-size: 11.5px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+    margin: 0;
+}
+
+/* ── Region Health ───────────────────────────────────────── */
+.db-region-list {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.db-region {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.db-region__dot-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+.db-region__dot-wrap--ok    { background: rgba(16,185,129,.08); }
+.db-region__dot-wrap--warn  { background: rgba(245,158,11,.08); }
+.db-region__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.db-region__dot--ok {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.2);
+}
+.db-region__dot--warn {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.2);
+}
+.db-region__info {
+    flex: 1;
+    min-width: 0;
+}
+.db-region__name {
+    font-size: 13px;
+    font-weight: 400;
+}
+.db-region__detail {
+    font-size: 11px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+}
+.db-region__status {
+    text-align: right;
+    flex-shrink: 0;
+}
+.db-region__status-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+.db-region__status-label--ok   { color: #10b981; }
+.db-region__status-label--warn { color: #f59e0b; }
+.db-region__latency {
+    font-size: 10px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+}
+.db-region__latency--warn { color: #b45309; }
+
+.db-panel__footer {
+    padding: 10px 18px;
+    background: var(--ds-hover, var(--c-bg-soft, #f7f8fa));
+    border-top: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+}
+.db-panel__footer-text {
+    font-size: 11px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+}
+.db-panel__footer-highlight {
+    font-size: 11px;
+    font-weight: 500;
+    color: #10b981;
+}
+
+/* ── Cost Forecast ───────────────────────────────────────── */
+.db-cost {
+    padding: 16px 18px;
+}
+.db-cost__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+@media (max-width: 480px) { .db-cost__grid { grid-template-columns: 1fr; } }
+
+.db-cost__card {
+    padding: 12px;
+    border: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    border-radius: 10px;
+    background: var(--ds-hover, var(--c-bg-soft, #f7f8fa));
+}
+.db-cost__label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ds-text-subtle, var(--c-text-faint, #9ca3af));
+    font-weight: 500;
+}
+.db-cost__value {
+    font-size: 22px;
+    font-weight: 500;
+    margin-top: 4px;
+    color: var(--ds-text, inherit);
+}
+.db-cost__meta {
+    font-size: 11px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+}
+.db-cost__delta--positive { color: #10b981; }
+
+/* ── Bar rows (cost breakdown) ───────────────────────────── */
+.db-bar {
+    margin-bottom: 12px;
+}
+.db-bar:last-child { margin-bottom: 0; }
+.db-bar__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.db-bar__label {
+    font-size: 12px;
+    font-weight: 400;
+}
+.db-bar__value {
+    font-size: 12px;
+    font-weight: 500;
+}
+.db-bar__pct {
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+}
+.db-bar__track {
+    height: 5px;
+    background: var(--ds-hover, var(--c-bg-soft, #f7f8fa));
+    border-radius: 999px;
+    overflow: hidden;
+}
+.db-bar__fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.db-bar__fill--indigo { background: #6366f1; }
+.db-bar__fill--green  { background: #10b981; }
+.db-bar__fill--amber  { background: #f59e0b; }
+.db-bar__fill--violet { background: #8b5cf6; }
+
+/* ── Recent Deployments ──────────────────────────────────── */
+.db-deploys {
+    background: var(--ds-surface, var(--c-surface, #fff));
+    border: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 16px;
+}
+.db-deploys__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 0;
+}
+@media (max-width: 860px)  { .db-deploys__grid { grid-template-columns: 1fr; } }
+
+.db-deploy {
+    padding: 14px 18px;
+    border-right: 1px solid var(--ds-border, var(--c-border, #e5e7eb));
+}
+.db-deploy:last-child { border-right: none; }
+@media (max-width: 860px) {
+    .db-deploy { border-right: none; border-bottom: 1px solid var(--ds-border, var(--c-border, #e5e7eb)); }
+    .db-deploy:last-child { border-bottom: none; }
+}
+.db-deploy__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.db-deploy__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.db-deploy__dot--ok   { background: #10b981; }
+.db-deploy__dot--fail { background: #ef4444; }
+.db-deploy__name {
+    font-size: 13px;
+    font-weight: 400;
+}
+.db-deploy__meta {
+    font-size: 11px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+}
+.db-deploy__commit {
+    font-size: 11px;
+    color: var(--ds-text-muted, var(--c-text-dim, #6b7280));
+    font-weight: 300;
+    margin-top: 2px;
+}
+.db-deploy__commit--fail {
+    color: #dc2626;
+}
+.db-deploy__sha {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+}
+</style>
+
+<div class="db-root">
+
+    <!-- Page heading + time range picker -->
+    <header class="db-header">
+        <div>
+            <h1 class="ds-page-title" style="margin:0">Dashboard</h1>
+            <p class="ds-page-subtitle" style="margin:4px 0 0">Infrastructure analytics across all workspaces.</p>
+        </div>
+        <nav class="db-range-picker" id="rangePicker" aria-label="Time range">
+            <button class="db-range-btn" data-range="1">Today</button>
+            <button class="db-range-btn db-range-btn--active" data-range="7" aria-pressed="true">7 Days</button>
+            <button class="db-range-btn" data-range="30">30 Days</button>
+            <button class="db-range-btn" data-range="90">90 Days</button>
+            <button class="db-range-btn" data-range="365">1 Year</button>
+        </nav>
+    </header>
+
+    <!-- KPI grid -->
+    <section class="db-kpi-grid" aria-label="Key performance indicators">
+
+        <div class="db-kpi-card" data-metric="instances">
+            <div class="db-kpi-card__top">
+                <div class="db-kpi-card__icon db-kpi-card__icon--indigo">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="3" y="2" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="3" y="7" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="3" y="12" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><circle cx="5.5" cy="4" r="0.7" fill="currentColor"/><circle cx="5.5" cy="9" r="0.7" fill="currentColor"/><circle cx="5.5" cy="14" r="0.7" fill="currentColor"/></svg>
+                </div>
+                <span class="db-kpi-card__label">Active Instances</span>
+            </div>
+            <div class="db-kpi-card__value" id="val-instances">—</div>
+            <div class="db-kpi-card__meta">
+                <span class="db-kpi-card__delta" id="delta-instances"></span>
+                <span class="db-kpi-card__period" id="period-instances"></span>
+            </div>
+        </div>
+
+
+        <div class="db-kpi-card" data-metric="uptime">
+            <div class="db-kpi-card__top">
+                <div class="db-kpi-card__icon db-kpi-card__icon--amber">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <span class="db-kpi-card__label">Uptime</span>
+            </div>
+            <div class="db-kpi-card__value" id="val-uptime">—</div>
+            <div class="db-kpi-card__meta">
+                <span class="db-kpi-card__delta" id="delta-uptime"></span>
+                <span class="db-kpi-card__period" id="period-uptime"></span>
+            </div>
+        </div>
+
+        <div class="db-kpi-card" data-metric="latency">
+            <div class="db-kpi-card__top">
+                <div class="db-kpi-card__icon db-kpi-card__icon--rose">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2v4l2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4l-1.5-1.5M14 4l1.5-1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="9" cy="10" r="6" stroke="currentColor" stroke-width="1.2"/></svg>
+                </div>
+                <span class="db-kpi-card__label">Avg Latency</span>
+            </div>
+            <div class="db-kpi-card__value" id="val-latency">—</div>
+            <div class="db-kpi-card__meta">
+                <span class="db-kpi-card__delta" id="delta-latency"></span>
+                <span class="db-kpi-card__period" id="period-latency"></span>
+            </div>
+        </div>
+
+
+        <div class="db-kpi-card" data-metric="alerts">
+            <div class="db-kpi-card__top">
+                <div class="db-kpi-card__icon db-kpi-card__icon--teal">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2a5 5 0 015 5v3l1.5 2H2.5L4 10V7a5 5 0 015-5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 14a2 2 0 004 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </div>
+                <span class="db-kpi-card__label">Active Alerts</span>
+            </div>
+            <div class="db-kpi-card__value" id="val-alerts">—</div>
+            <div class="db-kpi-card__meta">
+                <span class="db-kpi-card__delta" id="delta-alerts"></span>
+                <span class="db-kpi-card__period" id="period-alerts"></span>
+            </div>
+        </div>
+
+    </section><!-- /.db-kpi-grid -->
+
+    <!-- Region Health & Cost Forecast -->
+    <div class="db-panels-grid">
+
+        <!-- Region health map -->
+        <section class="db-panel" aria-label="Region health">
+            <div class="db-panel__header">
+                <div>
+                    <h2 class="db-panel__title">Region Health</h2>
+                    <p class="db-panel__subtitle">Live status from 3 availability zones</p>
+                </div>
+            </div>
+            <div class="db-region-list" role="list" aria-label="Region statuses">
+                <div class="db-region" role="listitem">
+                    <div class="db-region__dot-wrap db-region__dot-wrap--ok">
+                        <div class="db-region__dot db-region__dot--ok" aria-hidden="true"></div>
+                    </div>
+                    <div class="db-region__info">
+                        <div class="db-region__name">fra1 — Frankfurt</div>
+                        <div class="db-region__detail">42 instances · 168 vCPU · 99.99% uptime (7 d)</div>
+                    </div>
+                    <div class="db-region__status">
+                        <div class="db-region__status-label db-region__status-label--ok">Operational</div>
+                        <div class="db-region__latency">18 ms latency</div>
+                    </div>
+                </div>
+                <div class="db-region" role="listitem">
+                    <div class="db-region__dot-wrap db-region__dot-wrap--ok">
+                        <div class="db-region__dot db-region__dot--ok" aria-hidden="true"></div>
+                    </div>
+                    <div class="db-region__info">
+                        <div class="db-region__name">iad1 — Ashburn</div>
+                        <div class="db-region__detail">28 instances · 112 vCPU · 99.98% uptime (7 d)</div>
+                    </div>
+                    <div class="db-region__status">
+                        <div class="db-region__status-label db-region__status-label--ok">Operational</div>
+                        <div class="db-region__latency">42 ms latency</div>
+                    </div>
+                </div>
+                <div class="db-region" role="listitem">
+                    <div class="db-region__dot-wrap db-region__dot-wrap--warn">
+                        <div class="db-region__dot db-region__dot--warn" aria-hidden="true"></div>
+                    </div>
+                    <div class="db-region__info">
+                        <div class="db-region__name">sin1 — Singapore</div>
+                        <div class="db-region__detail">14 instances · 56 vCPU · 99.91% uptime (7 d)</div>
+                    </div>
+                    <div class="db-region__status">
+                        <div class="db-region__status-label db-region__status-label--warn">Degraded</div>
+                        <div class="db-region__latency db-region__latency--warn">68 ms latency</div>
+                    </div>
+                </div>
+                <footer class="db-panel__footer">
+                    <span class="db-panel__footer-text">84 instances · 336 vCPU · 3 regions</span>
+                    <span class="db-panel__footer-highlight">Global composite: 99.96%</span>
+                </footer>
+            </div>
+        </section>
+
+        <!-- Cost forecast -->
+        <section class="db-panel" aria-label="Cost forecast">
+            <div class="db-panel__header">
+                <div>
+                    <h2 class="db-panel__title">Cost Forecast</h2>
+                    <p class="db-panel__subtitle">Projected infrastructure spend based on current trajectory</p>
+                </div>
+            </div>
+            <div class="db-cost">
+                <div class="db-cost__grid">
+                    <div class="db-cost__card">
+                        <div class="db-cost__label">MTD spend</div>
+                        <div class="db-cost__value">$8,420</div>
+                        <div class="db-cost__meta">16 days into cycle</div>
+                    </div>
+                    <div class="db-cost__card">
+                        <div class="db-cost__label">Projected EOM</div>
+                        <div class="db-cost__value">$15,788</div>
+                        <div class="db-cost__meta">
+                            <span class="db-cost__delta--positive">&#x25BC; 3.2%</span> vs last month
+                        </div>
+                    </div>
+                </div>
+                <div class="db-bar">
+                    <div class="db-bar__row">
+                        <span class="db-bar__label">Compute</span>
+                        <span class="db-bar__value">$10,240 <span class="db-bar__pct">· 64.9%</span></span>
+                    </div>
+                    <div class="db-bar__track">
+                        <div class="db-bar__fill db-bar__fill--indigo" style="width:64.9%"></div>
+                    </div>
+                </div>
+                <div class="db-bar">
+                    <div class="db-bar__row">
+                        <span class="db-bar__label">Storage &amp; backups</span>
+                        <span class="db-bar__value">$3,120 <span class="db-bar__pct">· 19.8%</span></span>
+                    </div>
+                    <div class="db-bar__track">
+                        <div class="db-bar__fill db-bar__fill--green" style="width:19.8%"></div>
+                    </div>
+                </div>
+                <div class="db-bar">
+                    <div class="db-bar__row">
+                        <span class="db-bar__label">Network &amp; egress</span>
+                        <span class="db-bar__value">$1,680 <span class="db-bar__pct">· 10.6%</span></span>
+                    </div>
+                    <div class="db-bar__track">
+                        <div class="db-bar__fill db-bar__fill--amber" style="width:10.6%"></div>
+                    </div>
+                </div>
+                <div class="db-bar">
+                    <div class="db-bar__row">
+                        <span class="db-bar__label">Databases &amp; managed services</span>
+                        <span class="db-bar__value">$748 <span class="db-bar__pct">· 4.7%</span></span>
+                    </div>
+                    <div class="db-bar__track">
+                        <div class="db-bar__fill db-bar__fill--violet" style="width:4.7%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Recent Deployments Feed -->
+    <section class="db-deploys" aria-label="Recent deployments">
+        <div class="db-panel__header">
+            <div>
+                <h2 class="db-panel__title">Recent Deployments</h2>
+                <p class="db-panel__subtitle">Last 24 hours across all client workspaces</p>
+            </div>
+            <button class="btn btn--ghost btn--sm">View All</button>
+        </div>
+        <div class="db-deploys__grid" role="list" aria-label="Deployment entries">
+            <div class="db-deploy" role="listitem">
+                <div class="db-deploy__header">
+                    <div class="db-deploy__dot db-deploy__dot--ok" aria-hidden="true"></div>
+                    <span class="db-deploy__name">marketing-site</span>
+                </div>
+                <div class="db-deploy__meta">Acme Inc. · fra1 · 12 min ago</div>
+                <div class="db-deploy__commit">
+                    <span class="db-deploy__sha">a3f9c21</span> · Next.js 14.2 · 18 s build
+                </div>
+            </div>
+            <div class="db-deploy" role="listitem">
+                <div class="db-deploy__header">
+                    <div class="db-deploy__dot db-deploy__dot--ok" aria-hidden="true"></div>
+                    <span class="db-deploy__name">api-v2</span>
+                </div>
+                <div class="db-deploy__meta">Monroe LLC · iad1 · 2 h ago</div>
+                <div class="db-deploy__commit">
+                    <span class="db-deploy__sha">f1b08e2</span> · Go 1.22 · rolling deploy
+                </div>
+            </div>
+            <div class="db-deploy" role="listitem">
+                <div class="db-deploy__header">
+                    <div class="db-deploy__dot db-deploy__dot--fail" aria-hidden="true"></div>
+                    <span class="db-deploy__name">landing-q2</span>
+                </div>
+                <div class="db-deploy__meta">TechBlue · fra1 · 4 h ago</div>
+                <div class="db-deploy__commit db-deploy__commit--fail">
+                    <span class="db-deploy__sha">b81c3f0</span> · Build failed (42 s)
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div><!-- /.db-root -->
+
+<script>
+(function () {
+    // ── Seeded pseudo-random (reproducible per metric) ──────────────
+    function seededRng(seed) {
+        var s = seed;
+        return function () {
+            s = (s * 1664525 + 1013904223) & 0xffffffff;
+            return (s >>> 0) / 4294967296;
+        };
+    }
+
+    // ── Generate plausible time-series data ─────────────────────────
+    function genSeries(points, base, volatility, trend, rngFn) {
+        var data = [], v = base;
+        for (var i = 0; i < points; i++) {
+            v += (rngFn() - 0.48) * volatility + trend;
+            v = Math.max(0, v);
+            data.push(v);
+        }
+        return data;
+    }
+
+    // ── Metric definitions ───────────────────────────────────────────
+    var metrics = {
+        instances:  { base: 84,     vol: 12,    trend: 0.5,   seed: 1,  fmt: 'int',   prefix: '',  suffix: '',     label: 'vs prev period', lowerBetter: false },
+        uptime:     { base: 99.95,  vol: 0.03,  trend: 0.001, seed: 5,  fmt: 'pct3',  prefix: '',  suffix: '%',    label: 'vs prev period', lowerBetter: false },
+        latency:    { base: 42,     vol: 8,     trend:-0.1,   seed: 6,  fmt: 'int',   prefix: '',  suffix: ' ms',  label: 'vs prev period', lowerBetter: true  },
+        alerts:     { base: 12,     vol: 6,     trend:-0.1,   seed: 8,  fmt: 'int',   prefix: '',  suffix: '',     label: 'vs prev period', lowerBetter: true  },
+    };
+
+    // ── Format values ────────────────────────────────────────────────
+    function fmt(val, m) {
+        if (m.fmt === 'pct3') return m.prefix + val.toFixed(3) + m.suffix;
+        if (m.fmt === 'pct')  return m.prefix + val.toFixed(1) + m.suffix;
+        if (val >= 1e6) return m.prefix + (val / 1e6).toFixed(2) + 'M' + m.suffix;
+        if (val >= 1e3) return m.prefix + (val / 1e3).toFixed(1) + 'K' + m.suffix;
+        return m.prefix + Math.round(val).toLocaleString() + m.suffix;
+    }
+
+    var periodLabels = {
+        1: 'vs yesterday', 7: 'vs prev 7d', 30: 'vs prev 30d',
+        90: 'vs prev 90d', 365: 'vs prev year',
+    };
+
+    // ── Main render ─────────────────────────────────────────────────
+    function render(days) {
+        var points = Math.min(Math.max(days, 7), 60);
+
+        Object.keys(metrics).forEach(function (key) {
+            var m = metrics[key];
+            var rng = seededRng(m.seed + days * 31);
+            var series = genSeries(points, m.base * (days / 30), m.vol * (days / 30), m.trend, rng);
+
+            // Cumulative total for the period
+            var total = series.reduce(function (a, b) { return a + b; }, 0) / points;
+            if (m.fmt === 'pct' || m.fmt === 'pct3') total = series[series.length - 1];
+
+            // Delta vs "prev period" (simple: first half vs second half)
+            var half = Math.floor(series.length / 2);
+            var prevAvg = series.slice(0, half).reduce(function (a, b) { return a + b; }, 0) / half;
+            var currAvg = series.slice(half).reduce(function (a, b) { return a + b; }, 0) / (series.length - half);
+            var deltaPct = prevAvg === 0 ? 0 : ((currAvg - prevAvg) / prevAvg * 100);
+
+            // DOM updates
+            document.getElementById('val-' + key).textContent = fmt(total, m);
+
+            var deltaEl = document.getElementById('delta-' + key);
+            var up = deltaPct >= 0;
+            var good = m.lowerBetter ? !up : up;
+            deltaEl.textContent = (up ? '▲ ' : '▼ ') + Math.abs(deltaPct).toFixed(1) + '%';
+            deltaEl.className = 'db-kpi-card__delta ' + (good ? 'db-kpi-card__delta--up' : 'db-kpi-card__delta--down');
+
+            document.getElementById('period-' + key).textContent = periodLabels[days] || '';
+        });
+    }
+
+    // ── Range picker wiring ──────────────────────────────────────────
+    var activeRange = 7;
+    var picker = document.getElementById('rangePicker');
+    picker.addEventListener('click', function (e) {
+        var btn = e.target.closest('.db-range-btn');
+        if (!btn) return;
+        picker.querySelectorAll('.db-range-btn').forEach(function (b) {
+            b.classList.remove('db-range-btn--active');
+        });
+        btn.classList.add('db-range-btn--active');
+        activeRange = parseInt(btn.dataset.range, 10);
+        render(activeRange);
+    });
+
+    render(activeRange);
+})();
+</script>
+{{end}}

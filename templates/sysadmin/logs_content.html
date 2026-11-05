@@ -1,0 +1,727 @@
+{{define "logs-content"}}
+<div class="logs-page">
+
+    <!-- ── Toolbar ── -->
+    <form class="logs-toolbar" method="GET" action="/s/logs/">
+        <div class="logs-search-wrap" role="search">
+            <svg class="logs-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <input
+                class="logs-search-input"
+                type="text"
+                name="q"
+                value="{{.FilterSearch}}"
+                placeholder="Search messages, services, trace IDs…  ( / )"
+                autocomplete="off"
+            />
+            {{if .FilterSearch}}<button type="button" class="logs-search-clear" onclick="this.closest('form').querySelector('[name=q]').value='';this.closest('form').submit()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </button>{{end}}
+            <!-- Search dropdown: history + samples -->
+            <div class="logs-search-dropdown" id="logsSearchDrop"></div>
+        </div>
+
+        <div class="logs-filters">
+            <!-- Level filter -->
+            <div class="logs-filter-group">
+                {{range $l := .LevelOptions}}
+                <button type="submit" name="level" value="{{if eq $.FilterLevel $l}}{{else}}{{$l}}{{end}}"
+                    class="logs-level-pill logs-level-pill--{{$l}} {{if eq $.FilterLevel $l}}active{{end}}"
+                    aria-label="Filter by {{$l}} level" aria-pressed="{{if eq $.FilterLevel $l}}true{{else}}false{{end}}">
+                    {{$l}}
+                </button>
+                {{end}}
+            </div>
+
+            <!-- Service filter -->
+            <select class="logs-select" name="service" onchange="this.form.submit()">
+                <option value="" {{if eq .FilterSvc ""}}selected{{end}}>All services</option>
+                {{range .Services}}
+                <option value="{{.}}" {{if eq $.FilterSvc .}}selected{{end}}>{{.}}</option>
+                {{end}}
+            </select>
+
+            <!-- Time range -->
+            <select class="logs-select" name="range" onchange="this.form.submit()">
+                <option value="1h" {{if eq .FilterRange "1h"}}selected{{end}}>Last 1 hour</option>
+                <option value="6h" {{if eq .FilterRange "6h"}}selected{{end}}>Last 6 hours</option>
+                <option value="24h" {{if eq .FilterRange "24h"}}selected{{end}}>Last 24 hours</option>
+                <option value="7d" {{if eq .FilterRange "7d"}}selected{{end}}>Last 7 days</option>
+            </select>
+
+            <!-- Live button -->
+            <button type="button" class="logs-live-btn" id="liveBtn" onclick="toggleLive()">
+                <span class="logs-live-dot" id="liveDot"></span>
+                Live
+            </button>
+
+            <!-- Export button -->
+            <div class="logs-export-wrap">
+                <button type="button" class="logs-live-btn" id="exportBtn" onclick="toggleExportDrop()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 9v3h10V9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 1v7M4.5 5.5L7 8l2.5-2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Export
+                </button>
+                <div class="logs-export-dropdown" id="exportDrop">
+                    <button type="button" class="logs-export-option" onclick="exportLogs('csv')">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 5h11M1 8.5h11M5 1v11" stroke="currentColor" stroke-width="1.0"/></svg>
+                        Export as CSV
+                    </button>
+                    <button type="button" class="logs-export-option" onclick="exportLogs('json')">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M4 1.5C2.5 1.5 2 2.5 2 3.5S2.5 5 3 5.5 2 6.5 2 7.5s.5 3 2 3M9 1.5c1.5 0 2 1 2 2S10.5 5 10 5.5s1 1 1 2-.5 3-2 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                        Export as JSON
+                    </button>
+                    <button type="button" class="logs-export-option" onclick="exportLogs('clipboard')">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4" y="1" width="8" height="8" rx="1.2" stroke="currentColor" stroke-width="1.0"/><path d="M1 4v7a1 1 0 001 1h7" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                        Copy to clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- ── Summary badges ── -->
+    <div class="logs-summary" aria-live="polite">
+        <a href="/s/logs/?level=error{{if .FilterSvc}}&service={{.FilterSvc}}{{end}}{{if .FilterSearch}}&q={{.FilterSearch}}{{end}}" class="logs-summary-badge logs-summary-badge--error {{if eq .FilterLevel "error"}}active{{end}}">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/><path d="M6.5 4v3M6.5 9h.01" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            {{.ErrorCount}} errors
+        </a>
+        <a href="/s/logs/?level=warn{{if .FilterSvc}}&service={{.FilterSvc}}{{end}}{{if .FilterSearch}}&q={{.FilterSearch}}{{end}}" class="logs-summary-badge logs-summary-badge--warn {{if eq .FilterLevel "warn"}}active{{end}}">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5L12 11H1L6.5 1.5z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M6.5 5v3M6.5 9.5h.01" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            {{.WarnCount}} warnings
+        </a>
+        <a href="/s/logs/?level=info{{if .FilterSvc}}&service={{.FilterSvc}}{{end}}{{if .FilterSearch}}&q={{.FilterSearch}}{{end}}" class="logs-summary-badge logs-summary-badge--info {{if eq .FilterLevel "info"}}active{{end}}">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/><path d="M6.5 5.5v4M6.5 4h.01" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            {{.InfoCount}} info
+        </a>
+        <a href="/s/logs/?level=debug{{if .FilterSvc}}&service={{.FilterSvc}}{{end}}{{if .FilterSearch}}&q={{.FilterSearch}}{{end}}" class="logs-summary-badge logs-summary-badge--debug {{if eq .FilterLevel "debug"}}active{{end}}">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="3" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M4 6.5h5M4 8.5h2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            {{.DebugCount}} debug
+        </a>
+        {{if or .FilterLevel .FilterSvc .FilterSearch}}
+        <a href="/s/logs/" class="logs-clear-filters">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Clear filters
+        </a>
+        {{end}}
+    </div>
+
+    <!-- ── Log Pipeline Settings ── -->
+    <div class="logs-pipeline-wrap">
+        <button type="button" class="logs-pipeline-toggle" onclick="togglePipeline()">
+            <svg class="logs-pipeline-toggle__icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Pipeline Settings
+            <svg class="logs-pipeline-toggle__chevron" id="pipelineChevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="logs-pipeline-panel" id="pipelinePanel" hidden>
+
+            <!-- Retention policy -->
+            <div class="logs-pipeline-section">
+                <div class="logs-pipeline-section__header">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v5.5H11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                    Retention Policy
+                </div>
+                <select class="logs-select logs-pipeline-select">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="90">90 days</option>
+                </select>
+            </div>
+
+            <!-- Log forwarding -->
+            <div class="logs-pipeline-section">
+                <div class="logs-pipeline-section__header">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 6.5h9M7.5 4l3 2.5-3 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Log Forwarding
+                </div>
+                <div class="logs-pipeline-list">
+                    <div class="logs-pipeline-list__item">
+                        <span class="logs-pipeline-dot logs-pipeline-dot--active"></span>
+                        <div class="logs-pipeline-list__info">
+                            <span class="logs-pipeline-list__name">Elasticsearch cluster</span>
+                            <code class="logs-pipeline-list__dest">logs.internal:9200</code>
+                        </div>
+                        <span class="logs-pipeline-badge logs-pipeline-badge--active">Active</span>
+                        <span class="logs-pipeline-list__rate">2.4M events/day</span>
+                    </div>
+                    <div class="logs-pipeline-list__item">
+                        <span class="logs-pipeline-dot logs-pipeline-dot--active"></span>
+                        <div class="logs-pipeline-list__info">
+                            <span class="logs-pipeline-list__name">S3 archive</span>
+                            <code class="logs-pipeline-list__dest">s3://platform-logs/production/</code>
+                        </div>
+                        <span class="logs-pipeline-badge logs-pipeline-badge--active">Active</span>
+                        <span class="logs-pipeline-list__rate">cold storage after 7 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert rules -->
+            <div class="logs-pipeline-section">
+                <div class="logs-pipeline-section__header">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v1M6.5 10.5v1M2.5 6.5h-1M11.5 6.5h-1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="3" stroke="currentColor" stroke-width="1.1"/></svg>
+                    Alert Rules
+                </div>
+                <div class="logs-pipeline-list">
+                    <div class="logs-pipeline-list__item">
+                        <span class="logs-pipeline-dot logs-pipeline-dot--active"></span>
+                        <div class="logs-pipeline-list__info">
+                            <span class="logs-pipeline-list__name">Error spike</span>
+                            <code class="logs-pipeline-list__dest">error count &gt; 50 in 5min</code>
+                        </div>
+                        <span class="logs-pipeline-list__channel">Slack #ops-alerts</span>
+                        <span class="logs-pipeline-badge logs-pipeline-badge--active">Active</span>
+                    </div>
+                    <div class="logs-pipeline-list__item">
+                        <span class="logs-pipeline-dot logs-pipeline-dot--active"></span>
+                        <div class="logs-pipeline-list__info">
+                            <span class="logs-pipeline-list__name">Auth failures</span>
+                            <code class="logs-pipeline-list__dest">auth.failed &gt; 10 in 1min</code>
+                        </div>
+                        <span class="logs-pipeline-list__channel">PagerDuty</span>
+                        <span class="logs-pipeline-badge logs-pipeline-badge--active">Active</span>
+                    </div>
+                    <div class="logs-pipeline-list__item">
+                        <span class="logs-pipeline-dot logs-pipeline-dot--paused"></span>
+                        <div class="logs-pipeline-list__info">
+                            <span class="logs-pipeline-list__name">Slow queries</span>
+                            <code class="logs-pipeline-list__dest">db.query_ms &gt; 5000</code>
+                        </div>
+                        <span class="logs-pipeline-list__channel">Slack #dev</span>
+                        <span class="logs-pipeline-badge logs-pipeline-badge--paused">Paused</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Histogram ── -->
+    <div class="logs-histogram">
+        <div class="logs-histogram__heading">Volume (last hour)</div>
+        <div class="logs-histogram__bars">
+            {{range .Buckets}}
+            <div class="logs-histogram__col" title="{{.Label}} — {{.Total}} entries">
+                <div class="logs-histogram__bar-wrap" style="height:52px;">
+                    {{if gt .Total 0}}
+                    {{$pct := pct .Total $.HistoMax}}
+                    <div class="logs-histogram__bar" style="height:{{$pct}}%;">
+                        {{if gt .Error 0}}<span class="logs-hbar logs-hbar--error" style="flex:{{.Error}}"></span>{{end}}
+                        {{if gt .Warn 0}}<span class="logs-hbar logs-hbar--warn"  style="flex:{{.Warn}}"></span>{{end}}
+                        {{if gt .Info 0}}<span class="logs-hbar logs-hbar--info"  style="flex:{{.Info}}"></span>{{end}}
+                        {{if gt .Debug 0}}<span class="logs-hbar logs-hbar--debug" style="flex:{{.Debug}}"></span>{{end}}
+                    </div>
+                    {{end}}
+                </div>
+                <div class="logs-histogram__label">{{.Label}}</div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- ── Log table ── -->
+    <div class="logs-table-wrap" role="log">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th class="col-time">Timestamp</th>
+                    <th class="col-level">Level</th>
+                    <th class="col-service">Service</th>
+                    <th class="col-msg">Message</th>
+                    <th class="col-trace">Trace ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{if eq (len .Entries) 0}}
+                <tr><td colspan="5" class="logs-empty">
+                    <div class="logs-empty__inner">
+                        <svg class="logs-empty__icon" width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="5" width="22" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 12h12M8 16h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        <span class="logs-empty__title">No log entries match your filters</span>
+                        <span class="logs-empty__hint">Try broadening the time range, clearing a level filter, or searching for a different term.</span>
+                        {{if or .FilterLevel .FilterSvc .FilterSearch}}
+                        <a href="/s/logs/" class="logs-empty__reset">Clear all filters</a>
+                        {{end}}
+                    </div>
+                </td></tr>
+                {{else}}
+                {{range .Entries}}
+                <tr class="log-row log-row--{{.Level}}" onclick="toggleRow(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRow(this)}" tabindex="0" role="button" aria-expanded="false">
+                    <td class="col-time log-ts">
+                        <svg class="log-row__chevron" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {{.Timestamp}}
+                    </td>
+                    <td class="col-level"><span class="log-badge log-badge--{{.Level}}">{{.Level}}</span></td>
+                    <td class="col-service log-svc">{{.Service}}</td>
+                    <td class="col-msg log-msg">{{.Message}}</td>
+                    <td class="col-trace log-trace">{{substr .TraceID 0 8}}</td>
+                </tr>
+                <tr class="log-detail" hidden>
+                    <td colspan="5">
+                        <div class="log-detail__inner">
+                            <div class="log-detail__grid">
+                                <div class="log-detail__field">
+                                    <span class="log-detail__key">timestamp</span>
+                                    <span class="log-detail__val">{{.Timestamp}}</span>
+                                </div>
+                                <div class="log-detail__field">
+                                    <span class="log-detail__key">level</span>
+                                    <span class="log-detail__val log-badge log-badge--{{.Level}}">{{.Level}}</span>
+                                </div>
+                                <div class="log-detail__field">
+                                    <span class="log-detail__key">service</span>
+                                    <span class="log-detail__val">{{.Service}}</span>
+                                </div>
+                                <div class="log-detail__field">
+                                    <span class="log-detail__key">trace_id</span>
+                                    <span class="log-detail__val log-detail__mono">{{.TraceID}}</span>
+                                </div>
+                                <div class="log-detail__field log-detail__field--full">
+                                    <span class="log-detail__key">message</span>
+                                    <span class="log-detail__val">{{.Message}}</span>
+                                </div>
+                                {{range $k, $v := .Extra}}
+                                <div class="log-detail__field">
+                                    <span class="log-detail__key">{{$k}}</span>
+                                    <span class="log-detail__val log-detail__mono">{{$v}}</span>
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+function toggleRow(row) {
+    const detail = row.nextElementSibling;
+    if (detail && detail.classList.contains('log-detail')) {
+        const hidden = detail.hidden;
+        detail.hidden = !hidden;
+        row.classList.toggle('log-row--expanded', hidden);
+        row.setAttribute('aria-expanded', hidden ? 'true' : 'false');
+    }
+}
+
+let liveInterval = null;
+function toggleLive() {
+    const btn = document.getElementById('liveBtn');
+    const active = btn.classList.toggle('active');
+    if (active) {
+        liveInterval = setInterval(() => location.reload(), 5000);
+    } else {
+        clearInterval(liveInterval);
+    }
+}
+
+// ── Search dropdown: history + samples ───────────────────────
+const HISTORY_KEY = 'platform_logs_history';
+const SAMPLES = [
+    'level:error service:api-gateway',
+    'timeout',
+    'tenant acme-corp',
+    'TLS handshake',
+    'replica lag',
+];
+
+function getHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+}
+
+function saveToHistory(q) {
+    if (!q.trim()) return;
+    let h = getHistory().filter(x => x !== q);
+    h.unshift(q);
+    if (h.length > 5) h = h.slice(0, 5);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+}
+
+function removeFromHistory(q) {
+    const h = getHistory().filter(x => x !== q);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+    renderDrop();
+}
+
+function renderDrop() {
+    const drop = document.getElementById('logsSearchDrop');
+    const history = getHistory();
+    let html = '';
+
+    if (history.length) {
+        html += `<div class="logs-sdrop__section-label">Recent</div>`;
+        history.forEach(h => {
+            const esc = h.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const display = h.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            html += `<div class="logs-sdrop__item" onclick="pickSearch('${esc}')">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6 1a5 5 0 100 10A5 5 0 006 1zm0 0V6l3 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="logs-sdrop__item-text">${display}</span>
+                <button class="logs-sdrop__remove" title="Remove" onclick="event.stopPropagation();removeFromHistory('${esc}')">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+            </div>`;
+        });
+        html += `<div class="logs-sdrop__sep"></div>`;
+    }
+
+    html += `<div class="logs-sdrop__section-label">Suggestions</div>`;
+    SAMPLES.forEach(s => {
+        const esc = s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const display = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `<div class="logs-sdrop__item" onclick="pickSearch('${esc}')">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.1"/><path d="M9 9l2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <span class="logs-sdrop__item-text">${display}</span>
+        </div>`;
+    });
+
+    drop.innerHTML = html;
+}
+
+function openDrop() {
+    renderDrop();
+    document.getElementById('logsSearchDrop').classList.add('open');
+}
+
+function closeDrop() {
+    document.getElementById('logsSearchDrop').classList.remove('open');
+}
+
+function pickSearch(val) {
+    const inp = document.querySelector('.logs-search-input');
+    inp.value = val;
+    closeDrop();
+    inp.closest('form').submit();
+}
+
+(function initSearchDrop() {
+    const inp = document.querySelector('.logs-search-input');
+    if (!inp) return;
+
+    inp.addEventListener('focus', openDrop);
+
+    document.addEventListener('mousedown', e => {
+        const drop = document.getElementById('logsSearchDrop');
+        if (!drop.contains(e.target) && e.target !== inp) closeDrop();
+    });
+
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeDrop(); inp.blur(); }
+    });
+
+    // Save to history on form submit
+    inp.closest('form').addEventListener('submit', () => {
+        saveToHistory(inp.value);
+    });
+})();
+
+// ── Pipeline panel toggle ───────────────────────────────────
+function togglePipeline() {
+    const panel = document.getElementById('pipelinePanel');
+    const chevron = document.getElementById('pipelineChevron');
+    const isHidden = panel.hidden;
+    panel.hidden = !isHidden;
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+// ── Export dropdown ─────────────────────────────────────────
+function toggleExportDrop() {
+    const drop = document.getElementById('exportDrop');
+    drop.classList.toggle('open');
+}
+
+document.addEventListener('mousedown', function(e) {
+    const wrap = document.querySelector('.logs-export-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('exportDrop').classList.remove('open');
+    }
+});
+
+function exportLogs(format) {
+    document.getElementById('exportDrop').classList.remove('open');
+    const rows = document.querySelectorAll('.log-row');
+    if (format === 'csv') {
+        let csv = 'Timestamp,Level,Service,Message,TraceID\n';
+        rows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            csv += Array.from(cells).map(c => '"' + c.textContent.trim().replace(/"/g, '""') + '"').join(',') + '\n';
+        });
+        downloadText(csv, 'logs-export.csv', 'text/csv');
+    } else if (format === 'json') {
+        const data = [];
+        rows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            data.push({
+                timestamp: cells[0]?.textContent.trim(),
+                level: cells[1]?.textContent.trim(),
+                service: cells[2]?.textContent.trim(),
+                message: cells[3]?.textContent.trim(),
+                traceId: cells[4]?.textContent.trim()
+            });
+        });
+        downloadText(JSON.stringify(data, null, 2), 'logs-export.json', 'application/json');
+    } else if (format === 'clipboard') {
+        let text = '';
+        rows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            text += Array.from(cells).map(c => c.textContent.trim()).join('\t') + '\n';
+        });
+        navigator.clipboard.writeText(text);
+    }
+}
+
+function downloadText(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ── Keyboard shortcut: "/" to focus search ─────────────────
+document.addEventListener('keydown', function(e) {
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const active = document.activeElement;
+        const tag = active ? active.tagName : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || active.isContentEditable) return;
+        e.preventDefault();
+        const inp = document.querySelector('.logs-search-input');
+        if (inp) { inp.focus(); inp.select(); }
+    }
+});
+</script>
+
+<!-- ── Pipeline & Export styles ── -->
+<style>
+/* Export dropdown */
+.logs-export-wrap { position: relative; }
+.logs-export-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--ds-surface, #fff);
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.16);
+    min-width: 180px;
+    z-index: 20;
+    padding: 4px;
+}
+.logs-export-dropdown.open { display: block; }
+.logs-export-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    background: none;
+    color: var(--ds-text, #1d1d1f);
+    font-size: .82rem;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+}
+.logs-export-option:hover { background: var(--ds-hover, rgba(0,0,0,.04)); }
+.logs-export-option svg { opacity: .55; flex-shrink: 0; }
+
+/* Pipeline panel */
+.logs-pipeline-wrap {
+    margin: 10px 0 6px;
+}
+.logs-pipeline-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 8px;
+    background: var(--ds-surface, #fff);
+    color: var(--ds-text, #1d1d1f);
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+}
+.logs-pipeline-toggle:hover { background: var(--ds-hover, rgba(0,0,0,.04)); }
+.logs-pipeline-toggle__icon { opacity: .5; }
+.logs-pipeline-toggle__chevron {
+    margin-left: auto;
+    opacity: .45;
+    transition: transform .2s;
+}
+.logs-pipeline-panel {
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 8px;
+    background: var(--ds-surface, #fff);
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 10px 14px;
+}
+.logs-pipeline-section__header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ds-text-muted, #6e6e73);
+    margin-bottom: 5px;
+}
+.logs-pipeline-section__header svg { opacity: .5; }
+.logs-pipeline-select {
+    width: 100%;
+    max-width: 160px;
+}
+.logs-pipeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.logs-pipeline-list__item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 7px;
+    border-radius: 5px;
+    background: var(--ds-hover, rgba(0,0,0,.04));
+    font-size: .76rem;
+}
+.logs-pipeline-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.logs-pipeline-dot--active { background: #22c55e; }
+.logs-pipeline-dot--paused { background: #f59e0b; }
+.logs-pipeline-list__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+.logs-pipeline-list__name {
+    font-weight: 500;
+    color: var(--ds-text, #1d1d1f);
+}
+.logs-pipeline-list__dest {
+    font-size: .72rem;
+    color: var(--ds-text-muted, #6e6e73);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.logs-pipeline-list__rate,
+.logs-pipeline-list__channel {
+    font-size: .72rem;
+    color: var(--ds-text-muted, #6e6e73);
+    white-space: nowrap;
+}
+.logs-pipeline-badge {
+    font-size: .68rem;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 9px;
+    white-space: nowrap;
+}
+.logs-pipeline-badge--active {
+    background: rgba(34,197,94,.12);
+    color: #16a34a;
+}
+.logs-pipeline-badge--paused {
+    background: rgba(245,158,11,.12);
+    color: #d97706;
+}
+
+/* Histogram heading */
+.logs-histogram__heading {
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ds-text-muted, #6e6e73);
+    margin-bottom: 4px;
+    letter-spacing: .02em;
+}
+
+/* Focus ring for search input (accessibility) */
+.logs-search-input:focus {
+    outline: 2px solid var(--ds-focus, #0071e3);
+    outline-offset: 1px;
+    border-color: transparent;
+}
+
+/* Row expand chevron indicator */
+.log-row__chevron {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+    opacity: .3;
+    transition: transform .15s, opacity .15s;
+    flex-shrink: 0;
+}
+.log-row:hover .log-row__chevron {
+    opacity: .55;
+}
+.log-row--expanded .log-row__chevron {
+    transform: rotate(90deg);
+    opacity: .7;
+}
+
+/* Pulsing live-mode indicator */
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(1.35); }
+}
+.logs-live-btn.active .logs-live-dot {
+    background: #ef4444;
+    animation: livePulse 1.5s ease-in-out infinite;
+}
+
+/* Empty state */
+.logs-empty__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 16px;
+    color: var(--ds-text-muted, #6e6e73);
+}
+.logs-empty__icon { opacity: .35; }
+.logs-empty__title {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--ds-text, #1d1d1f);
+}
+.logs-empty__hint {
+    font-size: .78rem;
+    max-width: 380px;
+    text-align: center;
+    line-height: 1.4;
+}
+.logs-empty__reset {
+    margin-top: 4px;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--ds-accent, #0071e3);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--ds-accent, #0071e3);
+    transition: background .15s;
+}
+.logs-empty__reset:hover {
+    background: rgba(0,113,227,.06);
+}
+</style>
+{{end}}

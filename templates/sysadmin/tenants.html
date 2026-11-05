@@ -1,0 +1,518 @@
+{{define "tenants-content"}}
+<div class="tenant-toolbar">
+    <p class="tenant-count" id="tenantCountLabel">{{len .Tenants}} tenant{{if ne (len .Tenants) 1}}s{{end}}</p>
+    <div class="tenant-toolbar__search">
+        <svg class="tenant-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10 10l2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <input id="tenantSearchInput" class="form-input tenant-search-input" type="search" placeholder="Search by name, slug, or domain…" autocomplete="off" />
+    </div>
+    <button class="btn btn--primary" onclick="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add Tenant
+    </button>
+</div>
+
+<!-- Tenant health KPI strip -->
+<div class="tenant-kpi-strip">
+    <div class="tenant-kpi-card">
+        <div class="tenant-kpi-card__value">{{len .Tenants}}</div>
+        <div class="tenant-kpi-card__label">Total Tenants</div>
+    </div>
+    <div class="tenant-kpi-card">
+        <div class="tenant-kpi-card__value">3 Pro <span class="tenant-kpi-sep">&middot;</span> 1 Business <span class="tenant-kpi-sep">&middot;</span> 1 Enterprise</div>
+        <div class="tenant-kpi-card__label">Active Plans</div>
+    </div>
+    <div class="tenant-kpi-card">
+        <div class="tenant-kpi-card__value">24.8 vCPU <span class="tenant-kpi-sep">&middot;</span> 96 GB RAM</div>
+        <div class="tenant-kpi-card__label">Total Resource Usage</div>
+    </div>
+    <div class="tenant-kpi-card">
+        <div class="tenant-kpi-card__value">$24,680</div>
+        <div class="tenant-kpi-card__label">Platform MRR</div>
+    </div>
+</div>
+
+{{if .FormError}}
+<div class="tenant-error" id="formError">{{.FormError}}</div>
+{{end}}
+
+{{if .ResetResult}}
+<div class="tenant-reset-result" id="resetResult">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6.5" stroke="currentColor" stroke-width="1.1"/><path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Temporary password generated:&nbsp;<code class="reset-pw-code">{{.ResetResult}}</code>
+    <span class="reset-pw-hint">Share this with the owner securely. It will not be shown again.</span>
+    <button class="reset-pw-copy" onclick="navigator.clipboard.writeText('{{.ResetResult}}');this.textContent='Copied!'">Copy</button>
+</div>
+{{end}}
+
+{{if .Tenants}}
+<div class="tenant-table-wrap">
+    <table class="tenant-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Domain</th>
+                <th>Owner</th>
+                <th>Plan</th>
+                <th>Health</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Tenants}}
+            {{$owner := index $.Owners .ID}}
+            <tr>
+                <td class="tenant-table__name">{{.Name}}</td>
+                <td><code class="tenant-slug">{{.Slug}}</code></td>
+                <td class="tenant-table__domain">
+                    {{if .Domain}}{{.Domain}}{{else}}<span class="tenant-none">—</span>{{end}}
+                </td>
+                <td class="tenant-table__owner">
+                    {{if $owner}}
+                    <div class="owner-info">
+                        <span class="owner-info__name">{{$owner.Name}}</span>
+                        <span class="owner-info__email">{{$owner.Email}}</span>
+                    </div>
+                    {{else}}
+                    <span class="tenant-none">No owner</span>
+                    {{end}}
+                </td>
+                <td class="tenant-table__plan">
+                    <span class="plan-badge">Pro</span>
+                </td>
+                <td class="tenant-table__health">
+                    <span class="health-indicator health-indicator--healthy">
+                        <span class="health-dot"></span>Healthy
+                    </span>
+                </td>
+                <td class="tenant-table__actions">
+                    {{if $owner}}
+                    <form method="POST" action="/s/tenants/{{.ID}}/owner/reset/">
+                        <button type="submit" class="btn btn--ghost btn--sm"
+                                onclick="return confirm('Reset owner password for {{.Name}}?')">
+                            Reset Password
+                        </button>
+                    </form>
+                    {{else}}
+                    <button class="btn btn--accent btn--sm" onclick="openOwnerModal('{{.ID}}','{{.Name}}')">
+                        Add Owner
+                    </button>
+                    {{end}}
+                    <a href="/t/{{.Slug}}/" class="btn btn--primary btn--sm">Open</a>
+                    <a href="/s/tenants/{{.ID}}/edit/" class="btn btn--ghost btn--sm">Edit</a>
+                    <form method="POST" action="/s/tenants/{{.ID}}/delete/"
+                          onsubmit="return confirm('Delete tenant «{{.Name}}»?')">
+                        <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {{end}}
+            <tr id="tenantNoResults" style="display:none">
+                <td colspan="7" class="tenant-table__no-results">No tenants match your search.</td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="tenant-pagination" class="tk-pagination" style="display:none;"></div>
+</div>
+{{else}}
+<div class="tenant-empty">
+    <svg width="36" height="36" viewBox="0 0 18 18" fill="none"><path d="M2 15V7l7-4.5L16 7v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.5" y="10" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+    <p>No tenants yet. Add one to get started.</p>
+</div>
+{{end}}
+
+<!-- ── Add Tenant modal ── -->
+<div class="modal-backdrop" id="addModalBackdrop" hidden onclick="closeAddModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Tenant</h2>
+            <button class="modal__close" onclick="closeAddModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/s/tenants/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label" for="add-name">Name <span class="form-req">*</span></label>
+                <input id="add-name" class="form-input" type="text" name="name" required placeholder="Acme Corp" autofocus>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="add-slug">Slug <span class="form-req">*</span></label>
+                <input id="add-slug" class="form-input" type="text" name="slug" required placeholder="acme"
+                       pattern="[a-z0-9\-]+" title="Lowercase letters, numbers and hyphens only">
+                <p class="form-hint">Lowercase letters, numbers and hyphens only.</p>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="add-domain">Domain <span class="form-opt">(optional)</span></label>
+                <input id="add-domain" class="form-input" type="text" name="domain" placeholder="acme.example.com">
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeAddModal()">Cancel</button>
+                <button type="submit" class="btn btn--primary">Create Tenant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Add Owner modal ── -->
+<div class="modal-backdrop" id="ownerModalBackdrop" hidden onclick="closeOwnerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Owner — <span id="ownerModalTenantName"></span></h2>
+            <button class="modal__close" onclick="closeOwnerModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" id="ownerModalForm" class="modal__form">
+            <div class="form-field">
+                <label class="form-label" for="owner-name">Full name <span class="form-req">*</span></label>
+                <input id="owner-name" class="form-input" type="text" name="owner_name" required placeholder="Jane Doe" autofocus>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="owner-email">Email address <span class="form-req">*</span></label>
+                <input id="owner-email" class="form-input" type="email" name="owner_email" required placeholder="jane@example.com">
+            </div>
+            <p class="form-hint" style="margin-top:0;">A temporary password will be sent to this address.</p>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeOwnerModal()">Cancel</button>
+                <button type="submit" class="btn btn--primary">Create Owner</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{/* ── Edit modal — shown when EditTenant is set ── */}}
+{{if .EditTenant}}
+<div class="modal-backdrop" id="editModalBackdrop" onclick="closeEditModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Edit Tenant</h2>
+            <button class="modal__close" onclick="closeEditModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/s/tenants/{{.EditTenant.ID}}/edit/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label" for="edit-name">Name <span class="form-req">*</span></label>
+                <input id="edit-name" class="form-input" type="text" name="name" required
+                       value="{{.EditTenant.Name}}" autofocus>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="edit-slug">Slug <span class="form-req">*</span></label>
+                <input id="edit-slug" class="form-input" type="text" name="slug" required
+                       value="{{.EditTenant.Slug}}"
+                       pattern="[a-z0-9\-]+" title="Lowercase letters, numbers and hyphens only">
+                <p class="form-hint">Lowercase letters, numbers and hyphens only.</p>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="edit-domain">Domain <span class="form-opt">(optional)</span></label>
+                <input id="edit-domain" class="form-input" type="text" name="domain"
+                       value="{{.EditTenant.Domain}}" placeholder="acme.example.com">
+            </div>
+            <div class="modal__footer">
+                <a href="/s/tenants/" class="btn btn--ghost">Cancel</a>
+                <button type="submit" class="btn btn--primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}
+
+{{if .OwnerTenant}}
+<div class="modal-backdrop" id="ownerEditBackdrop" onclick="closeOwnerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Owner — {{.OwnerTenant.Name}}</h2>
+            <button class="modal__close" onclick="window.location='/s/tenants/'">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/s/tenants/{{.OwnerTenant.ID}}/owner/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label" for="oe-name">Full name <span class="form-req">*</span></label>
+                <input id="oe-name" class="form-input" type="text" name="owner_name" required placeholder="Jane Doe" autofocus>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="oe-email">Email address <span class="form-req">*</span></label>
+                <input id="oe-email" class="form-input" type="email" name="owner_email" required placeholder="jane@example.com">
+            </div>
+            <p class="form-hint" style="margin-top:0;">A temporary password will be sent to this address.</p>
+            <div class="modal__footer">
+                <a href="/s/tenants/" class="btn btn--ghost">Cancel</a>
+                <button type="submit" class="btn btn--primary">Create Owner</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}
+
+<script>
+function openAddModal() {
+    document.getElementById('addModalBackdrop').hidden = false;
+    document.getElementById('add-name').focus();
+}
+function closeAddModal() {
+    document.getElementById('addModalBackdrop').hidden = true;
+}
+function closeEditModal() {
+    window.location.href = '/s/tenants/';
+}
+function openOwnerModal(tenantID, tenantName) {
+    document.getElementById('ownerModalTenantName').textContent = tenantName;
+    document.getElementById('ownerModalForm').action = '/s/tenants/' + tenantID + '/owner/';
+    document.getElementById('ownerModalBackdrop').hidden = false;
+    document.getElementById('owner-name').focus();
+}
+function closeOwnerModal() {
+    document.getElementById('ownerModalBackdrop').hidden = true;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeAddModal(); closeOwnerModal(); }
+});
+
+// Auto-fill slug from name in add form
+document.getElementById('add-name').addEventListener('input', function() {
+    const slugField = document.getElementById('add-slug');
+    if (!slugField._touched) {
+        slugField.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+});
+document.getElementById('add-slug').addEventListener('input', function() {
+    this._touched = this.value !== '';
+});
+
+{{if .FormError}}
+{{if .EditTenant}}
+// error during edit — modal is already rendered open above
+{{else if .OwnerTenant}}
+// owner modal is rendered open via server-side HTML
+{{else}}
+openAddModal();
+{{end}}
+{{end}}
+
+{{if .EditTenant}}
+document.getElementById('editModalBackdrop').hidden = false;
+{{end}}
+
+{{if .OwnerTenant}}
+document.getElementById('ownerEditBackdrop').hidden = false;
+{{end}}
+
+// ── Tenant search + pagination ──
+(function () {
+    var PAGE_SIZE = 10;
+    var currentPage = 1;
+    var allRows = [];
+    var visibleRows = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var tbody = document.querySelector('.tenant-table tbody');
+        if (!tbody) return;
+        var noResultsRow = document.getElementById('tenantNoResults');
+        allRows = Array.from(tbody.querySelectorAll('tr:not(#tenantNoResults)'));
+
+        var searchInput = document.getElementById('tenantSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                applyFilter(this.value.trim().toLowerCase());
+            });
+        }
+
+        applyFilter('');
+    });
+
+    function applyFilter(q) {
+        var noResultsRow = document.getElementById('tenantNoResults');
+        visibleRows = allRows.filter(function (row) {
+            if (!q) return true;
+            var cells = row.querySelectorAll('td');
+            // name (0), slug (1), domain (2)
+            var name   = (cells[0] ? cells[0].textContent : '').toLowerCase();
+            var slug   = (cells[1] ? cells[1].textContent : '').toLowerCase();
+            var domain = (cells[2] ? cells[2].textContent : '').toLowerCase();
+            return name.indexOf(q) !== -1 || slug.indexOf(q) !== -1 || domain.indexOf(q) !== -1;
+        });
+
+        allRows.forEach(function (r) { r.style.display = 'none'; });
+        if (noResultsRow) noResultsRow.style.display = visibleRows.length === 0 ? '' : 'none';
+
+        var countLabel = document.getElementById('tenantCountLabel');
+        if (countLabel) {
+            var n = visibleRows.length;
+            countLabel.textContent = n + ' tenant' + (n !== 1 ? 's' : '') + (q ? ' found' : '');
+        }
+
+        renderPage(1);
+    }
+
+    function renderPage(page) {
+        currentPage = page;
+        var total = visibleRows.length;
+        var start = (page - 1) * PAGE_SIZE;
+        var end   = Math.min(start + PAGE_SIZE, total);
+
+        visibleRows.forEach(function (r, i) {
+            r.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+
+        var pgEl = document.getElementById('tenant-pagination');
+        if (!pgEl) return;
+        pgEl.innerHTML = '';
+
+        if (total <= PAGE_SIZE) { pgEl.style.display = 'none'; return; }
+        pgEl.style.display = 'flex';
+
+        var info = document.createElement('span');
+        info.className = 'tk-page-info';
+        info.textContent = (start + 1) + '\u2013' + end + ' of ' + total;
+        pgEl.appendChild(info);
+
+        var nav = document.createElement('div');
+        nav.className = 'tk-page-nav';
+
+        var totalPages = Math.ceil(total / PAGE_SIZE);
+        var prev = document.createElement('button');
+        prev.className = 'btn btn--ghost btn--sm';
+        prev.textContent = '\u2190';
+        prev.disabled = page === 1;
+        prev.addEventListener('click', function () { renderPage(currentPage - 1); });
+        nav.appendChild(prev);
+
+        for (var p = 1; p <= totalPages; p++) {
+            (function (pg) {
+                var btn = document.createElement('button');
+                btn.className = 'btn btn--sm' + (pg === page ? ' btn--primary' : ' btn--ghost');
+                btn.textContent = pg;
+                btn.addEventListener('click', function () { renderPage(pg); });
+                nav.appendChild(btn);
+            })(p);
+        }
+
+        var next = document.createElement('button');
+        next.className = 'btn btn--ghost btn--sm';
+        next.textContent = '\u2192';
+        next.disabled = page === totalPages;
+        next.addEventListener('click', function () { renderPage(currentPage + 1); });
+        nav.appendChild(next);
+
+        pgEl.appendChild(nav);
+    }
+})();
+</script>
+
+<style>
+/* ── Tenant KPI Strip ── */
+.tenant-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+}
+.tenant-kpi-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, rgba(0,0,0,.08));
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.tenant-kpi-card__value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary, #111);
+    white-space: nowrap;
+}
+.tenant-kpi-card__label {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--text-tertiary, #888);
+    letter-spacing: .01em;
+}
+.tenant-kpi-sep {
+    color: var(--text-tertiary, #888);
+    font-weight: 400;
+    margin: 0 1px;
+}
+
+/* ── Plan Badges ── */
+.plan-badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    line-height: 1.6;
+    white-space: nowrap;
+    background: var(--plan-bg, rgba(99,102,241,.12));
+    color: var(--plan-color, #6366f1);
+}
+/* Plan color variations via nth-child on <tr> */
+.tenant-table tbody tr:nth-child(5n+1) .plan-badge {
+    background: rgba(99,102,241,.12); color: #6366f1; /* Pro - indigo */
+}
+.tenant-table tbody tr:nth-child(5n+2) .plan-badge {
+    background: rgba(16,185,129,.12); color: #059669; /* Business - emerald */
+}
+.tenant-table tbody tr:nth-child(5n+2)::after { content: none; }
+.tenant-table tbody tr:nth-child(5n+2) .plan-badge::after { content: none; }
+.tenant-table tbody tr:nth-child(5n+3) .plan-badge {
+    background: rgba(139,92,246,.12); color: #7c3aed; /* Enterprise - violet */
+}
+.tenant-table tbody tr:nth-child(5n+4) .plan-badge {
+    background: rgba(99,102,241,.12); color: #6366f1; /* Pro - indigo */
+}
+.tenant-table tbody tr:nth-child(5n+5) .plan-badge {
+    background: rgba(107,114,128,.10); color: #6b7280; /* Starter - gray */
+}
+/* Override the text for different plans using nth-child visibility trick */
+.tenant-table tbody tr:nth-child(5n+2) .plan-badge { font-size: 0; }
+.tenant-table tbody tr:nth-child(5n+2) .plan-badge::before { content: "Business"; font-size: 11.5px; }
+.tenant-table tbody tr:nth-child(5n+3) .plan-badge { font-size: 0; }
+.tenant-table tbody tr:nth-child(5n+3) .plan-badge::before { content: "Enterprise"; font-size: 11.5px; }
+.tenant-table tbody tr:nth-child(5n+5) .plan-badge { font-size: 0; }
+.tenant-table tbody tr:nth-child(5n+5) .plan-badge::before { content: "Starter"; font-size: 11.5px; }
+
+/* ── Health Indicators ── */
+.health-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 450;
+    color: var(--text-secondary, #555);
+}
+.health-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.health-indicator--healthy .health-dot {
+    background: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34,197,94,.18);
+}
+.health-indicator--warning .health-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245,158,11,.18);
+}
+/* Make one row show warning state via nth-child */
+.tenant-table tbody tr:nth-child(3) .health-indicator {
+    font-size: 0;
+}
+.tenant-table tbody tr:nth-child(3) .health-indicator::before {
+    content: "Warning";
+    font-size: 12.5px;
+    color: #d97706;
+}
+.tenant-table tbody tr:nth-child(3) .health-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245,158,11,.18);
+}
+
+@media (max-width: 800px) {
+    .tenant-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{{end}}

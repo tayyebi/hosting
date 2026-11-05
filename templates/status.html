@@ -1,0 +1,478 @@
+{{define "title"}}Status — Platform{{end}}
+
+{{define "head"}}
+<style>
+/* ── Status page — right-side content ───────────────────────────── */
+.status-container {
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 0;
+}
+
+.status-overall {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.status-overall::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(16,185,129,.06), transparent 60%);
+    pointer-events: none;
+}
+.status-overall--operational { border-color: rgba(16,185,129,.35); }
+.status-overall--degraded    { border-color: rgba(245,158,11,.35); }
+.status-overall--degraded::before    { background: linear-gradient(90deg, rgba(245,158,11,.06), transparent 60%); }
+.status-overall--partial     { border-color: rgba(239,68,68,.35); }
+.status-overall--partial::before     { background: linear-gradient(90deg, rgba(239,68,68,.06), transparent 60%); }
+.status-overall--major       { border-color: rgba(220,38,38,.45); }
+.status-overall--major::before       { background: linear-gradient(90deg, rgba(220,38,38,.08), transparent 60%); }
+
+.status-overall__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    box-shadow: 0 6px 20px rgba(16,185,129,.25);
+    z-index: 1;
+}
+.status-overall--degraded .status-overall__icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 6px 20px rgba(245,158,11,.25); }
+.status-overall--partial  .status-overall__icon { background: linear-gradient(135deg, #ef4444, #f87171); box-shadow: 0 6px 20px rgba(239,68,68,.25); }
+.status-overall--major    .status-overall__icon { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 6px 20px rgba(220,38,38,.3); }
+
+.status-overall__body { flex: 1; min-width: 0; z-index: 1; }
+.status-overall__title { font-size: 18px; font-weight: 500; letter-spacing: -.01em; margin-bottom: 2px; color: var(--text); }
+.status-overall__sub { font-size: 13px; color: var(--text-dim); font-weight: 300; line-height: 1.5; }
+.status-overall__updated {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+}
+.status-overall__updated .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; animation: stPulse 2s ease-in-out infinite; }
+@keyframes stPulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+/* ── Metric tiles ─────────────────────────────── */
+.status-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+}
+.status-metric {
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+.status-metric__lbl {
+    font-size: 10.5px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+.status-metric__val {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -.02em;
+    color: var(--text);
+    line-height: 1;
+}
+.status-metric__val .unit {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-left: 2px;
+    font-weight: 400;
+}
+.status-metric__val .trend {
+    font-size: 11px;
+    margin-left: 5px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-weight: 500;
+    vertical-align: middle;
+}
+.status-metric__val .trend--up   { background: rgba(16,185,129,.12); color: #10b981; }
+.status-metric__val .trend--down { background: rgba(59,130,246,.12); color: #3b82f6; }
+.status-metric__val .trend--flat { background: rgba(107,114,128,.12); color: var(--text-dim); }
+
+/* ── 90-day uptime bar ─────────────────────────── */
+.status-uptime {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 28px;
+}
+.status-uptime__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.status-uptime__title { font-size: 14px; font-weight: 500; color: var(--text); }
+.status-uptime__pct { font-size: 13px; color: #10b981; font-weight: 500; }
+.status-uptime__bars {
+    display: flex;
+    gap: 2px;
+    height: 30px;
+    align-items: stretch;
+}
+.status-bar {
+    flex: 1;
+    background: #10b981;
+    border-radius: 2px;
+    transition: transform .12s ease;
+    cursor: pointer;
+    min-width: 2px;
+}
+.status-bar:hover { transform: scaleY(1.12); }
+.status-bar--degraded    { background: #f59e0b; }
+.status-bar--partial     { background: #ef4444; }
+.status-bar--major       { background: #dc2626; }
+.status-bar--maintenance { background: #3b82f6; }
+.status-uptime__legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 400;
+}
+
+/* ── Components list ───────────────────────────── */
+.status-components {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+}
+.status-components__head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+.status-comp {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.status-comp:last-child { border-bottom: none; }
+.status-comp__body { flex: 1; min-width: 0; }
+.status-comp__name { font-size: 14px; font-weight: 400; color: var(--text); }
+.status-comp__desc { font-size: 12px; color: var(--text-dim); font-weight: 300; margin-top: 1px; }
+.status-comp__uptime { font-size: 12px; color: var(--text-dim); font-weight: 400; font-variant-numeric: tabular-nums; }
+.status-comp__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+.status-comp__pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-comp__pill--operational { background: rgba(16,185,129,.1);  color: #10b981; }
+.status-comp__pill--degraded    { background: rgba(245,158,11,.12); color: #d97706; }
+.status-comp__pill--partial     { background: rgba(239,68,68,.12);  color: #dc2626; }
+.status-comp__pill--major       { background: rgba(220,38,38,.15);  color: #b91c1c; }
+.status-comp__pill--maintenance { background: rgba(59,130,246,.12); color: #2563eb; }
+
+/* ── Incident timeline ─────────────────────────── */
+.status-timeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.status-timeline__head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+.status-incident {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.status-incident:last-child { border-bottom: none; }
+.status-incident__top {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+.status-incident__when {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 400;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.status-incident__sev {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.status-incident__sev--resolved      { background: rgba(16,185,129,.1);  color: #10b981; }
+.status-incident__sev--monitoring    { background: rgba(59,130,246,.1);  color: #3b82f6; }
+.status-incident__sev--investigating { background: rgba(245,158,11,.12); color: #d97706; }
+.status-incident__sev--major         { background: rgba(220,38,38,.15);  color: #b91c1c; }
+.status-incident__title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.status-incident__body  { font-size: 13px; color: var(--text-dim); font-weight: 300; line-height: 1.55; }
+
+.status-subscribe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.status-subscribe__t { font-size: 13px; color: var(--text-dim); font-weight: 300; }
+.status-subscribe__t b { color: var(--text); font-weight: 500; }
+.status-subscribe__btns { display: flex; gap: 8px; }
+.status-sub-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+}
+.status-sub-btn:hover { background: rgba(0,0,0,.04); color: var(--text); border-color: var(--text-dim); }
+[data-theme="dark"] .status-sub-btn:hover { background: rgba(255,255,255,.05); }
+
+/* Page-local CSS variables that fall back to the auth palette */
+.auth-form-panel {
+    --text:       var(--gray-900, #1d1d1f);
+    --text-dim:   #6b7280;
+    --text-faint: #9ca3af;
+    --surface:    #ffffff;
+    --border:     rgba(0,0,0,.08);
+}
+[data-theme="dark"] .auth-form-panel {
+    --text:       #eef0f6;
+    --text-dim:   #9aa0b4;
+    --text-faint: #6b7189;
+    --surface:    #1a1e2e;
+    --border:     rgba(255,255,255,.08);
+}
+</style>
+{{end}}
+
+{{define "body"}}
+<div class="auth-layout login-page">
+
+    <!-- Left panel: branding -->
+    <aside class="auth-brand">
+        <div class="auth-brand__inner">
+            <div class="brand-logo">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="10" fill="white" fill-opacity="0.15"/>
+                    <path d="M10 18L16 12L22 18L28 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 24L16 18L22 24L28 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+                </svg>
+                <span class="brand-name">Platform</span>
+            </div>
+
+            <div class="brand-content">
+                <h1 class="brand-headline">Real-time<br/>system status.</h1>
+                <p class="brand-sub">Live health, uptime history, and incident reports for every service running on Platform — refreshed every 60 seconds.</p>
+            </div>
+
+            <ul class="brand-features">
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Live component health
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    90-day uptime history
+                </li>
+                <li>
+                    <span class="feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Email, SMS, &amp; webhook alerts
+                </li>
+            </ul>
+
+            <div class="brand-footer">
+                <div class="brand-stats">
+                    <div class="stat">
+                        <span class="stat-value">99.99%</span>
+                        <span class="stat-label">90-day uptime</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">8</span>
+                        <span class="stat-label">Regions</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-value">12</span>
+                        <span class="stat-label">Components</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right panel: status content -->
+    <main class="auth-form-panel">
+        <div class="status-container">
+
+            <div class="auth-form-header">
+                <h2 class="auth-form-title">System status</h2>
+                <p class="auth-form-subtitle">Everything you need to know about Platform's services, in real time.</p>
+            </div>
+
+            <div class="status-overall status-overall--{{.Overall.State}}">
+                <span class="status-overall__icon">
+                    {{if eq .Overall.State "operational"}}
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {{else if eq .Overall.State "degraded"}}
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    {{else}}
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    {{end}}
+                </span>
+                <div class="status-overall__body">
+                    <div class="status-overall__title">{{.Overall.Title}}</div>
+                    <div class="status-overall__sub">{{.Overall.Subtitle}}</div>
+                    <div class="status-overall__updated"><span class="dot"></span> Last updated {{.Overall.Updated}} · auto-refresh in <span id="stCountdown">60</span>s</div>
+                </div>
+            </div>
+
+            <div class="status-metrics">
+                {{range .Metrics}}
+                <div class="status-metric">
+                    <div class="status-metric__lbl">{{.Label}}</div>
+                    <div class="status-metric__val">{{.Value}}{{if .Unit}}<span class="unit">{{.Unit}}</span>{{end}}<span class="trend trend--{{.Trend}}">{{if eq .Trend "up"}}↑{{else if eq .Trend "down"}}↓{{else}}—{{end}}</span></div>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="status-uptime">
+                <div class="status-uptime__head">
+                    <div class="status-uptime__title">Uptime · last 90 days</div>
+                    <div class="status-uptime__pct">99.991% — 8 incidents</div>
+                </div>
+                <div class="status-uptime__bars">
+                    {{range .Days}}
+                    <div class="status-bar status-bar--{{.State}}" title="{{.Date}} · {{.State}}"></div>
+                    {{end}}
+                </div>
+                <div class="status-uptime__legend"><span>90 days ago</span><span>Today</span></div>
+            </div>
+
+            <div class="status-components">
+                <div class="status-components__head">Components ({{len .Components}})</div>
+                {{range .Components}}
+                <div class="status-comp">
+                    <div class="status-comp__body">
+                        <div class="status-comp__name">{{.Name}}</div>
+                        <div class="status-comp__desc">{{.Description}}</div>
+                    </div>
+                    <span class="status-comp__uptime">{{.Uptime}}</span>
+                    <span class="status-comp__pill status-comp__pill--{{.State}}"><span class="dot"></span>{{.State}}</span>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="status-timeline">
+                <div class="status-timeline__head">Recent incidents</div>
+                {{range .Incidents}}
+                <div class="status-incident">
+                    <div class="status-incident__top">
+                        <span class="status-incident__sev status-incident__sev--{{.Severity}}">{{.Severity}}</span>
+                        <span class="status-incident__when">{{.When}}</span>
+                    </div>
+                    <div class="status-incident__title">{{.Title}}</div>
+                    <div class="status-incident__body">{{.Body}}</div>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="status-subscribe">
+                <div class="status-subscribe__t"><b>Subscribe to updates.</b> Get notified when an incident is opened or resolved.</div>
+                <div class="status-subscribe__btns">
+                    <button class="status-sub-btn" type="button">Email</button>
+                    <button class="status-sub-btn" type="button">RSS</button>
+                    <button class="status-sub-btn" type="button">Webhook</button>
+                </div>
+            </div>
+
+            <p class="auth-form-footer">
+                Looking for your account?
+                <a href="/login" class="form-link form-link--bold">Sign in</a>
+            </p>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/status">Status</a>
+            <span>&copy; 2026 Platform, Inc.</span>
+        </footer>
+    </main>
+
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+/* ── Auto-refresh countdown ── */
+(function () {
+    var el = document.getElementById('stCountdown');
+    if (!el) return;
+    var n = 60;
+    setInterval(function () {
+        n -= 1;
+        if (n <= 0) { location.reload(); return; }
+        el.textContent = n;
+    }, 1000);
+})();
+</script>
+{{end}}

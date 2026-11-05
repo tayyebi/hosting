@@ -1,0 +1,470 @@
+{{define "replicas-content"}}
+
+    <!-- ── Page header ── -->
+    <div class="replicas-header">
+        <div>
+            <p class="ds-page-subtitle">{{len .Replicas}} replica{{if ne (len .Replicas) 1}}s{{end}} across 3 regions in the mesh</p>
+        </div>
+        <button class="btn btn--primary" onclick="openOnboardModal()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            On-board Replica
+        </button>
+    </div>
+
+    <!-- ── Merchant code ── -->
+    <div class="merchant-code-box">
+        <div class="merchant-code-box__label">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M4.5 5L6.5 7L4.5 9M7.5 9h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Merchant Code
+            <span class="merchant-code-box__expires">expires in 30d</span>
+        </div>
+        <div class="merchant-code-box__row">
+            <code class="merchant-code-box__value" id="merchantCode">{{.MerchantCode}}</code>
+            <button class="merchant-code-box__copy" id="copyBtn" onclick="copyMerchantCode()" title="Copy to clipboard">
+                <svg id="copyIcon" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                    <rect x="5" y="1" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.1"/>
+                    <path d="M1 5v8a1 1 0 001 1h8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                </svg>
+                <svg id="checkIcon" width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:none">
+                    <path d="M3 7.5l3.5 3.5 5.5-6" stroke="#22c55e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="copyLabel">Copy</span>
+            </button>
+        </div>
+        <p class="merchant-code-box__hint">Copy this code and provide it to each replica operator -- they will need it to authenticate during on-boarding.</p>
+    </div>
+
+    <!-- ── Mesh Health ── -->
+    <div class="mesh-health" aria-live="polite">
+        <div class="mesh-health__card mesh-health__card--green">
+            <span class="mesh-health__dot mesh-health__dot--green"></span>
+            <div class="mesh-health__info">
+                <span class="mesh-health__value">99.97%</span>
+                <span class="mesh-health__label">Mesh Uptime (30d)</span>
+            </div>
+        </div>
+        <div class="mesh-health__card mesh-health__card--green">
+            <span class="mesh-health__dot mesh-health__dot--green"></span>
+            <div class="mesh-health__info">
+                <span class="mesh-health__value">14 ms</span>
+                <span class="mesh-health__label">Avg Sync Lag</span>
+            </div>
+        </div>
+        <div class="mesh-health__card mesh-health__card--green">
+            <span class="mesh-health__dot mesh-health__dot--green"></span>
+            <div class="mesh-health__info">
+                <span class="mesh-health__value">42 ms</span>
+                <span class="mesh-health__label">Cross-region Latency (p99)</span>
+            </div>
+        </div>
+        <div class="mesh-health__card mesh-health__card--green">
+            <span class="mesh-health__dot mesh-health__dot--green"></span>
+            <div class="mesh-health__info">
+                <span class="mesh-health__value">1,247</span>
+                <span class="mesh-health__label">Active Connections</span>
+            </div>
+        </div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:var(--fg-muted);margin:-8px 0 10px;opacity:.7">Mesh data as of <time>just now</time></div>
+
+    {{if .FormError}}
+    <div class="tenant-error">{{.FormError}}</div>
+    {{end}}
+
+    <!-- ── Replica cards ── -->
+    {{if .Replicas}}
+    <div class="replica-grid">
+        {{range .Replicas}}
+        <div class="replica-card">
+            <div class="replica-card__header">
+                <span class="replica-health replica-health--{{.Health}}">
+                    <span class="replica-health__dot"></span>
+                    {{.Health.Label}}
+                </span>
+                <form method="POST" action="/s/replicas/{{.ID}}/delete/"
+                      onsubmit="event.preventDefault();var f=this;if(window.mockConfirm){window.mockConfirm('Remove replica','Are you sure you want to remove \u00ab{{.Host}}\u00bb from the mesh?','Remove',function(){f.submit()})}else if(confirm('Remove replica \u00ab{{.Host}}\u00bb?')){f.submit()}">
+                    <button type="submit" class="replica-card__remove" title="Remove replica">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3L3 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    </button>
+                </form>
+            </div>
+            <div class="replica-card__host">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/>
+                    <path d="M1 6h12" stroke="currentColor" stroke-width="1.1"/>
+                    <circle cx="3.5" cy="4.7" r=".7" fill="currentColor"/>
+                    <circle cx="5.5" cy="4.7" r=".7" fill="currentColor"/>
+                </svg>
+                <span>{{.Host}}</span>
+            </div>
+            <div class="replica-card__footer">
+                {{if .Region}}
+                <span class="replica-card__region">
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M1 6h10M6 1c-1.5 1.5-2 3-2 5s.5 3.5 2 5M6 1c1.5 1.5 2 3 2 5s-.5 3.5-2 5" stroke="currentColor" stroke-width="1.0"/>
+                    </svg>
+                    {{.Region}}
+                </span>
+                {{end}}
+                <span class="replica-card__meta">Added {{.AddedAt.Format "Jan 2, 2006"}}</span>
+                <span class="replica-card__sync" title="Last sync time">
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.0"/>
+                        <path d="M6 3v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{.AddedAt.Format "15:04"}}
+                </span>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="replica-empty">
+        <svg width="36" height="36" viewBox="0 0 18 18" fill="none">
+            <rect x="1.5" y="1.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="9.5" y="9.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M8.5 5H13a2 2 0 012 2v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <p class="replica-empty__title">No replicas in the mesh yet</p>
+        <ol class="replica-empty__steps">
+            <li>Copy the <strong>Merchant Code</strong> above</li>
+            <li>Click <strong>On-board Replica</strong> and enter the host address</li>
+            <li>Share the merchant code with the replica operator to complete authentication</li>
+        </ol>
+    </div>
+    {{end}}
+
+    <!-- ── Auto-scaling Policy ── -->
+    <div class="autoscale-card">
+        <div class="autoscale-card__header">
+            <div class="autoscale-card__title">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                    <path d="M2 10l3-3 2.5 2L11 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.5 4H11v2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Auto-scaling Policy
+            </div>
+            <div class="autoscale-card__actions">
+                <span class="autoscale-card__saved" id="autoscaleSaved">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Changes saved
+                </span>
+                <label class="st-toggle-row" style="margin:0;">
+                    <input type="checkbox" class="st-toggle-input" checked onchange="onAutoscaleChange()">
+                    <span class="st-toggle-slider"></span>
+                    <span class="autoscale-card__toggle-label">Enabled</span>
+                </label>
+            </div>
+        </div>
+        <div class="autoscale-card__body">
+            <div class="autoscale-card__inline">
+                <div class="autoscale-card__field">
+                    <label class="autoscale-card__field-label">Min</label>
+                    <input type="number" class="st-input autoscale-card__input" value="2" min="1" max="20" onchange="onAutoscaleChange()">
+                </div>
+                <div class="autoscale-card__field">
+                    <label class="autoscale-card__field-label">Max</label>
+                    <input type="number" class="st-input autoscale-card__input" value="8" min="1" max="50" onchange="onAutoscaleChange()">
+                </div>
+                <div class="autoscale-card__sep"></div>
+                <div class="autoscale-card__field">
+                    <label class="autoscale-card__field-label">Scale-up</label>
+                    <div class="autoscale-card__rule">CPU &gt; 75% for 5m</div>
+                </div>
+                <div class="autoscale-card__field">
+                    <label class="autoscale-card__field-label">Scale-down</label>
+                    <div class="autoscale-card__rule">CPU &lt; 25% for 15m</div>
+                </div>
+                <div class="autoscale-card__sep"></div>
+                <div class="autoscale-card__field">
+                    <label class="autoscale-card__field-label">Cooldown</label>
+                    <div class="autoscale-card__rule">10 min</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- ── On-board modal ── -->
+<div class="modal-backdrop" id="onboardModalBackdrop" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="onboardTitle" onclick="closeOnboardModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="onboardTitle">On-board Replica</h2>
+            <button class="modal__close" onclick="closeOnboardModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="/s/replicas/" class="modal__form">
+            <div class="form-field">
+                <label class="form-label" for="onboard-host">Host Address <span class="form-req">*</span></label>
+                <input id="onboard-host" class="form-input" type="text" name="host" required
+                       placeholder="replica.example.com:8080" autofocus>
+                <p class="form-hint">The host and optional port of the replica (e.g. <code>replica.internal:8080</code>).</p>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeOnboardModal()">Cancel</button>
+                <button type="submit" class="btn btn--primary">On-board</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+/* ── Modal open / close ── */
+function openOnboardModal() {
+    var backdrop = document.getElementById('onboardModalBackdrop');
+    backdrop.hidden = false;
+    backdrop.setAttribute('aria-hidden','false');
+    document.getElementById('onboard-host').focus();
+}
+function closeOnboardModal() {
+    var backdrop = document.getElementById('onboardModalBackdrop');
+    backdrop.hidden = true;
+    backdrop.setAttribute('aria-hidden','true');
+}
+
+/* ── Keyboard: Escape closes, Tab trapped inside modal ── */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeOnboardModal();
+
+    var backdrop = document.getElementById('onboardModalBackdrop');
+    if (e.key === 'Tab' && !backdrop.hidden) {
+        var modal = backdrop.querySelector('.modal');
+        var focusable = modal.querySelectorAll('input, button, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            if (document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    }
+});
+
+/* ── Copy merchant code ── */
+function copyMerchantCode() {
+    var code = document.getElementById('merchantCode').textContent;
+    navigator.clipboard.writeText(code).then(function() {
+        document.getElementById('copyIcon').style.display = 'none';
+        document.getElementById('checkIcon').style.display = '';
+        document.getElementById('copyLabel').textContent = 'Copied!';
+        setTimeout(function() {
+            document.getElementById('copyIcon').style.display = '';
+            document.getElementById('checkIcon').style.display = 'none';
+            document.getElementById('copyLabel').textContent = 'Copy';
+        }, 2000);
+    });
+}
+
+/* ── Auto-scaling auto-save indicator ── */
+var _autoscaleTimer;
+function onAutoscaleChange() {
+    var el = document.getElementById('autoscaleSaved');
+    el.classList.remove('autoscale-card__saved--visible');
+    clearTimeout(_autoscaleTimer);
+    _autoscaleTimer = setTimeout(function() {
+        el.classList.add('autoscale-card__saved--visible');
+        setTimeout(function() { el.classList.remove('autoscale-card__saved--visible'); }, 2400);
+    }, 400);
+}
+
+{{if .FormError}}
+openOnboardModal();
+{{end}}
+</script>
+
+<!-- ── Styles ── -->
+<style>
+/* ── Merchant code expiry badge ── */
+.merchant-code-box__expires {
+    font-size: .68rem;
+    font-weight: 500;
+    color: #f59e0b;
+    background: rgba(245,158,11,.10);
+    padding: 1px 7px;
+    border-radius: 8px;
+    margin-left: 6px;
+}
+
+/* ── Mesh Health cards ── */
+.mesh-health {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+}
+.mesh-health__card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    border-left: 3px solid var(--border);
+}
+.mesh-health__card--green  { border-left-color: #22c55e; }
+.mesh-health__card--yellow { border-left-color: #f59e0b; }
+.mesh-health__card--red    { border-left-color: #ef4444; }
+.mesh-health__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.mesh-health__dot--green  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.35); }
+.mesh-health__dot--yellow { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,.35); }
+.mesh-health__dot--red    { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,.35); }
+.mesh-health__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.mesh-health__value {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--fg);
+    line-height: 1.2;
+}
+.mesh-health__label {
+    font-size: .72rem;
+    color: var(--fg-muted);
+    line-height: 1.2;
+}
+@media (max-width: 700px) {
+    .mesh-health { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Replica cards hover elevation ── */
+.replica-card {
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+.replica-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    transform: translateY(-1px);
+}
+.replica-card__footer {
+    flex-wrap: wrap;
+}
+.replica-card__sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: .72rem;
+    color: var(--fg-muted);
+}
+
+/* ── Empty state ── */
+.replica-empty__title {
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin: 0 0 8px;
+}
+.replica-empty__steps {
+    text-align: left;
+    display: inline-block;
+    font-size: .8rem;
+    color: var(--fg-muted);
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.7;
+}
+.replica-empty__steps strong {
+    color: var(--fg);
+}
+
+/* ── Auto-scaling card ── */
+.autoscale-card {
+    margin: 18px 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    overflow: hidden;
+}
+.autoscale-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+.autoscale-card__title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--fg);
+}
+.autoscale-card__title svg { opacity: .55; }
+.autoscale-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.autoscale-card__saved {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .74rem;
+    color: #22c55e;
+    opacity: 0;
+    transition: opacity .25s ease;
+    pointer-events: none;
+}
+.autoscale-card__saved--visible { opacity: 1; }
+.autoscale-card__toggle-label {
+    font-size: .78rem;
+    color: var(--fg-muted);
+}
+.autoscale-card__body {
+    padding: 14px 16px;
+}
+.autoscale-card__inline {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.autoscale-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.autoscale-card__field-label {
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+}
+.autoscale-card__input {
+    max-width: 72px;
+}
+.autoscale-card__rule {
+    font-size: .8rem;
+    color: var(--fg);
+    padding: 5px 10px;
+    background: var(--hover);
+    border-radius: 6px;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
+}
+.autoscale-card__sep {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+    flex-shrink: 0;
+    align-self: center;
+}
+</style>
+{{end}}

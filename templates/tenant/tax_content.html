@@ -1,0 +1,783 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Tax page — scoped under .tax ── */
+.tax {
+  --tax-red:     #ef4444;
+  --tax-orange:  #f97316;
+  --tax-amber:   #f59e0b;
+  --tax-green:   #10b981;
+  --tax-blue:    #3b82f6;
+  --tax-indigo:  #6366f1;
+  --tax-violet:  #8b5cf6;
+  --tax-bg:       var(--c-surface, #fff);
+  --tax-bg-soft:  var(--c-bg-soft, #f7f8fa);
+  --tax-border:   var(--c-border, #e5e7eb);
+  --tax-border-s: var(--c-border-subtle, #eef0f3);
+  --tax-text:     var(--c-text, #111827);
+  --tax-text-2:   var(--c-text-dim, #6b7280);
+  --tax-text-3:   var(--c-text-faint, #9ca3af);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] .tax {
+  --tax-bg:       #181a20;
+  --tax-bg-soft:  #13151b;
+  --tax-border:   #262932;
+  --tax-border-s: #1f2229;
+  --tax-text:     #e5e7eb;
+  --tax-text-2:   #9ca3af;
+  --tax-text-3:   #6b7280;
+}
+
+/* ── Fade animation ── */
+@keyframes taxFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.tax-fade { animation: taxFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── KPI unit span ── */
+.tax-kpi-unit {
+  font-size: 14px;
+  color: var(--tax-text-2);
+}
+
+/* ── Two-column grid (Filing + Nexus) ── */
+.tax-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+/* ── Panel (card) ── */
+.tax-panel {
+  margin-bottom: 0;
+}
+.tax-panel--spaced {
+  margin-bottom: 24px;
+}
+.tax-panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--tax-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tax-panel__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tax-text);
+}
+.tax-panel__subtitle {
+  font-size: 11.5px;
+  color: var(--tax-text-2);
+  font-weight: 300;
+}
+.tax-panel__body {
+  padding: 16px 18px;
+}
+.tax-panel__body--flush {
+  padding: 0;
+}
+.tax-panel__actions {
+  display: flex;
+  gap: 6px;
+}
+[data-theme="dark"] .tax-panel {
+  background: var(--tax-bg);
+  border-color: var(--tax-border);
+}
+[data-theme="dark"] .tax-panel__header {
+  border-color: var(--tax-border);
+}
+[data-theme="dark"] .tax-panel__title {
+  color: var(--tax-text);
+}
+[data-theme="dark"] .tax-panel__subtitle {
+  color: var(--tax-text-2);
+}
+
+/* ── Filing calendar items ── */
+.tax-filing-item {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--tax-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tax-filing-item:last-child {
+  border-bottom: none;
+}
+.tax-filing-date {
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.tax-filing-date__day {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+.tax-filing-date__day--urgent {
+  color: #dc2626;
+}
+.tax-filing-date__day--warn {
+  color: #b45309;
+}
+.tax-filing-date__day--normal {
+  color: var(--tax-text);
+}
+.tax-filing-date__month {
+  font-size: 10px;
+  color: var(--tax-text-2);
+  font-weight: 400;
+}
+.tax-filing-info {
+  flex: 1;
+  min-width: 0;
+}
+.tax-filing-info__title {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--tax-text);
+}
+.tax-filing-info__desc {
+  font-size: 11px;
+  color: var(--tax-text-2);
+  font-weight: 300;
+}
+.tax-filing-urgency {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tax-filing-urgency--critical {
+  background: rgba(239,68,68,.08);
+  color: #dc2626;
+}
+.tax-filing-urgency--warn {
+  background: rgba(245,158,11,.08);
+  color: #b45309;
+}
+.tax-filing-urgency--normal {
+  background: rgba(107,114,128,.08);
+  color: #6b7280;
+}
+[data-theme="dark"] .tax-filing-item {
+  border-color: var(--tax-border);
+}
+[data-theme="dark"] .tax-filing-date__day--urgent { color: #fca5a5; }
+[data-theme="dark"] .tax-filing-date__day--warn   { color: #fcd34d; }
+[data-theme="dark"] .tax-filing-date__day--normal  { color: var(--tax-text); }
+[data-theme="dark"] .tax-filing-info__title { color: var(--tax-text); }
+[data-theme="dark"] .tax-filing-info__desc  { color: var(--tax-text-2); }
+[data-theme="dark"] .tax-filing-urgency--critical { background: rgba(239,68,68,.15);  color: #fca5a5; }
+[data-theme="dark"] .tax-filing-urgency--warn     { background: rgba(245,158,11,.15); color: #fcd34d; }
+[data-theme="dark"] .tax-filing-urgency--normal   { background: rgba(107,114,128,.15); color: #9ca3af; }
+
+/* ── Nexus analysis items ── */
+.tax-nexus-item {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--tax-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tax-nexus-item:last-child {
+  border-bottom: none;
+}
+.tax-nexus-flag {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.tax-nexus-info {
+  flex: 1;
+  min-width: 0;
+}
+.tax-nexus-info__title {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--tax-text);
+}
+.tax-nexus-info__desc {
+  font-size: 11px;
+  color: var(--tax-text-2);
+  font-weight: 300;
+}
+.tax-nexus-meter {
+  text-align: right;
+  flex-shrink: 0;
+}
+.tax-nexus-bar {
+  height: 5px;
+  width: 80px;
+  background: var(--tax-bg-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tax-nexus-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.tax-nexus-bar__fill--danger  { background: #ef4444; }
+.tax-nexus-bar__fill--warn    { background: #f59e0b; }
+.tax-nexus-bar__fill--ok      { background: #10b981; }
+.tax-nexus-pct {
+  font-size: 10px;
+  margin-top: 3px;
+  font-weight: 500;
+}
+.tax-nexus-pct--danger  { color: #dc2626; }
+.tax-nexus-pct--warn    { color: #b45309; }
+.tax-nexus-pct--ok      { color: #059669; }
+[data-theme="dark"] .tax-nexus-item {
+  border-color: var(--tax-border);
+}
+[data-theme="dark"] .tax-nexus-info__title { color: var(--tax-text); }
+[data-theme="dark"] .tax-nexus-info__desc  { color: var(--tax-text-2); }
+[data-theme="dark"] .tax-nexus-bar {
+  background: var(--tax-bg-soft);
+}
+[data-theme="dark"] .tax-nexus-pct--danger { color: #fca5a5; }
+[data-theme="dark"] .tax-nexus-pct--warn   { color: #fcd34d; }
+[data-theme="dark"] .tax-nexus-pct--ok     { color: #6ee7b7; }
+
+/* ── Nexus exceeded tag ── */
+.tax-nexus-exceeded {
+  color: #dc2626;
+  font-weight: 600;
+}
+[data-theme="dark"] .tax-nexus-exceeded {
+  color: #fca5a5;
+}
+
+/* ── Jurisdiction flag + name cell ── */
+.tax-flag-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tax-flag {
+  flex-shrink: 0;
+}
+
+/* ── Toggle scale fix ── */
+.tax-toggle-sm {
+  transform: scale(.85);
+}
+
+/* ── Report period row ── */
+.tax-report-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.tax-report-select {
+  width: 160px;
+}
+
+/* ── Report download link ── */
+.tax-download-link {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ── Default rate input ── */
+.tax-rate-input {
+  max-width: 160px;
+}
+
+/* ── Add button spacing ── */
+.tax-add-btn-row {
+  margin-bottom: 14px;
+}
+
+/* ── Modal overrides ── */
+.tax-modal {
+  max-width: 440px;
+}
+.tax-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .tax-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .tax-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .tax-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .tax-panel__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .tax-report-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tax-report-select {
+    width: 100%;
+  }
+  .tax-filing-item {
+    flex-wrap: wrap;
+  }
+  .tax-nexus-item {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 380px) {
+  .tax-report-row {
+    gap: 6px;
+  }
+  .tax-filing-item {
+    gap: 8px;
+  }
+  .tax-nexus-item {
+    gap: 8px;
+  }
+  .tax-nexus-meter {
+    width: 100%;
+    text-align: left;
+  }
+  .tax-nexus-bar {
+    width: 100%;
+  }
+}
+</style>
+
+<div class="tax" role="main" aria-label="Tax management">
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Tax</h1>
+    <p class="ds-page-subtitle">Automated VAT/GST/Sales-Tax engine — rates, jurisdictions, exemptions, filings.</p>
+</div>
+
+<!-- KPI row — tax posture -->
+<div class="ws-kpi-grid tax-fade" style="animation-delay:.05s" role="region" aria-label="Tax posture metrics">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M9 2.5c-2 2-3 4-3 6.5s1 4.5 3 6.5M9 2.5c2 2 3 4 3 6.5s-1 4.5-3 6.5M2.5 9h13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">12</div>
+            <div class="ws-kpi-card__label">Active jurisdictions</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 3v12M6 6h3.5a2 2 0 110 4H8a2 2 0 100 4h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">&euro;3,492</div>
+            <div class="ws-kpi-card__label">Collected &middot; MTD</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 7h14M6 10h3M6 12h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2</div>
+            <div class="ws-kpi-card__label">Filings due &middot; &le; 14 d (DE OSS, UK)</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 6l4 4 6-7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9v6H3V5h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">24</div>
+            <div class="ws-kpi-card__label">VIES-validated VAT IDs</div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-layout tax-fade" style="animation-delay:.1s">
+    <aside class="settings-sidebar" role="navigation" aria-label="Tax settings navigation">
+        <div class="settings-sidebar__title">Tax</div>
+        <button class="settings-nav__item settings-nav__item--active" onclick="switchSection(this,'tax-general')" aria-current="true">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 4v1.5M7.5 9.5V11M5 6.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            General
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'tax-jurisdictions')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.0"/><path d="M7.5 1.5c0 0-2.5 2.5-2.5 6s2.5 6 2.5 6M7.5 1.5c0 0 2.5 2.5 2.5 6s-2.5 6-2.5 6M1.5 7.5h12" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Jurisdictions
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'tax-exemptions')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.0"/><path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Exemptions
+        </button>
+        <button class="settings-nav__item" onclick="switchSection(this,'tax-reports')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M5 5.5h5M5 8h5M5 10.5h3" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+            Reports
+        </button>
+    </aside>
+
+    <div class="settings-content">
+
+        <!-- General -->
+        <section class="settings-section settings-section--active" id="tax-general" role="region" aria-label="General tax settings">
+            <h2 class="settings-section__title">General</h2>
+            <p class="settings-section__sub">Default tax behaviour applied to all invoices.</p>
+
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Tax collection enabled</div>
+                    <div class="st-toggle-sub">Automatically apply applicable taxes on invoices</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Prices shown tax-inclusive</div>
+                    <div class="st-toggle-sub">Display prices with tax already included on client-facing pages</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox"><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="st-toggle-row">
+                <div>
+                    <div class="st-toggle-label">Reverse charge (B2B EU)</div>
+                    <div class="st-toggle-sub">Apply VAT reverse charge for validated EU business clients</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Tax identification</h3>
+            <div class="st-group">
+                <label class="st-label">Company VAT number</label>
+                <input class="st-input" type="text" value="DE 314 159 265">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Tax display name on invoices</label>
+                <input class="st-input" type="text" value="VAT">
+            </div>
+            <div class="st-group">
+                <label class="st-label">Default tax rate (%)</label>
+                <input class="st-input tax-rate-input" type="number" value="19" step="0.01" min="0">
+            </div>
+            <div class="st-btn-row">
+                <button class="st-btn-primary">Save</button>
+            </div>
+        </section>
+
+        <!-- Jurisdictions -->
+        <section class="settings-section" id="tax-jurisdictions" role="region" aria-label="Tax jurisdictions">
+            <h2 class="settings-section__title">Jurisdictions</h2>
+            <p class="settings-section__sub">Tax rates applied per country or region.</p>
+
+            <div class="tax-add-btn-row">
+                <button class="btn btn--primary btn--sm" onclick="document.getElementById('addJurModal').hidden=false" aria-haspopup="dialog">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    Add Jurisdiction
+                </button>
+            </div>
+
+            <div class="clients-table-wrap">
+            <table class="tenant-table" role="table" aria-label="Jurisdiction list">
+                <thead>
+                    <tr><th scope="col">Country</th><th scope="col">Region</th><th scope="col">Tax type</th><th scope="col">Rate</th><th scope="col">Active</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div class="tax-flag-cell"><span class="tax-flag">&#x1F1E9;&#x1F1EA;</span>Germany</div></td>
+                        <td class="tenant-table__domain">All regions</td>
+                        <td><span class="pr-compat">VAT</span></td>
+                        <td><strong>19%</strong></td>
+                        <td><label class="st-toggle tax-toggle-sm"><input type="checkbox" checked><span class="st-toggle__track"></span></label></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit Germany jurisdiction">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove Germany jurisdiction">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tax-flag-cell"><span class="tax-flag">&#x1F1E6;&#x1F1F9;</span>Austria</div></td>
+                        <td class="tenant-table__domain">All regions</td>
+                        <td><span class="pr-compat">VAT</span></td>
+                        <td><strong>20%</strong></td>
+                        <td><label class="st-toggle tax-toggle-sm"><input type="checkbox" checked><span class="st-toggle__track"></span></label></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit Austria jurisdiction">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove Austria jurisdiction">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tax-flag-cell"><span class="tax-flag">&#x1F1EB;&#x1F1F7;</span>France</div></td>
+                        <td class="tenant-table__domain">All regions</td>
+                        <td><span class="pr-compat">TVA</span></td>
+                        <td><strong>20%</strong></td>
+                        <td><label class="st-toggle tax-toggle-sm"><input type="checkbox" checked><span class="st-toggle__track"></span></label></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit France jurisdiction">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove France jurisdiction">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tax-flag-cell"><span class="tax-flag">&#x1F1FA;&#x1F1F8;</span>United States</div></td>
+                        <td class="tenant-table__domain">California</td>
+                        <td><span class="pr-compat">Sales Tax</span></td>
+                        <td><strong>8.84%</strong></td>
+                        <td><label class="st-toggle tax-toggle-sm"><input type="checkbox"><span class="st-toggle__track"></span></label></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit United States California jurisdiction">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove United States California jurisdiction">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tax-flag-cell"><span class="tax-flag">&#x1F1EC;&#x1F1E7;</span>United Kingdom</div></td>
+                        <td class="tenant-table__domain">All regions</td>
+                        <td><span class="pr-compat">VAT</span></td>
+                        <td><strong>20%</strong></td>
+                        <td><label class="st-toggle tax-toggle-sm"><input type="checkbox" checked><span class="st-toggle__track"></span></label></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit United Kingdom jurisdiction">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove United Kingdom jurisdiction">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+        <!-- Exemptions -->
+        <section class="settings-section" id="tax-exemptions" role="region" aria-label="Tax exemptions">
+            <h2 class="settings-section__title">Exemptions</h2>
+            <p class="settings-section__sub">Clients exempted from tax collection (e.g. resellers, NGOs).</p>
+
+            <div class="tax-add-btn-row">
+                <button class="btn btn--primary btn--sm" onclick="document.getElementById('addExemptModal').hidden=false" aria-haspopup="dialog">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    Add Exemption
+                </button>
+            </div>
+
+            <div class="clients-table-wrap">
+            <table class="tenant-table" role="table" aria-label="Exemption list">
+                <thead>
+                    <tr><th scope="col">Client</th><th scope="col">Reason</th><th scope="col">Certificate</th><th scope="col">Valid until</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div class="tk-client">Faisal Al-Amin</div><div class="tk-client-co">Al-Amin Corp</div></td>
+                        <td class="tenant-table__domain">EU B2B reverse charge</td>
+                        <td><a href="#" class="pr-cert-link">VAT_cert_alamin.pdf</a></td>
+                        <td class="tk-date">2025-12-31</td>
+                        <td><span class="tk-status tk-status--resolved">Active</span></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit exemption for Faisal Al-Amin">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove exemption for Faisal Al-Amin">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tk-client">Lena Bauer</div><div class="tk-client-co">BauerHosts</div></td>
+                        <td class="tenant-table__domain">Reseller agreement</td>
+                        <td><a href="#" class="pr-cert-link">reseller_bauer.pdf</a></td>
+                        <td class="tk-date">2025-06-30</td>
+                        <td><span class="tk-status tk-status--resolved">Active</span></td>
+                        <td class="tenant-table__actions"><button class="btn btn--ghost btn--sm" aria-label="Edit exemption for Lena Bauer">Edit</button><button class="btn btn--danger btn--sm" aria-label="Remove exemption for Lena Bauer">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </section>
+
+        <!-- Reports -->
+        <section class="settings-section" id="tax-reports" role="region" aria-label="Tax reports">
+            <h2 class="settings-section__title">Reports</h2>
+            <p class="settings-section__sub">Download tax summaries for filing.</p>
+
+            <div class="st-group">
+                <label class="st-label">Period</label>
+                <div class="tax-report-row">
+                    <select class="st-input st-select tax-report-select" aria-label="Select reporting period">
+                        <option>November 2024</option>
+                        <option>October 2024</option>
+                        <option>Q3 2024</option>
+                        <option>2024 Annual</option>
+                    </select>
+                    <button class="st-btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Download CSV
+                    </button>
+                    <button class="st-btn-secondary">Download PDF</button>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3 class="st-subheading">Recent exports</h3>
+            <div class="st-card"><div><div class="st-card__label">November 2024 &mdash; VAT Summary</div><div class="st-card__sub">Generated 2024-11-03 &middot; 47 transactions &middot; $3,492.80 total tax</div></div><a href="#" class="st-btn-secondary tax-download-link">Download</a></div>
+            <div class="st-card"><div><div class="st-card__label">October 2024 &mdash; VAT Summary</div><div class="st-card__sub">Generated 2024-10-31 &middot; 52 transactions &middot; $3,801.60 total tax</div></div><a href="#" class="st-btn-secondary tax-download-link">Download</a></div>
+            <div class="st-card"><div><div class="st-card__label">Q3 2024 &mdash; Combined Report</div><div class="st-card__sub">Generated 2024-10-02 &middot; 144 transactions &middot; $10,240.00 total tax</div></div><a href="#" class="st-btn-secondary tax-download-link">Download</a></div>
+        </section>
+
+    </div>
+</div>
+
+<!-- ── Filing Calendar & Nexus Analysis ── -->
+<div class="tax-two-col tax-fade" style="animation-delay:.15s">
+
+    <!-- Filing deadlines -->
+    <div class="clients-table-wrap tax-panel" role="region" aria-label="Upcoming filing deadlines">
+        <div class="tax-panel__header">
+            <div>
+                <div class="tax-panel__title">Upcoming Filing Deadlines</div>
+                <div class="tax-panel__subtitle">Auto-tracked from active jurisdiction registrations</div>
+            </div>
+        </div>
+        <div class="tax-panel__body--flush">
+            <div class="tax-filing-item">
+                <div class="tax-filing-date">
+                    <div class="tax-filing-date__day tax-filing-date__day--urgent">25</div>
+                    <div class="tax-filing-date__month">Apr</div>
+                </div>
+                <div class="tax-filing-info">
+                    <div class="tax-filing-info__title">DE VAT &mdash; OSS quarterly return (Q1 2026)</div>
+                    <div class="tax-filing-info__desc">BZSt portal &middot; estimated liability: &euro;1,240.80</div>
+                </div>
+                <span class="tax-filing-urgency tax-filing-urgency--critical">9 days</span>
+            </div>
+            <div class="tax-filing-item">
+                <div class="tax-filing-date">
+                    <div class="tax-filing-date__day tax-filing-date__day--warn">30</div>
+                    <div class="tax-filing-date__month">Apr</div>
+                </div>
+                <div class="tax-filing-info">
+                    <div class="tax-filing-info__title">UK VAT &mdash; quarterly return (Q1 2026)</div>
+                    <div class="tax-filing-info__desc">HMRC MTD &middot; estimated liability: &pound;840.00</div>
+                </div>
+                <span class="tax-filing-urgency tax-filing-urgency--warn">14 days</span>
+            </div>
+            <div class="tax-filing-item">
+                <div class="tax-filing-date">
+                    <div class="tax-filing-date__day tax-filing-date__day--normal">15</div>
+                    <div class="tax-filing-date__month">May</div>
+                </div>
+                <div class="tax-filing-info">
+                    <div class="tax-filing-info__title">FR TVA &mdash; monthly declaration (Apr 2026)</div>
+                    <div class="tax-filing-info__desc">impots.gouv.fr &middot; estimated: &euro;680.40</div>
+                </div>
+                <span class="tax-filing-urgency tax-filing-urgency--normal">29 days</span>
+            </div>
+            <div class="tax-filing-item">
+                <div class="tax-filing-date">
+                    <div class="tax-filing-date__day tax-filing-date__day--normal">20</div>
+                    <div class="tax-filing-date__month">Jul</div>
+                </div>
+                <div class="tax-filing-info">
+                    <div class="tax-filing-info__title">AT VAT &mdash; quarterly return (Q2 2026)</div>
+                    <div class="tax-filing-info__desc">FinanzOnline &middot; estimate pending</div>
+                </div>
+                <span class="tax-filing-urgency tax-filing-urgency--normal">95 days</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nexus / economic presence analysis -->
+    <div class="clients-table-wrap tax-panel" role="region" aria-label="Economic nexus analysis">
+        <div class="tax-panel__header">
+            <div>
+                <div class="tax-panel__title">Economic Nexus Analysis</div>
+                <div class="tax-panel__subtitle">Jurisdictions approaching or exceeding collection thresholds</div>
+            </div>
+            <button class="btn btn--ghost btn--sm" aria-label="Refresh nexus data">Refresh</button>
+        </div>
+        <div class="tax-panel__body--flush">
+            <div class="tax-nexus-item">
+                <span class="tax-nexus-flag" aria-hidden="true">&#x1F1FA;&#x1F1F8;</span>
+                <div class="tax-nexus-info">
+                    <div class="tax-nexus-info__title">California &mdash; Sales Tax nexus <strong class="tax-nexus-exceeded">exceeded</strong></div>
+                    <div class="tax-nexus-info__desc">$112K revenue (threshold $100K) &middot; 14 transactions (threshold 200)</div>
+                </div>
+                <div class="tax-nexus-meter">
+                    <div class="tax-nexus-bar">
+                        <div class="tax-nexus-bar__fill tax-nexus-bar__fill--danger" style="width:100%"></div>
+                    </div>
+                    <div class="tax-nexus-pct tax-nexus-pct--danger">112% of threshold</div>
+                </div>
+            </div>
+            <div class="tax-nexus-item">
+                <span class="tax-nexus-flag" aria-hidden="true">&#x1F1FA;&#x1F1F8;</span>
+                <div class="tax-nexus-info">
+                    <div class="tax-nexus-info__title">New York &mdash; approaching threshold</div>
+                    <div class="tax-nexus-info__desc">$82K revenue (threshold $100K) &middot; 9 transactions</div>
+                </div>
+                <div class="tax-nexus-meter">
+                    <div class="tax-nexus-bar">
+                        <div class="tax-nexus-bar__fill tax-nexus-bar__fill--warn" style="width:82%"></div>
+                    </div>
+                    <div class="tax-nexus-pct tax-nexus-pct--warn">82% of threshold</div>
+                </div>
+            </div>
+            <div class="tax-nexus-item">
+                <span class="tax-nexus-flag" aria-hidden="true">&#x1F1E8;&#x1F1E6;</span>
+                <div class="tax-nexus-info">
+                    <div class="tax-nexus-info__title">Canada (federal) &mdash; GST registration</div>
+                    <div class="tax-nexus-info__desc">CAD $24K revenue (threshold CAD $30K)</div>
+                </div>
+                <div class="tax-nexus-meter">
+                    <div class="tax-nexus-bar">
+                        <div class="tax-nexus-bar__fill tax-nexus-bar__fill--warn" style="width:80%"></div>
+                    </div>
+                    <div class="tax-nexus-pct tax-nexus-pct--warn">80% of threshold</div>
+                </div>
+            </div>
+            <div class="tax-nexus-item">
+                <span class="tax-nexus-flag" aria-hidden="true">&#x1F1E6;&#x1F1FA;</span>
+                <div class="tax-nexus-info">
+                    <div class="tax-nexus-info__title">Australia &mdash; GST safe</div>
+                    <div class="tax-nexus-info__desc">AUD $18K revenue (threshold AUD $75K)</div>
+                </div>
+                <div class="tax-nexus-meter">
+                    <div class="tax-nexus-bar">
+                        <div class="tax-nexus-bar__fill tax-nexus-bar__fill--ok" style="width:24%"></div>
+                    </div>
+                    <div class="tax-nexus-pct tax-nexus-pct--ok">24% of threshold</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Jurisdiction modal -->
+<div class="modal-backdrop" id="addJurModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-labelledby="addJurModalTitle">
+    <div class="modal tax-modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="addJurModalTitle">Add Jurisdiction</h2>
+            <button class="modal__close" onclick="document.getElementById('addJurModal').hidden=true" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field"><label class="form-label">Country <span class="form-req">*</span></label><select class="form-input" aria-required="true"><option>Select country&hellip;</option><option>Germany</option><option>France</option><option>Netherlands</option><option>United States</option><option>Canada</option></select></div>
+            <div class="form-field"><label class="form-label">Region / State</label><input class="form-input" type="text" placeholder="Leave blank for all regions"></div>
+            <div class="form-field tax-form-grid"><div><label class="form-label">Tax type</label><select class="form-input"><option>VAT</option><option>GST</option><option>Sales Tax</option><option>Other</option></select></div><div><label class="form-label">Rate (%)</label><input class="form-input" type="number" step="0.01" min="0" placeholder="0.00"></div></div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('addJurModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Exemption modal -->
+<div class="modal-backdrop" id="addExemptModal" hidden onclick="this.hidden=true" role="dialog" aria-modal="true" aria-labelledby="addExemptModalTitle">
+    <div class="modal tax-modal" onclick="event.stopPropagation()">
+        <div class="modal__header">
+            <h2 class="modal__title" id="addExemptModalTitle">Add Exemption</h2>
+            <button class="modal__close" onclick="document.getElementById('addExemptModal').hidden=true" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field"><label class="form-label">Client <span class="form-req">*</span></label><select class="form-input" aria-required="true"><option>Select client&hellip;</option><option>James Wright</option><option>Alice Monroe</option><option>Faisal Al-Amin</option></select></div>
+            <div class="form-field"><label class="form-label">Reason</label><input class="form-input" type="text" placeholder="e.g. EU B2B reverse charge"></div>
+            <div class="form-field"><label class="form-label">Valid until</label><input class="form-input" type="date"></div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" onclick="document.getElementById('addExemptModal').hidden=true">Cancel</button>
+                <button class="btn btn--primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchSection(btn, id) {
+    document.querySelectorAll('#tax-general,#tax-jurisdictions,#tax-exemptions,#tax-reports').forEach(function(s) { s.classList.remove('settings-section--active'); });
+    document.querySelectorAll('.settings-sidebar .settings-nav__item').forEach(function(b) { b.classList.remove('settings-nav__item--active'); b.removeAttribute('aria-current'); });
+    btn.classList.add('settings-nav__item--active');
+    btn.setAttribute('aria-current', 'true');
+    document.getElementById(id).classList.add('settings-section--active');
+}
+</script>
+
+</div><!-- /.tax -->
+{{end}}

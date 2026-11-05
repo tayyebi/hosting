@@ -1,0 +1,920 @@
+{{define "tenant-page-content"}}
+<style>
+/* ── Abuse Reports page — scoped under .ar-* ── */
+
+/* KPI unit suffix */
+.ar-kpi-unit {
+    font-size: 14px;
+    color: var(--ds-text-muted, #6e6e73);
+}
+
+/* Threat Intelligence panel */
+.ar-threat-panel {
+    background: var(--topbar-bg);
+    border: 1px solid var(--topbar-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 24px;
+}
+.ar-threat-panel__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.ar-threat-panel__title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--topbar-text-dark);
+}
+.ar-threat-panel__desc {
+    font-size: 13px;
+    color: var(--c-text-dim, #6b7280);
+    margin: 0 0 16px;
+}
+
+/* Stat cards grid inside threat panel */
+.ar-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.ar-stat-card {
+    background: var(--topbar-bg);
+    border: 1px solid var(--topbar-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+.ar-stat-card__label {
+    font-size: 12px;
+    color: var(--topbar-text);
+    margin-bottom: 4px;
+}
+.ar-stat-card__value {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--topbar-text-dark);
+    line-height: 1.1;
+}
+.ar-stat-card__sub {
+    font-size: 12px;
+    margin-top: 4px;
+}
+.ar-stat-card__sub--emerald { color: #10b981; }
+.ar-stat-card__sub--amber   { color: #f59e0b; }
+.ar-stat-card__sub--muted   { color: var(--c-text-dim, #6b7280); }
+
+/* Two-column panels grid (feeds + playbooks) */
+.ar-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+@media (max-width: 768px) {
+    .ar-panels-grid { grid-template-columns: 1fr; }
+}
+
+/* Feed / Playbook panel */
+.ar-panel {
+    border: 1px solid var(--c-border, #e5e7eb);
+    border-radius: 10px;
+    padding: 14px;
+}
+.ar-panel__title {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--topbar-text-dark);
+    margin-bottom: 10px;
+}
+.ar-panel__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Feed / Playbook row items */
+.ar-feed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--c-bg-card, #f9fafb);
+    font-size: 12px;
+    color: var(--topbar-text-dark);
+}
+.ar-feed-status {
+    font-weight: 500;
+}
+.ar-feed-status--synced { color: #10b981; }
+.ar-feed-status--stale  { color: #f59e0b; }
+
+.ar-playbook-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--c-bg-card, #f9fafb);
+    font-size: 12px;
+    color: var(--topbar-text-dark);
+}
+.ar-playbook-action {
+    color: var(--c-text-dim, #6b7280);
+}
+
+/* Automated actions table cells */
+.ar-ts-cell {
+    font-size: 12px;
+    color: var(--c-text-dim, #6b7280);
+}
+.ar-code-cell {
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--topbar-text-dark);
+    background: var(--c-bg-card, #f5f5f7);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--c-border, #e5e7eb);
+}
+.ar-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.ar-badge--blocked {
+    background: rgba(239, 68, 68, .1);
+    color: #d70015;
+}
+.ar-badge--mitigated {
+    background: rgba(245, 158, 11, .1);
+    color: #cc7700;
+}
+.ar-badge--live {
+    background: rgba(239, 68, 68, .1);
+    color: #d70015;
+    font-size: 11px;
+}
+
+/* Rejected status */
+.emp-status--rejected {
+    background: rgba(107, 114, 128, .1);
+    color: #6b7280;
+}
+
+/* Modal two-column field layout */
+.ar-modal-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Schedule modal description */
+.ar-schedule-desc {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+/* Category-mix dot modifiers (replacing inline bg colors) */
+.ar-catmix__dot--phishing   { background: #ef4444; }
+.ar-catmix__dot--malware    { background: #f59e0b; }
+.ar-catmix__dot--spam       { background: #6366f1; }
+.ar-catmix__dot--dmca       { background: #8b5cf6; }
+.ar-catmix__dot--other      { background: #9ca3af; }
+
+/* ── Dark-mode adjustments ── */
+[data-theme="dark"] .ar-stat-card {
+    background: var(--topbar-hover, rgba(255,255,255,.04));
+    border-color: var(--topbar-border);
+}
+[data-theme="dark"] .ar-feed-item,
+[data-theme="dark"] .ar-playbook-item {
+    background: var(--topbar-hover, rgba(255,255,255,.04));
+}
+[data-theme="dark"] .ar-panel {
+    border-color: var(--topbar-border);
+}
+[data-theme="dark"] .ar-code-cell {
+    background: rgba(255,255,255,.06);
+    border-color: var(--topbar-border);
+}
+[data-theme="dark"] .ar-badge--blocked {
+    background: rgba(239, 68, 68, .15);
+    color: #fca5a5;
+}
+[data-theme="dark"] .ar-badge--mitigated {
+    background: rgba(245, 158, 11, .15);
+    color: #fcd34d;
+}
+[data-theme="dark"] .ar-badge--live {
+    background: rgba(239, 68, 68, .15);
+    color: #fca5a5;
+}
+[data-theme="dark"] .emp-status--rejected {
+    background: rgba(107, 114, 128, .15);
+    color: #9ca3af;
+}
+[data-theme="dark"] .ar-threat-panel {
+    background: var(--topbar-hover, rgba(255,255,255,.02));
+}
+[data-theme="dark"] .ar-schedule-desc {
+    color: #9ca3af;
+}
+[data-theme="dark"] .ar-stat-card__sub--emerald { color: #34d399; }
+[data-theme="dark"] .ar-stat-card__sub--amber   { color: #fbbf24; }
+[data-theme="dark"] .ar-stat-card__sub--muted   { color: #9ca3af; }
+[data-theme="dark"] .ar-feed-status--synced { color: #34d399; }
+[data-theme="dark"] .ar-feed-status--stale  { color: #fbbf24; }
+</style>
+
+<div class="ds-page-header">
+    <h1 class="ds-page-title">Abuse Reports</h1>
+    <p class="ds-page-subtitle">Trust &amp; Safety intake — web form, ARF-compliant mailbox (RFC 6650), DMCA, auto-classifier.</p>
+</div>
+
+<!-- ── KPI row ── -->
+<div class="ws-kpi-grid" style="margin-bottom:20px;">
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--indigo">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v14M5 6h8M5 12h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">7</div>
+            <div class="ws-kpi-card__label">Open tickets &middot; SLA 24 h</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--amber">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v5l3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M14 14l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">2</div>
+            <div class="ws-kpi-card__label">Breaching SLA (&gt; 20 h)</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--violet">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">4<span class="ar-kpi-unit"> h 12 m</span></div>
+            <div class="ws-kpi-card__label">Median time-to-triage &middot; 30 d</div>
+        </div>
+    </div>
+    <div class="ws-kpi-card">
+        <div class="ws-kpi-card__icon ws-kpi-card__icon--emerald">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 12l3-3 3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 6h5v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+            <div class="ws-kpi-card__value">86.4<span class="ar-kpi-unit">%</span></div>
+            <div class="ws-kpi-card__label">Auto-classified &middot; 14 d</div>
+        </div>
+    </div>
+</div>
+
+<!-- Category mix -->
+<div class="ar-catmix">
+    <div class="ar-catmix__item"><span class="ar-catmix__dot ar-catmix__dot--phishing"></span><span class="ar-catmix__label">Phishing</span><span class="ar-catmix__val">38%</span></div>
+    <div class="ar-catmix__item"><span class="ar-catmix__dot ar-catmix__dot--malware"></span><span class="ar-catmix__label">Malware hosting</span><span class="ar-catmix__val">21%</span></div>
+    <div class="ar-catmix__item"><span class="ar-catmix__dot ar-catmix__dot--spam"></span><span class="ar-catmix__label">Spam / UBE</span><span class="ar-catmix__val">17%</span></div>
+    <div class="ar-catmix__item"><span class="ar-catmix__dot ar-catmix__dot--dmca"></span><span class="ar-catmix__label">DMCA 17 USC &sect;512</span><span class="ar-catmix__val">14%</span></div>
+    <div class="ar-catmix__item"><span class="ar-catmix__dot ar-catmix__dot--other"></span><span class="ar-catmix__label">Other</span><span class="ar-catmix__val">10%</span></div>
+</div>
+
+<!-- ── Submission channels ── -->
+<div class="ar-channels">
+
+    <!-- Form Builder -->
+    <div class="ar-channel-card">
+        <div class="ar-channel-card__head">
+            <div class="ar-channel-icon ar-channel-icon--form">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 6h8M5 9h8M5 12h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+                <div class="ar-channel-card__title">Web Form</div>
+                <div class="ar-channel-card__sub">Embeddable HTML form for public abuse submissions</div>
+            </div>
+            <label class="st-toggle" style="margin-left:auto;" title="Enable/disable public form">
+                <input type="checkbox" checked id="formToggle" onchange="toggleFormEmbed(this)">
+                <span class="st-toggle__track"></span>
+            </label>
+        </div>
+
+        <div id="formBuilderSection">
+            <!-- Field builder -->
+            <div class="ar-builder">
+                <div class="ar-builder__label">Form fields</div>
+                <div class="ar-fields" id="arFields">
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Reporter name" readonly>
+                        <span class="ar-field-type">text</span>
+                        <span class="ar-field-req">required</span>
+                    </div>
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Reporter email" readonly>
+                        <span class="ar-field-type">email</span>
+                        <span class="ar-field-req">required</span>
+                    </div>
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Abuse type">
+                        <span class="ar-field-type">select</span>
+                        <span class="ar-field-req ar-field-req--opt">optional</span>
+                    </div>
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Subject / URL">
+                        <span class="ar-field-type">text</span>
+                        <span class="ar-field-req">required</span>
+                    </div>
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Description">
+                        <span class="ar-field-type">textarea</span>
+                        <span class="ar-field-req">required</span>
+                    </div>
+                    <div class="ar-field-row">
+                        <span class="ar-field-handle">&#x2807;</span>
+                        <input class="ar-field-input" type="text" value="Evidence / attachments">
+                        <span class="ar-field-type">file</span>
+                        <span class="ar-field-req ar-field-req--opt">optional</span>
+                    </div>
+                </div>
+                <div class="ar-builder__actions">
+                    <button class="btn btn--ghost btn--sm" onclick="addField()">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        Add field
+                    </button>
+                    <button class="btn btn--ghost btn--sm">Configure abuse types…</button>
+                </div>
+            </div>
+
+            <!-- Embed code -->
+            <div class="ar-embed">
+                <div class="ar-embed__label">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 3L1 7l3 4M10 3l3 4-3 4M8 2l-2 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Embed code
+                    <label class="st-toggle" style="margin-left:auto;" title="Enable embed">
+                        <input type="checkbox" checked>
+                        <span class="st-toggle__track"></span>
+                    </label>
+                </div>
+                <pre class="ar-embed__code" id="embedCode">&lt;iframe
+  src="https://{{.Tenant.Slug}}.platform.internal/abuse-form/"
+  width="100%" height="520"
+  frameborder="0" allow="clipboard-write"
+  title="Report Abuse"&gt;&lt;/iframe&gt;</pre>
+                <div class="ar-embed__footer">
+                    <button class="btn btn--ghost btn--sm" onclick="copyEmbed()">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M9 4V2.5A1.5 1.5 0 007.5 1H2.5A1.5 1.5 0 001 2.5v5A1.5 1.5 0 002.5 9H4" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                        Copy embed code
+                    </button>
+                    <a href="#" class="btn btn--ghost btn--sm">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M8 3l3 3.5-3 3.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Preview form
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email / Mailbox -->
+    <div class="ar-channel-card">
+        <div class="ar-channel-card__head">
+            <div class="ar-channel-icon ar-channel-icon--email">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.5l7 4.5 7-4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+                <div class="ar-channel-card__title">Email / Mailbox</div>
+                <div class="ar-channel-card__sub">Poll designated mailboxes for inbound abuse reports</div>
+            </div>
+        </div>
+
+        <!-- RFC 6650 / ARF toggle -->
+        <div class="ar-rfc-row">
+            <div>
+                <div class="ar-rfc-label">RFC 6650 / ARF compatible</div>
+                <div class="ar-rfc-sub">Parse Abuse Reporting Format (ARF) messages automatically</div>
+            </div>
+            <label class="st-toggle" title="Enable ARF parsing">
+                <input type="checkbox" checked>
+                <span class="st-toggle__track"></span>
+            </label>
+        </div>
+
+        <!-- Mailbox list -->
+        <div class="ar-mailbox-list" id="mailboxList">
+            <div class="ar-mailbox-row">
+                <div class="ar-mailbox-icon">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 5.5l6 3.5 6-3.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                </div>
+                <div class="ar-mailbox-info">
+                    <div class="ar-mailbox-addr">abuse@buyvm.net</div>
+                    <div class="ar-mailbox-meta">IMAP &middot; poll every <strong>15 min</strong> &middot; <span class="ar-mailbox-status ar-mailbox-status--ok">connected</span></div>
+                </div>
+                <button class="btn btn--ghost btn--sm" onclick="editMailbox(0)">Edit</button>
+                <button class="btn btn--danger btn--sm">Remove</button>
+            </div>
+            <div class="ar-mailbox-row">
+                <div class="ar-mailbox-icon">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.0"/><path d="M1 5.5l6 3.5 6-3.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round"/></svg>
+                </div>
+                <div class="ar-mailbox-info">
+                    <div class="ar-mailbox-addr">noc-abuse@buyvm.net</div>
+                    <div class="ar-mailbox-meta">IMAP &middot; poll every <strong>5 min</strong> &middot; <span class="ar-mailbox-status ar-mailbox-status--ok">connected</span></div>
+                </div>
+                <button class="btn btn--ghost btn--sm" onclick="editMailbox(1)">Edit</button>
+                <button class="btn btn--danger btn--sm">Remove</button>
+            </div>
+        </div>
+
+        <div class="ar-mailbox-footer">
+            <button class="btn btn--ghost btn--sm" onclick="openMailboxModal()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                Add Mailbox
+            </button>
+            <button class="btn btn--ghost btn--sm" onclick="openScheduleModal()">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.0"/><path d="M6.5 3.5v3l2 1.5" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Schedule Period
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Recent Reports ── -->
+<div class="ar-reports-header">
+    <h2 class="ar-reports-title">Recent Reports</h2>
+    <div class="ar-reports-filters">
+        <div class="clients-search" style="margin:0;">
+            <div class="clients-search__input-wrap">
+                <svg class="clients-search__icon" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 9.5l2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                <input id="arSearch" class="clients-search__input" type="text" placeholder="Search reporter, subject…">
+            </div>
+        </div>
+        <select id="arTypeFilter" class="clients-filter">
+            <option>All types</option>
+            <option>Spam</option>
+            <option>DMCA</option>
+            <option>Phishing</option>
+            <option>DoS/DDoS</option>
+            <option>Malware</option>
+            <option>Other</option>
+        </select>
+        <select id="arStatusFilter" class="clients-filter">
+            <option>All statuses</option>
+            <option>Open</option>
+            <option>Resolved</option>
+            <option>Rejected</option>
+        </select>
+    </div>
+</div>
+
+<div class="clients-table-wrap">
+    <table class="tenant-table ar-table">
+        <thead>
+            <tr>
+                <th>Reporter</th>
+                <th>Subject / URL</th>
+                <th>Type</th>
+                <th>Channel</th>
+                <th>Received</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Reports}}
+            <tr>
+                <td><div class="ar-reporter">{{.Source}}<div class="ar-reporter-sub">reported · {{.Created}}</div></div></td>
+                <td class="ar-subject">{{.Target}}<div class="ar-reporter-sub">{{.Summary}}</div></td>
+                <td><span class="ar-type-tag ar-type-tag--{{.Type}}">{{.Type}}</span></td>
+                <td><span class="ar-channel-tag">{{.Status}}</span></td>
+                <td class="ar-date">{{.Created}}</td>
+                <td>
+                    {{if eq .Status "new"}}<span class="emp-status emp-status--active">New</span>
+                    {{else if eq .Status "investigating"}}<span class="emp-status emp-status--pending">Investigating</span>
+                    {{else if eq .Status "resolved"}}<span class="emp-status emp-status--suspended">Resolved</span>
+                    {{else}}<span class="emp-status emp-status--rejected">Dismissed</span>
+                    {{end}}
+                </td>
+                <td class="ar-row-actions">
+                    {{if or (eq .Status "new") (eq .Status "investigating")}}
+                    <form method="POST" action="/t/{{$.TenantSlug}}/abuse-reports/{{.ID}}/status/" style="display:inline">
+                        <input type="hidden" name="status" value="resolved">
+                        <button class="btn btn--accent btn--sm" type="submit">Resolve</button>
+                    </form>
+                    <form method="POST" action="/t/{{$.TenantSlug}}/abuse-reports/{{.ID}}/status/" style="display:inline">
+                        <input type="hidden" name="status" value="investigating">
+                        <button class="btn btn--ghost btn--sm" type="submit">Investigate</button>
+                    </form>
+                    {{else}}
+                    <form method="POST" action="/t/{{$.TenantSlug}}/abuse-reports/{{.ID}}/delete/" style="display:inline">
+                        <button class="btn btn--danger btn--sm" type="submit" onclick="return confirm('Delete this report?')">Delete</button>
+                    </form>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--c-text-dim,#6b7280);">No abuse reports found.</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<div id="ar-pagination" class="tk-pagination" style="display:none;"></div>
+
+<script>
+(function(){
+  var PAGE_SIZE = 15;
+  var currentPage = 1;
+  var allRows = [];
+  var visibleRows = [];
+
+  function getRows() {
+    var tbody = document.querySelector('.ar-table tbody');
+    if (!tbody) return [];
+    return Array.from(tbody.querySelectorAll('tr')).filter(function(r){
+      return r.querySelector('td[colspan]') === null;
+    });
+  }
+
+  function applyFilter() {
+    var q = (document.getElementById('arSearch').value || '').toLowerCase();
+    var typeVal = document.getElementById('arTypeFilter').value;
+    var statusVal = document.getElementById('arStatusFilter').value;
+    visibleRows = allRows.filter(function(r) {
+      var text = r.textContent.toLowerCase();
+      if (q && text.indexOf(q) === -1) return false;
+      if (typeVal !== 'All types') {
+        var typeEl = r.querySelector('.ar-type-tag');
+        if (!typeEl || typeEl.textContent.trim().toLowerCase() !== typeVal.toLowerCase()) return false;
+      }
+      if (statusVal !== 'All statuses') {
+        var statusEl = r.querySelector('.emp-status');
+        if (!statusEl || statusEl.textContent.trim().toLowerCase() !== statusVal.toLowerCase()) return false;
+      }
+      return true;
+    });
+    renderPage(1);
+  }
+
+  function renderPage(page) {
+    currentPage = page;
+    var total = visibleRows.length;
+    var pages = Math.ceil(total / PAGE_SIZE) || 1;
+    var start = (page - 1) * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+
+    allRows.forEach(function(r) { r.style.display = 'none'; });
+    visibleRows.forEach(function(r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
+
+    var noResults = document.querySelector('.ar-table tbody tr td[colspan]');
+    if (noResults) noResults.closest('tr').style.display = total === 0 ? '' : 'none';
+
+    var pgEl = document.getElementById('ar-pagination');
+    if (total <= PAGE_SIZE) { pgEl.style.display = 'none'; pgEl.innerHTML = ''; return; }
+    pgEl.style.display = 'flex';
+    pgEl.innerHTML = '';
+
+    var info = document.createElement('span');
+    info.className = 'tk-page-info';
+    info.textContent = (total === 0 ? '0' : (start + 1)) + '\u2013' + end + ' of ' + total;
+    pgEl.appendChild(info);
+
+    var nav = document.createElement('div');
+    nav.className = 'tk-page-nav';
+
+    var prev = document.createElement('button');
+    prev.className = 'btn btn--ghost btn--sm';
+    prev.textContent = '\u2190 Prev';
+    prev.disabled = page <= 1;
+    prev.onclick = function() { renderPage(page - 1); };
+    nav.appendChild(prev);
+
+    for (var p = 1; p <= pages; p++) {
+      (function(p) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn--sm' + (p === page ? ' btn--accent' : ' btn--ghost');
+        btn.textContent = p;
+        btn.onclick = function() { renderPage(p); };
+        nav.appendChild(btn);
+      })(p);
+    }
+
+    var next = document.createElement('button');
+    next.className = 'btn btn--ghost btn--sm';
+    next.textContent = 'Next \u2192';
+    next.disabled = page >= pages;
+    next.onclick = function() { renderPage(page + 1); };
+    nav.appendChild(next);
+
+    pgEl.appendChild(nav);
+  }
+
+  allRows = getRows();
+  visibleRows = allRows.slice();
+  document.getElementById('arSearch').addEventListener('input', applyFilter);
+  document.getElementById('arTypeFilter').addEventListener('change', applyFilter);
+  document.getElementById('arStatusFilter').addEventListener('change', applyFilter);
+  if (allRows.length > PAGE_SIZE) renderPage(1);
+})();
+</script>
+
+<!-- ── Add Mailbox modal ── -->
+<div class="modal-backdrop" id="mailboxModal" hidden onclick="closeMailboxModal()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:480px;">
+        <div class="modal__header">
+            <h2 class="modal__title">Add Mailbox</h2>
+            <button class="modal__close" onclick="closeMailboxModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal__form">
+            <div class="form-field">
+                <label class="form-label">Email address <span class="form-req">*</span></label>
+                <input class="form-input" type="email" placeholder="abuse@yourdomain.com">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Protocol</label>
+                <select class="form-input">
+                    <option>IMAP (recommended)</option>
+                    <option>POP3</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">IMAP server</label>
+                <input class="form-input" type="text" placeholder="imap.yourdomain.com">
+            </div>
+            <div class="form-field">
+                <div class="ar-modal-split">
+                    <div>
+                        <label class="form-label">Username</label>
+                        <input class="form-input" type="text">
+                    </div>
+                    <div>
+                        <label class="form-label">Password</label>
+                        <input class="form-input" type="password">
+                    </div>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Poll interval</label>
+                <select class="form-input" id="mailboxPollInterval">
+                    <option>Every 5 minutes</option>
+                    <option selected>Every 15 minutes</option>
+                    <option>Every 30 minutes</option>
+                    <option>Every hour</option>
+                </select>
+            </div>
+            <div class="ar-rfc-row" style="margin-bottom:0;">
+                <div>
+                    <div class="ar-rfc-label">Accept ARF / RFC 6650 messages</div>
+                    <div class="ar-rfc-sub">Auto-parse structured abuse reports</div>
+                </div>
+                <label class="st-toggle"><input type="checkbox" checked><span class="st-toggle__track"></span></label>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeMailboxModal()">Cancel</button>
+                <button type="button" class="btn btn--primary" onclick="saveMailbox()">Add Mailbox</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Schedule Period modal ── -->
+<div class="modal-backdrop" id="scheduleModal" hidden onclick="closeScheduleModal()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:420px;">
+        <div class="modal__header">
+            <h2 class="modal__title">Schedule Period</h2>
+            <button class="modal__close" onclick="closeScheduleModal()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal__form">
+            <p class="ar-schedule-desc">Define a recurring time window during which reports are actively polled and notifications are sent to on-call staff.</p>
+            <div class="form-field">
+                <div class="ar-modal-split">
+                    <div>
+                        <label class="form-label">Start time</label>
+                        <input class="form-input" type="time" value="08:00">
+                    </div>
+                    <div>
+                        <label class="form-label">End time</label>
+                        <input class="form-input" type="time" value="20:00">
+                    </div>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Active days</label>
+                <div class="ar-day-picker">
+                    <label class="ar-day" data-active="true"><input type="checkbox" checked hidden>Mon</label>
+                    <label class="ar-day" data-active="true"><input type="checkbox" checked hidden>Tue</label>
+                    <label class="ar-day" data-active="true"><input type="checkbox" checked hidden>Wed</label>
+                    <label class="ar-day" data-active="true"><input type="checkbox" checked hidden>Thu</label>
+                    <label class="ar-day" data-active="true"><input type="checkbox" checked hidden>Fri</label>
+                    <label class="ar-day"><input type="checkbox" hidden>Sat</label>
+                    <label class="ar-day"><input type="checkbox" hidden>Sun</label>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Timezone</label>
+                <select class="form-input">
+                    <option>UTC</option>
+                    <option selected>Europe/Berlin</option>
+                    <option>America/New_York</option>
+                    <option>America/Los_Angeles</option>
+                    <option>Asia/Tokyo</option>
+                </select>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn--ghost" onclick="closeScheduleModal()">Cancel</button>
+                <button type="button" class="btn btn--primary">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleFormEmbed(cb) {
+    document.getElementById('formBuilderSection').style.opacity = cb.checked ? '1' : '0.4';
+    document.getElementById('formBuilderSection').style.pointerEvents = cb.checked ? '' : 'none';
+}
+function copyEmbed() {
+    var code = document.getElementById('embedCode').textContent;
+    navigator.clipboard.writeText(code).then(function() {
+        var btn = event.target.closest('button');
+        var orig = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        setTimeout(function(){ btn.innerHTML = orig; }, 1500);
+    });
+}
+function addField() {
+    var list = document.getElementById('arFields');
+    var row = document.createElement('div');
+    row.className = 'ar-field-row';
+    row.innerHTML = '<span class="ar-field-handle">&#x2807;</span><input class="ar-field-input" type="text" placeholder="Field label" /><select class="ar-field-type-sel"><option>text</option><option>email</option><option>textarea</option><option>select</option><option>file</option></select><span class="ar-field-req ar-field-req--opt">optional</span>';
+    list.appendChild(row);
+    row.querySelector('input').focus();
+}
+function openMailboxModal()   { document.getElementById('mailboxModal').hidden = false; }
+function closeMailboxModal()  { document.getElementById('mailboxModal').hidden = true; }
+function openScheduleModal()  { document.getElementById('scheduleModal').hidden = false; }
+function closeScheduleModal() { document.getElementById('scheduleModal').hidden = true; }
+function saveMailbox()        { closeMailboxModal(); }
+function editMailbox(i)       { openMailboxModal(); }
+// Day picker toggle
+document.querySelectorAll('.ar-day').forEach(function(lbl) {
+    lbl.addEventListener('click', function() {
+        var active = lbl.getAttribute('data-active') === 'true';
+        lbl.setAttribute('data-active', active ? 'false' : 'true');
+    });
+});
+</script>
+
+<!-- ── Threat Intelligence & Automated Response ── -->
+<div class="ar-threat-panel">
+    <div class="ar-threat-panel__header">
+        <h2 class="ar-threat-panel__title">Threat Intelligence &amp; Automated Response</h2>
+        <span class="ar-badge ar-badge--live">Live</span>
+    </div>
+    <p class="ar-threat-panel__desc">Correlates abuse signals with external threat feeds and IP reputation databases to auto-mitigate confirmed threats before human review.</p>
+
+    <div class="ar-stat-grid">
+        <div class="ar-stat-card">
+            <div class="ar-stat-card__label">Threats auto-blocked (30 d)</div>
+            <div class="ar-stat-card__value">1,247</div>
+            <div class="ar-stat-card__sub ar-stat-card__sub--emerald">94.2% true-positive rate</div>
+        </div>
+        <div class="ar-stat-card">
+            <div class="ar-stat-card__label">Avg time to mitigate</div>
+            <div class="ar-stat-card__value">38 s</div>
+            <div class="ar-stat-card__sub ar-stat-card__sub--emerald">vs 4.2 h manual</div>
+        </div>
+        <div class="ar-stat-card">
+            <div class="ar-stat-card__label">Feeds connected</div>
+            <div class="ar-stat-card__value">6</div>
+            <div class="ar-stat-card__sub ar-stat-card__sub--muted">Last sync 12 min ago</div>
+        </div>
+        <div class="ar-stat-card">
+            <div class="ar-stat-card__label">False-positive appeals</div>
+            <div class="ar-stat-card__value">18</div>
+            <div class="ar-stat-card__sub ar-stat-card__sub--amber">3 pending review</div>
+        </div>
+    </div>
+
+    <!-- Threat feed integrations -->
+    <div class="ar-panels-grid">
+        <div class="ar-panel">
+            <div class="ar-panel__title">Connected Threat Feeds</div>
+            <div class="ar-panel__list">
+                <div class="ar-feed-item">
+                    <span>AbuseIPDB</span>
+                    <span class="ar-feed-status ar-feed-status--synced">&#9679; Synced</span>
+                </div>
+                <div class="ar-feed-item">
+                    <span>Spamhaus DROP/EDROP</span>
+                    <span class="ar-feed-status ar-feed-status--synced">&#9679; Synced</span>
+                </div>
+                <div class="ar-feed-item">
+                    <span>PhishTank</span>
+                    <span class="ar-feed-status ar-feed-status--synced">&#9679; Synced</span>
+                </div>
+                <div class="ar-feed-item">
+                    <span>Shadowserver</span>
+                    <span class="ar-feed-status ar-feed-status--stale">&#9679; Stale (47 min)</span>
+                </div>
+                <div class="ar-feed-item">
+                    <span>Google Safe Browsing</span>
+                    <span class="ar-feed-status ar-feed-status--synced">&#9679; Synced</span>
+                </div>
+                <div class="ar-feed-item">
+                    <span>Internal honeypot network</span>
+                    <span class="ar-feed-status ar-feed-status--synced">&#9679; Synced</span>
+                </div>
+            </div>
+        </div>
+        <div class="ar-panel">
+            <div class="ar-panel__title">Auto-Response Playbooks</div>
+            <div class="ar-panel__list">
+                <div class="ar-playbook-item">
+                    <span>Phishing site takedown</span>
+                    <span class="ar-playbook-action">Suspend VM + notify tenant</span>
+                </div>
+                <div class="ar-playbook-item">
+                    <span>Outbound DDoS source</span>
+                    <span class="ar-playbook-action">Rate-limit + isolate VLAN</span>
+                </div>
+                <div class="ar-playbook-item">
+                    <span>Crypto-mining detection</span>
+                    <span class="ar-playbook-action">CPU cap + alert owner</span>
+                </div>
+                <div class="ar-playbook-item">
+                    <span>Spam relay (port 25)</span>
+                    <span class="ar-playbook-action">Block SMTP + log evidence</span>
+                </div>
+                <div class="ar-playbook-item">
+                    <span>DMCA repeat offender</span>
+                    <span class="ar-playbook-action">Escalate to legal queue</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent automated actions -->
+    <div class="clients-table-wrap">
+        <table class="tenant-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Threat type</th>
+                    <th>Source IP / resource</th>
+                    <th>Feed match</th>
+                    <th>Action taken</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="ar-ts-cell">16 Apr 08:12 UTC</td>
+                    <td>Phishing</td>
+                    <td><code class="ar-code-cell">i-8f3c01a2</code></td>
+                    <td>PhishTank #PT-884120</td>
+                    <td>VM suspended</td>
+                    <td><span class="ar-badge ar-badge--blocked">Blocked</span></td>
+                </tr>
+                <tr>
+                    <td class="ar-ts-cell">16 Apr 07:58 UTC</td>
+                    <td>DDoS source</td>
+                    <td><code class="ar-code-cell">198.51.100.44</code></td>
+                    <td>AbuseIPDB score 97</td>
+                    <td>Rate-limited</td>
+                    <td><span class="ar-badge ar-badge--mitigated">Mitigated</span></td>
+                </tr>
+                <tr>
+                    <td class="ar-ts-cell">16 Apr 06:31 UTC</td>
+                    <td>Crypto-miner</td>
+                    <td><code class="ar-code-cell">i-d42e19bb</code></td>
+                    <td>CPU anomaly + Shadowserver</td>
+                    <td>CPU capped 10%</td>
+                    <td><span class="ar-badge ar-badge--mitigated">Mitigated</span></td>
+                </tr>
+                <tr>
+                    <td class="ar-ts-cell">15 Apr 22:14 UTC</td>
+                    <td>Spam relay</td>
+                    <td><code class="ar-code-cell">i-7a9e03c1</code></td>
+                    <td>Spamhaus DROP</td>
+                    <td>Port 25 blocked</td>
+                    <td><span class="ar-badge ar-badge--blocked">Blocked</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

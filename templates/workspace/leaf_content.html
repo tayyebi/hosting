@@ -1,0 +1,190 @@
+{{define "workspace-page-content"}}
+<style>
+.lf{--lf-border:var(--c-border,#e5e7eb);--lf-surface:var(--c-surface,#fff);--lf-surface-2:var(--c-bg-soft,#f7f8fa);--lf-text:var(--c-text,#111);--lf-dim:var(--c-text-dim,#6b7280);--lf-faint:var(--c-text-faint,#9ca3af);--lf-accent:#7c5cff;--lf-green:#10b981;--lf-amber:#f59e0b;--lf-red:#ef4444;--lf-blue:#3b82f6}
+[data-theme="dark"] .lf{--lf-border:rgba(255,255,255,.08);--lf-surface:#1a1e2e;--lf-surface-2:#111421;--lf-text:#eef0f6;--lf-dim:#9aa0b4;--lf-faint:#6b7189}
+.lf{color:var(--lf-text)}
+.lf-header{margin-bottom:24px}
+.lf-header__title{font-size:26px;font-weight:500;letter-spacing:-.02em;margin:0 0 4px}
+.lf-header__sub{font-size:13px;color:var(--lf-dim);font-weight:300}
+.lf-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+.lf-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.lf-btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:400;font-family:inherit;cursor:pointer;border:1px solid var(--lf-border);background:var(--lf-surface);color:var(--lf-text);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.lf-btn:hover{background:var(--lf-surface-2);border-color:var(--lf-dim)}
+.lf-btn--primary{background:var(--lf-accent);color:#fff;border-color:transparent}
+.lf-btn--primary:hover{filter:brightness(1.08);background:var(--lf-accent)}
+.lf-btn--ghost{background:transparent;border-color:transparent;color:var(--lf-dim)}
+.lf-btn--ghost:hover{color:var(--lf-text);background:var(--lf-surface-2)}
+.lf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.lf-kpi{padding:18px 20px;background:var(--lf-surface);border:1px solid var(--lf-border);border-radius:12px}
+.lf-kpi__lbl{font-size:11px;color:var(--lf-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:400}
+.lf-kpi__val{font-size:26px;font-weight:500;letter-spacing:-.02em;margin-top:6px;line-height:1}
+.lf-kpi__sub{font-size:12px;color:var(--lf-dim);margin-top:6px;font-weight:300}
+.lf-kpi__delta{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;padding:2px 7px;border-radius:6px;margin-left:8px}
+.lf-kpi__delta--up{background:rgba(16,185,129,.12);color:var(--lf-green)}
+.lf-kpi__delta--down{background:rgba(239,68,68,.12);color:var(--lf-red)}
+.lf-card{background:var(--lf-surface);border:1px solid var(--lf-border);border-radius:12px;margin-bottom:20px;overflow:hidden}
+.lf-card__head{padding:16px 20px;border-bottom:1px solid var(--lf-border);display:flex;align-items:center;gap:10px}
+.lf-card__title{font-size:15px;font-weight:500}
+.lf-card__sub{font-size:12px;color:var(--lf-dim);font-weight:300}
+.lf-card__body{padding:20px}
+.lf-card__body--flush{padding:0}
+.lf-table{width:100%;border-collapse:collapse;font-size:13px}
+.lf-table th{text-align:left;padding:12px 20px;background:var(--lf-surface-2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--lf-faint);font-weight:500;border-bottom:1px solid var(--lf-border)}
+.lf-table th:last-child,.lf-table td:last-child{text-align:right}
+.lf-table td{padding:14px 20px;border-bottom:1px solid var(--lf-border);font-weight:300;vertical-align:middle}
+.lf-table tr:last-child td{border-bottom:none}
+.lf-table tr:hover td{background:var(--lf-surface-2)}
+.lf-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:500}
+.lf-badge--green{background:rgba(16,185,129,.12);color:var(--lf-green)}
+.lf-badge--amber{background:rgba(245,158,11,.12);color:var(--lf-amber)}
+.lf-badge--red{background:rgba(239,68,68,.12);color:var(--lf-red)}
+.lf-badge--blue{background:rgba(59,130,246,.12);color:var(--lf-blue)}
+.lf-badge--gray{background:rgba(107,114,128,.12);color:var(--lf-dim)}
+.lf-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.lf-prog{width:120px;height:6px;background:var(--lf-surface-2);border-radius:999px;overflow:hidden}
+.lf-prog__bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--lf-green),#34d399)}
+.lf-prog__bar--amber{background:linear-gradient(90deg,var(--lf-amber),#fbbf24)}
+.lf-prog__bar--red{background:linear-gradient(90deg,var(--lf-red),#f87171)}
+.lf-mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:400;color:var(--lf-dim)}
+.lf-empty{padding:48px 20px;text-align:center;color:var(--lf-dim)}
+.lf-note{padding:12px 16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;font-size:13px;color:var(--lf-text);margin-bottom:16px;font-weight:300}
+.lf-cost-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.18);font-size:12px;font-weight:500;color:var(--lf-green);margin-left:12px;vertical-align:middle;letter-spacing:-.01em}
+.lf-cost-tag svg{flex-shrink:0}
+
+/* ── Fade animation ── */
+@keyframes lfFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+.lf-fade { animation: lfFade .5s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ── Table scroll wrapper for mobile ── */
+.lf-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── Responsive breakpoints ── */
+@media (max-width:1024px) {
+  .lf-kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+}
+@media (max-width:768px) {
+  .lf-header.lf-row { flex-direction:column; align-items:flex-start; }
+  .lf-actions { margin-left:0; width:100%; flex-wrap:wrap; }
+  .lf-kpis { grid-template-columns: repeat(2, 1fr); }
+  .lf-card__head { flex-direction:column; align-items:flex-start; gap:8px; }
+  .lf-card__head .lf-actions { margin-left:0; }
+  .lf-table th, .lf-table td { padding:10px 14px; }
+}
+@media (max-width:480px) {
+  .lf-header__title { font-size:22px; }
+  .lf-kpis { grid-template-columns: 1fr; }
+  .lf-kpi__val { font-size:22px; }
+  .lf-cost-tag { margin-left:0; margin-top:6px; display:inline-flex; }
+  .lf-table { min-width:560px; }
+}
+</style>
+
+<div class="lf" role="main" aria-label="{{.PageTitle}} workspace view">
+<div class="lf-header lf-row lf-fade" style="animation-delay:.05s">
+  <div>
+    <h1 class="lf-header__title">{{.PageTitle}}<span class="lf-cost-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Est. $12.40/mo</span></h1>
+    <p class="lf-header__sub">{{.PageSub}}</p>
+  </div>
+  <div class="lf-actions">
+    <button class="lf-btn" onclick="lfAction('refresh','{{.PageTitle}}')" aria-label="Refresh {{.PageTitle}} data">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 0 1-15 6.7L3 16m0 0h5m-5 0v5m0-9a9 9 0 0 1 15-6.7L21 8m0 0h-5m5 0V3"/></svg>
+      Refresh
+    </button>
+    <button class="lf-btn" onclick="lfAction('export','{{.PageTitle}}')" aria-label="Export {{.PageTitle}} as CSV">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15V3m0 12-4-4m4 4 4-4M3 17v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/></svg>
+      Export
+    </button>
+    <button class="lf-btn lf-btn--primary" onclick="lfAction('create-{{.ActiveNav}}','{{.PageTitle}}')" aria-label="Create new {{.PageTitle}} resource">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4v16m-8-8h16"/></svg>
+      {{if eq .ActiveCat "compute"}}New instance{{else if eq .ActiveCat "storage"}}New volume{{else if eq .ActiveCat "databases"}}New database{{else if eq .ActiveCat "networking"}}New resource{{else if eq .ActiveCat "ai"}}New job{{else if eq .ActiveCat "security"}}New rule{{else if eq .ActiveCat "devops"}}New pipeline{{else if eq .ActiveCat "apps"}}New resource{{else}}Add new{{end}}
+    </button>
+  </div>
+</div>
+
+{{with .Leaf}}
+{{if .Note}}<div class="lf-note lf-fade" role="alert" style="animation-delay:.1s">{{.Note}}</div>{{end}}
+
+{{if .KPIs}}
+<div class="lf-kpis lf-fade" role="region" aria-label="Key performance indicators" style="animation-delay:.15s">
+  {{range .KPIs}}
+  <div class="lf-kpi">
+    <div class="lf-kpi__lbl">{{.Label}}</div>
+    <div class="lf-kpi__val">{{.Value}}</div>
+    {{if .Sub}}<div class="lf-kpi__sub">{{.Sub}}</div>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}
+
+{{if .Rows}}
+<div class="lf-card lf-fade" role="region" aria-label="{{$.PageTitle}} resource list" style="animation-delay:.2s">
+  <div class="lf-card__head">
+    <div>
+      <div class="lf-card__title">{{$.PageTitle}}</div>
+      <div class="lf-card__sub">{{$.PageSub}}</div>
+    </div>
+    <div class="lf-actions">
+      <button class="lf-btn lf-btn--ghost" onclick="lfAction('filter','')" aria-label="Filter table rows">Filter</button>
+      <button class="lf-btn lf-btn--ghost" onclick="lfAction('columns','')" aria-label="Toggle visible columns">Columns</button>
+    </div>
+  </div>
+  <div class="lf-card__body lf-card__body--flush lf-table-wrap">
+    <table class="lf-table" role="table" aria-label="{{$.PageTitle}} data table">
+      <thead><tr>{{range .Headers}}<th scope="col">{{.}}</th>{{end}}</tr></thead>
+      <tbody>
+        {{range .Rows}}<tr>{{range .}}<td>{{.}}</td>{{end}}</tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}
+{{end}}
+
+{{/* If no per-leaf data was registered, fall back to a generic placeholder */}}
+{{if not .Leaf.Rows}}
+<div class="lf-empty">
+  <p style="font-size:14px">Detailed view coming soon for this section.</p>
+  <p style="font-size:12px;margin-top:8px">Use the Marketplace, Pro features, or other sections in the meantime.</p>
+</div>
+{{end}}
+
+</div>
+
+<script>
+(function(){
+  if(window.__lfActionBound)return;window.__lfActionBound=true;
+  function toast(msg){
+    let t=document.getElementById('__lfToast');
+    if(!t){t=document.createElement('div');t.id='__lfToast';t.setAttribute('aria-live','polite');t.setAttribute('role','status');t.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;background:#1a1e2e;color:#eef0f6;padding:14px 20px;border-radius:10px;font:400 13px/1.4 Inter,sans-serif;border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 40px rgba(0,0,0,.4);display:flex;gap:10px;align-items:center;min-width:280px;max-width:420px;transform:translateY(20px);opacity:0;transition:all .2s';document.body.appendChild(t);}
+    t.innerHTML='<span style="color:#10b981;font-size:18px">✓</span><div>'+msg+'</div>';
+    requestAnimationFrame(()=>{t.style.transform='translateY(0)';t.style.opacity='1'});
+    clearTimeout(window.__lfTT);window.__lfTT=setTimeout(()=>{t.style.transform='translateY(20px)';t.style.opacity='0'},2600);
+  }
+  function modal(title,body){
+    let m=document.getElementById('__lfModal');
+    if(!m){m=document.createElement('div');m.id='__lfModal';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px';m.onclick=e=>{if(e.target===m)m.style.display='none'};m.innerHTML='<div style="background:var(--c-surface,#fff);color:var(--c-text,#111);border-radius:14px;max-width:520px;width:100%;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.4);border:1px solid rgba(0,0,0,.08)"><div id="__lfMT" style="font:500 18px/1.3 Inter,sans-serif;letter-spacing:-.01em;margin-bottom:12px"></div><div id="__lfMB" style="font:300 14px/1.55 Inter,sans-serif;color:#6b7280;margin-bottom:20px"></div><div style="text-align:right"><button onclick="document.getElementById(\'__lfModal\').style.display=\'none\'" style="padding:9px 18px;border-radius:8px;background:#7c5cff;color:#fff;border:none;font:400 13px Inter,sans-serif;cursor:pointer" aria-label="Close dialog">Got it</button></div></div>';document.body.appendChild(m);}
+    document.getElementById('__lfMT').textContent=title;document.getElementById('__lfMB').textContent=body;m.style.display='flex';
+  }
+  window.lfAction=function(kind,target){
+    const t=target||'';
+    if(kind==='refresh'){toast('Refreshing '+t+'…');return}
+    if(kind==='export'){toast('Exported '+t+' as CSV');return}
+    if(kind==='filter'||kind==='columns'){toast((kind==='filter'?'Filter':'Columns')+' panel · (demo)');return}
+    if(kind==='manage'){modal('Manage: '+t,'Full management console for "'+t+'" — overview, metrics, configuration, logs, danger-zone actions.');return}
+    if(kind.indexOf('create-')===0){modal('New resource','Creation wizard for "'+t+'" would walk you through sizing, region, networking, credentials, and tagging.');return}
+    modal(kind,'Action "'+kind+'" on "'+t+'" — (demo).');
+  };
+  // Auto-bind any "Manage →", "Open →" etc. buttons inside leaf tables
+  document.querySelectorAll('.lf-table .lf-btn').forEach(function(b){
+    if(b.__bound)return;b.__bound=true;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      const tr=b.closest('tr');
+      const name=tr&&tr.querySelector('strong')?tr.querySelector('strong').textContent:'item';
+      const action=b.textContent.trim().replace(/[→\s]+$/,'');
+      modal(action+': '+name,'This would open the '+action.toLowerCase()+' view for "'+name+'".');
+    });
+  });
+})();
+</script>
+{{end}}

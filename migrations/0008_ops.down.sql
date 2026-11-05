@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS background_job_workers;
+DROP TABLE IF EXISTS background_job_queues;
+DROP TABLE IF EXISTS background_jobs;
+DROP TABLE IF EXISTS maintenance_affected_services;
+DROP TABLE IF EXISTS maintenance_windows;
+DROP TABLE IF EXISTS status_page_components;
+DROP TABLE IF EXISTS incident_affected_services;
+DROP TABLE IF EXISTS incident_timeline_entries;
+DROP TABLE IF EXISTS incidents;
+DROP TABLE IF EXISTS ids_events;
+DROP TABLE IF EXISTS monitoring_results;
+DROP TABLE IF EXISTS monitoring_checks;

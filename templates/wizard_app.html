@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{.Name}} — Wizard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --wz-bg:#0a0b10;--wz-bg-2:#0f1118;--wz-surface:#1a1e2e;--wz-surface-2:#222739;
+  --wz-border:rgba(255,255,255,.08);--wz-border-strong:rgba(255,255,255,.14);
+  --wz-text:#eef0f6;--wz-text-dim:#9aa0b4;--wz-text-faint:#6b7189;
+  --wz-accent:#7c5cff;--wz-accent-2:#22d3ee;--wz-accent-3:#f472b6;
+  --wz-green:#34d399;--wz-amber:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--wz-bg);color:var(--wz-text);font:300 14px/1.55 'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;font-weight:400;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ── Animations ── */
+@keyframes wzFadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes wzFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+.wz-anim { animation: wzFadeUp .45s cubic-bezier(.2,.7,.3,1) both; }
+.wz-anim--d1 { animation-delay: .05s; }
+.wz-anim--d2 { animation-delay: .12s; }
+.wz-anim--d3 { animation-delay: .19s; }
+.wz-anim--d4 { animation-delay: .26s; }
+.wz-anim--d5 { animation-delay: .33s; }
+
+/* ── Focus & Accessibility ── */
+.wz-focusable:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--wz-accent);
+  outline-offset: 2px;
+}
+kbd {
+  font-family: inherit;
+  font-size: 10px;
+  padding: 1px 5px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid var(--wz-border-strong);
+  border-radius: 4px;
+  color: var(--wz-text-dim);
+  vertical-align: middle;
+}
+
+/* ── Background ── */
+.wz-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.wz-bg::before,.wz-bg::after{content:'';position:absolute;border-radius:50%;filter:blur(120px);opacity:.35}
+.wz-bg::before{width:600px;height:600px;background:radial-gradient(circle,#7c5cff 0%,transparent 70%);top:-200px;left:-100px}
+.wz-bg::after{width:680px;height:680px;background:radial-gradient(circle,#22d3ee 0%,transparent 70%);bottom:-260px;right:-120px}
+
+/* ── Nav ── */
+.wz-nav{position:relative;z-index:10;padding:18px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--wz-border);backdrop-filter:blur(12px)}
+.wz-brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:500;letter-spacing:-.01em}
+.wz-brand__mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--wz-accent),var(--wz-accent-2));display:grid;place-items:center;font-weight:700;color:#fff;box-shadow:0 0 30px rgba(124,92,255,.4)}
+.wz-back{font-size:13px;color:var(--wz-text-dim);display:inline-flex;align-items:center;gap:6px;transition:color .15s}
+.wz-back:hover{color:var(--wz-text)}
+
+/* ── App Layout ── */
+.wz-app{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:48px 36px}
+
+.wz-app__hero{display:grid;grid-template-columns:120px 1fr auto;gap:28px;align-items:start;margin-bottom:36px}
+.wz-app__ico{width:120px;height:120px;border-radius:24px;display:grid;place-items:center;font-size:48px;font-weight:600;letter-spacing:-.02em;flex-shrink:0;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.wz-app__head{min-width:0}
+.wz-app__name{font-size:38px;font-weight:600;letter-spacing:-.025em;line-height:1.1;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.wz-app__verified{color:var(--wz-accent-2);width:22px;height:22px}
+.wz-app__tag{font-size:17px;color:var(--wz-text-dim);font-weight:300;margin-bottom:14px;line-height:1.4}
+.wz-app__meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--wz-text-dim);font-weight:400}
+.wz-app__meta span{display:inline-flex;align-items:center;gap:5px}
+.wz-app__meta strong{color:var(--wz-text);font-weight:500}
+.wz-app__star{color:var(--wz-amber)}
+.wz-app__cta{display:flex;flex-direction:column;gap:8px;align-items:flex-end;min-width:200px}
+.wz-deploy{padding:14px 28px;border-radius:12px;background:linear-gradient(135deg,var(--wz-accent),#6344dd);color:#fff;font-size:15px;font-weight:500;display:inline-flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(124,92,255,.45);transition:all .18s;border:none;cursor:pointer;font-family:inherit}
+.wz-deploy:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(124,92,255,.6)}
+.wz-deploy:active{transform:translateY(0);box-shadow:0 6px 16px rgba(124,92,255,.35)}
+.wz-deploy kbd{background:rgba(255,255,255,.2);border-color:transparent;color:rgba(255,255,255,.8)}
+.wz-secondary{padding:10px 20px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--wz-border-strong);color:var(--wz-text-dim);font-size:13px;font-weight:400;transition:all .15s;font-family:inherit;cursor:pointer}
+.wz-secondary:hover{background:rgba(255,255,255,.08);color:var(--wz-text)}
+
+.wz-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.wz-pill{padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--wz-border);font-size:12px;color:var(--wz-text-dim);font-weight:400;transition:background .15s}
+.wz-pill:hover{background:rgba(255,255,255,.08)}
+
+.wz-grid{display:grid;grid-template-columns:1fr 320px;gap:32px;margin-top:36px}
+@media (max-width:880px){.wz-grid{grid-template-columns:1fr}.wz-app__hero{grid-template-columns:80px 1fr;gap:18px}.wz-app__cta{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:flex-start}.wz-app__ico{width:80px;height:80px;font-size:32px;border-radius:18px}.wz-app__name{font-size:28px}}
+
+/* ── Sections ── */
+.wz-section{background:var(--wz-surface);border:1px solid var(--wz-border);border-radius:14px;padding:28px;margin-bottom:18px;transition:border-color .2s}
+.wz-section:hover{border-color:var(--wz-border-strong)}
+.wz-section__t{font-size:18px;font-weight:500;letter-spacing:-.01em;margin-bottom:16px}
+.wz-section__p{font-size:14px;color:var(--wz-text-dim);line-height:1.7;font-weight:300}
+.wz-section__p+.wz-section__p{margin-top:10px}
+.wz-section__hero{color:var(--wz-text);font-weight:500}
+
+.wz-features{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+@media (max-width:600px){.wz-features{grid-template-columns:1fr}}
+.wz-feat{display:flex;gap:11px;align-items:flex-start;padding:14px;background:var(--wz-surface-2);border-radius:10px;border:1px solid var(--wz-border);transition:border-color .2s,transform .2s}
+.wz-feat:hover{border-color:var(--wz-border-strong);transform:translateY(-1px)}
+.wz-feat__ic{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--wz-accent),var(--wz-accent-2));display:grid;place-items:center;color:#fff;flex-shrink:0;font-size:14px;font-weight:600}
+.wz-feat__b{font-size:13px;color:var(--wz-text);font-weight:400;line-height:1.4}
+.wz-feat__b small{display:block;color:var(--wz-text-dim);font-weight:300;font-size:12px;margin-top:2px}
+
+/* ── Aside ── */
+.wz-aside .wz-section{padding:22px}
+.wz-spec-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--wz-border);font-size:13px}
+.wz-spec-row:last-child{border-bottom:none}
+.wz-spec-row__l{color:var(--wz-text-dim);font-weight:400}
+.wz-spec-row__r{color:var(--wz-text);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:12.5px}
+
+/* ── Pricing (aside) ── */
+.wz-price{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+.wz-price__amount{font-size:32px;font-weight:600;letter-spacing:-.025em;background:linear-gradient(135deg,var(--wz-accent-2),var(--wz-accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.wz-price__period{color:var(--wz-text-dim);font-weight:300}
+.wz-price__note{font-size:12px;color:var(--wz-text-faint);line-height:1.55;font-weight:300}
+.wz-deploy--full{width:100%;margin-top:14px;justify-content:center}
+
+/* ── Publisher (aside) ── */
+.wz-publisher{display:flex;gap:10px;align-items:center}
+.wz-publisher__avatar{width:40px;height:40px;border-radius:10px;background:rgba(124,92,255,.15);display:grid;place-items:center;color:var(--wz-accent);font-weight:600}
+.wz-publisher__name{font-size:13px;font-weight:500}
+.wz-publisher__badge{font-size:11px;color:var(--wz-text-faint);font-weight:300}
+
+/* ── Screenshots ── */
+.wz-screens{display:flex;gap:10px;overflow-x:auto;padding:4px 0;margin:14px -4px 0}
+.wz-screen{flex:0 0 280px;height:170px;border-radius:10px;background:linear-gradient(135deg,var(--wz-surface-2),rgba(124,92,255,.06));border:1px solid var(--wz-border);position:relative;overflow:hidden;display:grid;place-items:center;color:var(--wz-text-faint);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:500;transition:border-color .2s}
+.wz-screen:hover{border-color:var(--wz-border-strong)}
+.wz-screen::before{content:'';position:absolute;inset:8px;border-radius:6px;border:1px dashed rgba(255,255,255,.1)}
+
+/* ── Changelog ── */
+.wz-changelog{font-size:13px;color:var(--wz-text-dim);font-weight:300}
+.wz-changelog__row{display:flex;gap:14px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--wz-border)}
+.wz-changelog__row:last-child{border-bottom:none}
+.wz-changelog__v{font-family:'JetBrains Mono',monospace;color:var(--wz-accent-2);font-size:12px;font-weight:500;flex-shrink:0;min-width:60px}
+
+/* ── Modal Overlay ── */
+.wz-overlay{position:fixed;inset:0;z-index:1000;background:rgba(10,11,16,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.wz-overlay--open{display:flex}
+.wz-modal{background:var(--wz-surface);border:1px solid var(--wz-border-strong);border-radius:14px;max-width:480px;width:100%;padding:0;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden;animation:wzFadeUp .25s cubic-bezier(.2,.7,.3,1) both}
+.wz-modal__head{padding:20px 24px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--wz-border)}
+.wz-modal__title{font-size:17px;font-weight:500;line-height:1.3;color:var(--wz-text)}
+.wz-modal__close{background:transparent;color:var(--wz-text-faint);font-size:18px;padding:4px 6px;border-radius:6px;border:none;cursor:pointer;transition:color .15s,background .15s}
+.wz-modal__close:hover{color:var(--wz-text);background:rgba(255,255,255,.06)}
+.wz-modal__body{padding:18px 24px;font-size:14px;line-height:1.6;font-weight:300;color:var(--wz-text-dim)}
+.wz-modal__foot{padding:14px 24px;border-top:1px solid var(--wz-border);text-align:right;display:flex;align-items:center;justify-content:space-between}
+.wz-modal__hint{font-size:11px;color:var(--wz-text-faint);font-weight:300}
+.wz-modal__ok{padding:9px 18px;border-radius:8px;background:linear-gradient(135deg,var(--wz-accent),#6344dd);color:#fff;border:none;font-size:13px;font-weight:400;font-family:inherit;cursor:pointer;transition:opacity .15s}
+.wz-modal__ok:hover{opacity:.88}
+</style>
+</head>
+<body>
+<div class="wz-bg" aria-hidden="true"></div>
+
+<nav class="wz-nav" role="navigation" aria-label="Wizard navigation">
+  <a href="/wizard" class="wz-brand" aria-label="Wizard marketplace home"><span class="wz-brand__mark" aria-hidden="true">W</span><span>Wizard</span></a>
+  <a href="/wizard" class="wz-back" aria-label="Back to marketplace">&#8592; Back to marketplace</a>
+</nav>
+
+<main class="wz-app" role="main">
+  <div class="wz-app__hero wz-anim">
+    <div class="wz-app__ico" style="background:{{.IconColor}};color:{{.IconFG}}" role="img" aria-label="{{.Name}} icon">{{.IconLetter}}</div>
+    <div class="wz-app__head">
+      <h1 class="wz-app__name">
+        {{.Name}}
+        {{if .Verified}}<svg class="wz-app__verified" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Verified app" role="img"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{{end}}
+      </h1>
+      <p class="wz-app__tag">{{.Tagline}}</p>
+      <div class="wz-app__meta" aria-label="App statistics">
+        <span><span class="wz-app__star" aria-hidden="true">&#9733;</span>&nbsp;<strong>{{printf "%.1f" .Rating}}</strong></span>
+        <span><strong>{{.Installs}}</strong>&nbsp;installs</span>
+        <span>v<strong>{{.Version}}</strong></span>
+        <span><strong>{{.License}}</strong></span>
+        <span>by&nbsp;<strong>{{.Publisher}}</strong></span>
+      </div>
+      <div class="wz-pills" role="list" aria-label="Tags">
+        {{range .Tags}}<span class="wz-pill" role="listitem">{{.}}</span>{{end}}
+      </div>
+    </div>
+    <div class="wz-app__cta">
+      <button class="wz-deploy" id="wzDeployBtn" onclick="wzDeploy()" aria-label="Deploy {{.Name}} in 60 seconds">Deploy in 60s &#8594; <kbd>D</kbd></button>
+      <button class="wz-secondary" onclick="wzModal('Documentation','The full documentation for {{.Name}} would open in a new tab — installation guides, API reference, and troubleshooting.')" aria-label="Read documentation for {{.Name}}">Read docs</button>
+    </div>
+  </div>
+
+  <div class="wz-grid">
+    <div>
+      <section class="wz-section wz-anim wz-anim--d1" aria-labelledby="wz-about-title">
+        <h2 class="wz-section__t" id="wz-about-title">About {{.Name}}</h2>
+        <p class="wz-section__p wz-section__hero">{{.Hero}}</p>
+        <p class="wz-section__p">{{.Description}}</p>
+      </section>
+
+      <section class="wz-section wz-anim wz-anim--d2" aria-labelledby="wz-features-title">
+        <h2 class="wz-section__t" id="wz-features-title">What you get out of the box</h2>
+        <div class="wz-features" role="list" aria-label="Included features">
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">Auto-SSL with Let's Encrypt<small>Renews itself; no manual cert work.</small></div></div>
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">Daily off-site backups<small>30-day retention, point-in-time restore.</small></div></div>
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">One-click upgrades<small>Test in staging, promote to prod.</small></div></div>
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">Built-in monitoring<small>Logs, metrics, and uptime checks.</small></div></div>
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">Custom domain &amp; CDN<small>Bring your own domain in seconds.</small></div></div>
+          <div class="wz-feat" role="listitem"><div class="wz-feat__ic" aria-hidden="true">&#10003;</div><div class="wz-feat__b">Secrets &amp; env management<small>Encrypted at rest, scoped per env.</small></div></div>
+        </div>
+      </section>
+
+      <section class="wz-section wz-anim wz-anim--d3" aria-labelledby="wz-screens-title">
+        <h2 class="wz-section__t" id="wz-screens-title">Screenshots</h2>
+        <div class="wz-screens" role="list" aria-label="App screenshots">
+          <div class="wz-screen" role="listitem">Dashboard</div>
+          <div class="wz-screen" role="listitem">Settings</div>
+          <div class="wz-screen" role="listitem">Analytics</div>
+          <div class="wz-screen" role="listitem">Mobile</div>
+        </div>
+      </section>
+
+      <section class="wz-section wz-anim wz-anim--d4" aria-labelledby="wz-changelog-title">
+        <h2 class="wz-section__t" id="wz-changelog-title">Recent changelog</h2>
+        <div class="wz-changelog" role="list" aria-label="Version history">
+          <div class="wz-changelog__row" role="listitem"><div class="wz-changelog__v">v{{.Version}}</div><div>Latest stable release. Performance improvements, security patches, and minor UX polish across the admin panel.</div></div>
+          <div class="wz-changelog__row" role="listitem"><div class="wz-changelog__v">prev</div><div>Plugin marketplace, new permission model, faster startup time, and improved logging.</div></div>
+          <div class="wz-changelog__row" role="listitem"><div class="wz-changelog__v">earlier</div><div>Native dark mode, redesigned onboarding flow, and a brand-new REST API.</div></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="wz-aside" aria-label="App details sidebar">
+      <section class="wz-section wz-anim wz-anim--d2" aria-labelledby="wz-reqs-title">
+        <h2 class="wz-section__t" id="wz-reqs-title">Minimum requirements</h2>
+        <dl>
+          <div class="wz-spec-row"><dt class="wz-spec-row__l">RAM</dt><dd class="wz-spec-row__r">{{.MinRAM}}</dd></div>
+          <div class="wz-spec-row"><dt class="wz-spec-row__l">CPU</dt><dd class="wz-spec-row__r">{{.MinCPU}}</dd></div>
+          <div class="wz-spec-row"><dt class="wz-spec-row__l">Disk</dt><dd class="wz-spec-row__r">{{.MinDisk}}</dd></div>
+          <div class="wz-spec-row"><dt class="wz-spec-row__l">Image</dt><dd class="wz-spec-row__r">v{{.Version}}</dd></div>
+          <div class="wz-spec-row"><dt class="wz-spec-row__l">License</dt><dd class="wz-spec-row__r">{{.License}}</dd></div>
+        </dl>
+      </section>
+
+      <section class="wz-section wz-anim wz-anim--d3" aria-labelledby="wz-pricing-title">
+        <h2 class="wz-section__t" id="wz-pricing-title">Pricing from</h2>
+        <div class="wz-price">
+          <div class="wz-price__amount">$6</div>
+          <div class="wz-price__period">/&nbsp;month</div>
+        </div>
+        <p class="wz-price__note">Starter plan covers most personal use. Scale up to Pro and Enterprise as you grow — no migration needed.</p>
+        <button class="wz-deploy wz-deploy--full" onclick="document.getElementById('wzDeployBtn').click()" aria-label="Deploy this app">Deploy &#8594;</button>
+      </section>
+
+      <section class="wz-section wz-anim wz-anim--d4" aria-labelledby="wz-publisher-title">
+        <h2 class="wz-section__t" id="wz-publisher-title">Publisher</h2>
+        <div class="wz-publisher">
+          <div class="wz-publisher__avatar" aria-hidden="true">{{slice .Publisher 0 1}}</div>
+          <div>
+            <div class="wz-publisher__name">{{.Publisher}}</div>
+            <div class="wz-publisher__badge">Verified publisher</div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<!-- Modal overlay -->
+<div class="wz-overlay" id="wzOverlay" role="dialog" aria-modal="true" aria-labelledby="wzOvTitle" onclick="if(event.target===this)wzCloseModal()">
+  <div class="wz-modal">
+    <div class="wz-modal__head">
+      <div class="wz-modal__title" id="wzOvTitle"></div>
+      <button class="wz-modal__close" onclick="wzCloseModal()" aria-label="Close dialog">&times;</button>
+    </div>
+    <div class="wz-modal__body" id="wzOvBody"></div>
+    <div class="wz-modal__foot">
+      <span class="wz-modal__hint">Press <kbd>Esc</kbd> to close</span>
+      <button class="wz-modal__ok" onclick="wzCloseModal()">Got it</button>
+    </div>
+  </div>
+</div>
+<script>
+function wzDeploy() {
+  var btn = document.getElementById('wzDeployBtn');
+  btn.disabled = true;
+  btn.innerHTML = 'Deploying\u2026';
+  fetch('/api/wizard/{{.Slug}}/deploy', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({region: 'us-east-1'})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    btn.disabled = false;
+    btn.innerHTML = 'Deploy in 60s &#8594; <kbd>D</kbd>';
+    wzModal('Deploying {{.Name}}', d.message || '{{.Name}} deploy has been queued. Your app will be ready in a few minutes.');
+  }).catch(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Deploy in 60s &#8594; <kbd>D</kbd>';
+    wzModal('Deploy queued', '{{.Name}} deploy has been queued. Your app will be ready in a few minutes.');
+  });
+}
+
+function wzModal(t,b){
+  document.getElementById('wzOvTitle').textContent=t;
+  document.getElementById('wzOvBody').textContent=b;
+  var ov=document.getElementById('wzOverlay');
+  ov.classList.add('wz-overlay--open');
+  /* move focus into the modal */
+  setTimeout(function(){ov.querySelector('.wz-modal__ok').focus();},80);
+}
+function wzCloseModal(){
+  document.getElementById('wzOverlay').classList.remove('wz-overlay--open');
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') wzCloseModal();
+  /* keyboard shortcut: D to deploy */
+  if(e.key==='d'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'&&!document.getElementById('wzOverlay').classList.contains('wz-overlay--open')){
+    document.getElementById('wzDeployBtn').click();
+  }
+});
+</script>
+</body>
+</html>
