@@ -719,33 +719,33 @@
 # Core Domain Abstractions & First Real Infrastructure Roadmap
 
 ## 1. Supply & Provider Layer (Infrastructure Driver Placeholders)
-- [ ] Define `SupplyPool` / `HostNode` domain types (`OwnershipType`: `OwnedBareMetal`, `Colocated`, `LeasedServer`, `CloudResellerAPI`, `NestedCluster`; capacity & supply cost attributes) in `providers/`
-- [ ] Define `DriverRegistry` / `Provisioner` interfaces in `providers/`:
-  - [ ] `ComputeDriver` (`ValidateConnection`, `InspectCapacity`, `BootstrapHost`, `CreateInstance`, `StartInstance`, `StopInstance`, `ResizeInstance`, `SnapshotInstance`, `DeleteInstance`, `ConsoleInfo`)
-  - [ ] `HostingDriver` (`CreateAccount`, `BindDomain`, `IssueSSL`, `SetQuota`, `SuspendAccount`, `DeleteAccount`)
-  - [ ] `NetworkStorageDriver` (`AllocateIP`, `ReleaseIP`, `BindIP`, `CreateVolume`, `AttachVolume`, `DetachVolume`, `DeleteVolume`)
-- [ ] Implement big-picture placeholder drivers in `providers/`:
-  - [ ] `QEMULibvirtDriver` (bare-metal / nested Linux KVM+QEMU host driver)
-  - [ ] `ProxmoxDriver` (Proxmox VE REST API driver placeholder)
-  - [ ] `VMwareVSphereDriver` (vCenter/ESXi SOAP/REST driver placeholder, including nested ESXi)
-  - [ ] `UpstreamResellerDriver` (Hetzner / BuyVM / DigitalOcean / AWS / OpenStack API reseller placeholder)
-  - [ ] `SharedWebDriver` & `PaaSAppDriver` (shared web hosting & PaaS buildpack/container placeholders)
-  - [ ] `IPAMDriver` & `BlockStorageDriver` (IP pool allocation & Ceph/ZFS/LVM/cloud block storage placeholders)
+- [x] Define `SupplyPool` / `HostNode` domain types (`OwnershipType`: `OwnedBareMetal`, `Colocated`, `LeasedServer`, `CloudResellerAPI`, `NestedCluster`; capacity & supply cost attributes) in `providers/`
+- [x] Define `DriverRegistry` / `Provisioner` interfaces in `providers/`:
+  - [x] `ComputeDriver` (`ValidateConnection`, `InspectCapacity`, `BootstrapHost`, `CreateInstance`, `StartInstance`, `StopInstance`, `ResizeInstance`, `SnapshotInstance`, `DeleteInstance`, `ConsoleInfo`)
+  - [x] `HostingDriver` (`CreateAccount`, `BindDomain`, `IssueSSL`, `SetQuota`, `SuspendAccount`, `DeleteAccount`)
+  - [x] `NetworkStorageDriver` (`AllocateIP`, `ReleaseIP`, `BindIP`, `CreateVolume`, `AttachVolume`, `DetachVolume`, `DeleteVolume`)
+- [x] Implement big-picture placeholder drivers in `providers/`:
+  - [x] `QEMULibvirtDriver` (bare-metal / nested Linux KVM+QEMU host driver)
+  - [x] `ProxmoxDriver` (Proxmox VE REST API driver placeholder)
+  - [x] `VMwareVSphereDriver` (vCenter/ESXi SOAP/REST driver placeholder, including nested ESXi)
+  - [x] `UpstreamResellerDriver` (Hetzner / BuyVM / DigitalOcean / AWS / OpenStack API reseller placeholder)
+  - [x] `SharedWebDriver` & `PaaSAppDriver` (shared web hosting & PaaS buildpack/container placeholders)
+  - [x] `IPAMDriver` & `BlockStorageDriver` (IP pool allocation & Ceph/ZFS/LVM/cloud block storage placeholders)
 
 ## 2. Unified Resource & Payable Item Layer (Catalog & Billable Tree Placeholders)
-- [ ] Define `ProductSKU` catalog model in `catalog/` (`Kind`: `vm`, `ipv4`, `ipv6_subnet`, `block_ssd`, `shared_hosting`, `k8s_node`, `paas_app`, `backup_gb`; `BillingModel`: `RecurringFlat`, `HourlyMetered`, `UsageCounter`, `OneTimeSetup`; `ProvisionTarget` placement rules)
-- [ ] Define unified `PayableResource` tree model (`Resource` node with `ParentResourceID` for child/attached payable items such as `ipv4`, `block_nvme`, `snapshot`, `ddos_prot`, plus `ProviderNodeID` and `ExternalRef`)
-- [ ] Define `SubscriptionLineItem`, `UsageMeter`, and `CatalogService` placeholder interfaces & implementations in `catalog/`
+- [x] Define `ProductSKU` catalog model in `catalog/` (`Kind`: `vm`, `ipv4`, `ipv6_subnet`, `block_ssd`, `shared_hosting`, `k8s_node`, `paas_app`, `backup_gb`; `BillingModel`: `RecurringFlat`, `HourlyMetered`, `UsageCounter`, `OneTimeSetup`; `ProvisionTarget` placement rules)
+- [x] Define unified `PayableResource` tree model (`Resource` node with `ParentResourceID` for child/attached payable items such as `ipv4`, `block_nvme`, `snapshot`, `ddos_prot`, plus `ProviderNodeID` and `ExternalRef`)
+- [x] Define `SubscriptionLineItem`, `UsageMeter`, and `CatalogService` placeholder interfaces & implementations in `catalog/`
 
 ## 3. Cost-Centric Accounting Layer (COGS, Pricing Engine & Margin Ledger Placeholders)
-- [ ] Layer A — `SupplyCostCalculator` (`DirectPassThrough`, `AmortizedHardware`, `SharedOverhead` per host/provider/resource) in `accounting/`
-- [ ] Layer B — `PricingEngine` (`SellPrice = f(SupplyCost, Provider, Region, TenantTier, ClientPromo, SLA)` with `CostFloor` guard, provider/region multipliers, platform→tenant wholesale pricing, and tenant→client retail pricing) in `accounting/`
-- [ ] Layer C — `MarginLedger` (`CostEvent`, `RevenueEvent`, and `MarginView` computing `GrossMargin = Revenue - SupplyCost - PaymentFee - SLACredit` grouped by Cost Center) in `accounting/`
+- [x] Layer A — `SupplyCostCalculator` (`DirectPassThrough`, `AmortizedHardware`, `SharedOverhead` per host/provider/resource) in `accounting/`
+- [x] Layer B — `PricingEngine` (`SellPrice = f(SupplyCost, Provider, Region, TenantTier, ClientPromo, SLA)` with `CostFloor` guard, provider/region multipliers, platform→tenant wholesale pricing, and tenant→client retail pricing) in `accounting/`
+- [x] Layer C — `MarginLedger` (`CostEvent`, `RevenueEvent`, and `MarginView` computing `GrossMargin = Revenue - SupplyCost - PaymentFee - SLACredit` grouped by Cost Center) in `accounting/`
 
 ## 4. Clean Slate — Drop Dummy Data & Keep Only Real Seeders
 - [ ] Remove dummy demo seeders from `db/seed.go` (demo tenants `buyvm`/`abrnoc`/`hosting`, fake `system_logs`, fake `background_job_workers`, fake `background_jobs`, fake `replicas`, fake `billing_*` logs/webhooks) and keep only the System Super Administrator seeder (`sysadmin@platform.io`, configurable via env)
 - [ ] Purge hardcoded in-memory dummy fixture maps across `handlers/` (`buyvm`/`abrnoc`/`hosting` tenants, fake clients, fake VMs/resources, static mock tables) and wire tenant & workspace resolution directly to PostgreSQL
-- [ ] Fix Linux build exclusion bug on `db/maintenance_windows.go` (`_windows.go` Go OS suffix) so the full codebase compiles cleanly across Linux and Windows
+- [x] Fix Linux build exclusion bug on `db/maintenance_windows.go` (`_windows.go` Go OS suffix) so the full codebase compiles cleanly across Linux and Windows
 
 ## 5. First Real Infrastructure Case — Linux Nested VPS + Auto-Provisioning + Manual IP Pool
 - [ ] Add migration `0044_supply_hosts_and_ip_pool` creating `supply_hosts`, `supply_host_ips`, and extending `resources` with `parent_resource_id`, `supply_host_id`, and `external_ref`
