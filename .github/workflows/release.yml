@@ -1,7 +1,6 @@
 name: Release Binary
 
 on:
-  push:
   release:
     types: [published]
 

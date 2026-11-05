@@ -1,7 +1,6 @@
 name: Deploy to Linux Host
 
 on:
-  push:
   release:
     types: [published]
 
