@@ -39,11 +39,11 @@ jobs:
 
       - name: Checkout repository
         if: steps.check_secrets.outputs.deploy == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
         if: steps.check_secrets.outputs.deploy == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
