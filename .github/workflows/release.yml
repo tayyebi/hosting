@@ -1,0 +1,64 @@
+name: Release Binary
+
+on:
+  push:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run test suite
+        run: go test -v ./...
+
+      - name: Build static Linux binaries and release bundles
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          for ARCH in amd64 arm64; do
+            BIN_NAME="hosting-linux-${ARCH}"
+            STAGE_DIR="$(mktemp -d)"
+
+            CGO_ENABLED=0 GOOS=linux GOARCH="${ARCH}" \
+              go build -trimpath -ldflags="-s -w" -o "dist/${BIN_NAME}" .
+
+            cp "dist/${BIN_NAME}" "${STAGE_DIR}/hosting"
+            chmod +x "${STAGE_DIR}/hosting"
+            cp -r templates static scripts "${STAGE_DIR}/"
+            cp docker-compose.yml .env.example README.md "${STAGE_DIR}/"
+
+            tar -czf "dist/${BIN_NAME}.tar.gz" -C "${STAGE_DIR}" .
+            rm -rf "${STAGE_DIR}"
+          done
+
+          (cd dist && sha256sum hosting-linux-* > checksums.txt)
+          ls -lh dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Upload assets to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
