@@ -1,10 +1,17 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"platform/db"
 )
 
 // ════════════════════════════════════════════════════════════════
@@ -146,12 +153,49 @@ func filterGeneralVMs(all []GeneralVM, search, status string) []GeneralVM {
 	return out
 }
 
+func loadWorkspaceGeneralVMs(ctx context.Context, slug, wsID string) []GeneralVM {
+	if Pools != nil {
+		_, wsDBID, err := resolveTenantAndWorkspaceDBIDs(ctx, slug, wsID)
+		if err == nil && wsDBID > 0 {
+			if rows, qErr := db.ListComputeVMs(ctx, Pools.Admin, wsDBID, "general"); qErr == nil {
+				out := make([]GeneralVM, len(rows))
+				for i, r := range rows {
+					instID := r.IPAddress
+					if instID == "" {
+						instID = fmt.Sprintf("vm-%d", r.ResourceID)
+					}
+					st := r.Status
+					if st == "active" {
+						st = "running"
+					}
+					out[i] = GeneralVM{
+						ID:       strconv.FormatInt(r.ResourceID, 10),
+						Name:     r.Name,
+						InstID:   instID,
+						Type:     r.InstanceType,
+						Region:   r.Region,
+						Status:   st,
+						CPUPct:   0,
+						MemUsed:  "0",
+						MemTotal: fmt.Sprintf("%.0f", r.MemoryGB),
+					}
+				}
+				return out
+			}
+		}
+	}
+	return generalVMStore.list(slug)
+}
+
 func apiWSComputeVMsGeneralListHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	vms := filterGeneralVMs(generalVMStore.list(slug), r.URL.Query().Get("q"), r.URL.Query().Get("status"))
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	vms := filterGeneralVMs(loadWorkspaceGeneralVMs(ctx, slug, wsID), r.URL.Query().Get("q"), r.URL.Query().Get("status"))
 	out := make([]apiGeneralVM, len(vms))
 	for i, v := range vms {
 		out[i] = toAPIGeneralVM(v)
@@ -160,16 +204,22 @@ func apiWSComputeVMsGeneralListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type apiCreateGeneralVMRequest struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Region string `json:"region"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Region   string `json:"region"`
+	VCPUs    int    `json:"vcpus"`
+	MemoryGB int    `json:"memory_gb"`
+	DiskGB   int    `json:"disk_gb"`
+	SSHKey   string `json:"ssh_key"`
 }
 
 func apiWSComputeVMsGeneralCreateHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
+	user, _ := getSession(r)
+
 	var req apiCreateGeneralVMRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		apiError(w, http.StatusBadRequest, "Invalid JSON body.")
@@ -182,44 +232,129 @@ func apiWSComputeVMsGeneralCreateHandler(w http.ResponseWriter, r *http.Request)
 	}
 	vmType := strings.TrimSpace(req.Type)
 	if vmType == "" {
-		vmType = "t3.medium"
+		vmType = "nested-2c-4gb"
 	}
 	region := strings.TrimSpace(req.Region)
-	if region == "" {
-		region = "eu-central-1"
+	vcpus := req.VCPUs
+	if vcpus <= 0 {
+		vcpus = 2
 	}
+	memGB := req.MemoryGB
+	if memGB <= 0 {
+		memGB = 4
+	}
+	diskGB := req.DiskGB
+	if diskGB <= 0 {
+		diskGB = 40
+	}
+
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+		defer cancel()
+
+		res, err := ProvisionCustomerVM(ctx, CustomerVMPurchaseInput{
+			TenantSlug:      slug,
+			WorkspaceIDStr:  wsID,
+			ActorUserID:     user.ID,
+			Name:            name,
+			InstanceType:    vmType,
+			Distro:          "Ubuntu",
+			Version:         "24.04 LTS",
+			SSHPublicKey:    strings.TrimSpace(req.SSHKey),
+			VCPUs:           vcpus,
+			MemoryGB:        memGB,
+			DiskGB:          diskGB,
+			PreferredRegion: region,
+		})
+		if err != nil {
+			if errors.Is(err, db.ErrNoAssignableInventory) {
+				apiError(w, http.StatusConflict, "No online provisioned supply host with available assignable IPs in inventory. Onboard a Linux Nested VPS, run Auto-Provision, and add manual IPs in /s/infrastructure/.")
+				return
+			}
+			apiError(w, http.StatusBadGateway, "VM provisioning failed: "+err.Error())
+			return
+		}
+		vm := GeneralVM{
+			ID:       strconv.FormatInt(res.VMResourceID, 10),
+			Name:     name,
+			InstID:   res.AssignedIPv4,
+			Type:     vmType,
+			Region:   res.RegionSlug,
+			Status:   res.Status,
+			CPUPct:   0,
+			MemUsed:  "0",
+			MemTotal: strconv.Itoa(memGB),
+		}
+		apiCreated(w, toAPIGeneralVM(vm))
+		return
+	}
+
 	vm := GeneralVM{
 		ID: newID(), Name: name, InstID: "i-" + newID()[:12],
 		Type: vmType, Region: region, Status: "running",
-		CPUPct: 0, MemUsed: "0", MemTotal: "4",
+		CPUPct: 0, MemUsed: "0", MemTotal: strconv.Itoa(memGB),
 	}
 	generalVMStore.add(slug, vm)
 	apiCreated(w, toAPIGeneralVM(vm))
 }
 
 func apiWSComputeVMsGeneralGetHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	vm, found := generalVMStore.getByID(slug, r.PathValue("vmid"))
-	if !found {
-		apiError(w, http.StatusNotFound, "VM not found.")
-		return
+	targetID := r.PathValue("vmid")
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	for _, vm := range loadWorkspaceGeneralVMs(ctx, slug, wsID) {
+		if vm.ID == targetID {
+			apiOK(w, toAPIGeneralVM(vm))
+			return
+		}
 	}
-	apiOK(w, toAPIGeneralVM(vm))
+	apiError(w, http.StatusNotFound, "VM not found.")
 }
 
 func apiWSComputeVMsGeneralDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	slug, _, ok := wsAuth(w, r)
+	slug, wsID, ok := wsAuth(w, r)
 	if !ok {
 		return
 	}
-	if _, found := generalVMStore.getByID(slug, r.PathValue("vmid")); !found {
+	vmid := r.PathValue("vmid")
+	if Pools != nil {
+		numID, err := strconv.ParseInt(vmid, 10, 64)
+		if err != nil || numID <= 0 {
+			apiError(w, http.StatusNotFound, "VM not found.")
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+		defer cancel()
+
+		found := false
+		for _, vm := range loadWorkspaceGeneralVMs(ctx, slug, wsID) {
+			if vm.ID == vmid {
+				found = true
+				break
+			}
+		}
+		if !found {
+			apiError(w, http.StatusNotFound, "VM not found.")
+			return
+		}
+		if err := TerminateCustomerVM(ctx, numID); err != nil {
+			apiError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		apiOK(w, map[string]any{"ok": true, "message": "VM terminated and assignable IP returned to host pool."})
+		return
+	}
+
+	if _, found := generalVMStore.getByID(slug, vmid); !found {
 		apiError(w, http.StatusNotFound, "VM not found.")
 		return
 	}
-	generalVMStore.delete(slug, r.PathValue("vmid"))
+	generalVMStore.delete(slug, vmid)
 	apiOK(w, map[string]any{"ok": true, "message": "VM deleted."})
 }
 

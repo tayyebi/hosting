@@ -81,10 +81,11 @@ func (r *Registry) NetworkStorage(kind DriverKind) (NetworkStorageDriver, error)
 	return d, nil
 }
 
-// NewDefaultRegistry registers all built-in drivers (including placeholders).
+// NewDefaultRegistry registers all built-in drivers: the concrete
+// LinuxNestedQEMUDriver plus placeholder drivers for future infrastructure targets.
 func NewDefaultRegistry() *Registry {
 	reg := NewRegistry()
-	reg.RegisterCompute(&LinuxNestedQEMUPlaceholderDriver{})
+	reg.RegisterCompute(NewLinuxNestedQEMUDriver())
 	reg.RegisterCompute(&QEMULibvirtDriver{})
 	reg.RegisterCompute(&ProxmoxDriver{})
 	reg.RegisterCompute(&VMwareVSphereDriver{})

@@ -1,10 +1,15 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"platform/db"
 )
 
 // ── Pro feature data structures ──────────────────────────────
@@ -608,6 +613,47 @@ func proFeatureHandler(w http.ResponseWriter, r *http.Request, d WorkspaceShellD
 	d.ActiveNav = "pro:" + feat.Slug
 	d.PageTitle = feat.Title
 	d.PageSub = feat.Subtitle
+
+	if feat.Slug == "compute/virtual-machines/linux-vms" && Pools != nil && d.Workspace.DBID > 0 {
+		qCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		if rows, err := db.ListLinuxVMs(qCtx, Pools.Admin, d.Workspace.DBID); err == nil {
+			totalVCPUs := 0
+			totalRAM := 0
+			runningCount := 0
+			for _, vm := range rows {
+				totalVCPUs += vm.VCPUs
+				totalRAM += vm.MemoryGB
+				st := vm.VMStatus
+				if st == "" {
+					st = vm.Status
+				}
+				if st == "running" || st == "active" {
+					runningCount++
+				}
+				feat.Resources = append(feat.Resources, ProResource{
+					Name:        vm.Name,
+					Status:      st,
+					StatusLabel: st,
+					Region:      vm.Region,
+					Columns: []string{
+						vm.Name,
+						strings.TrimSpace(vm.Distro + " " + vm.Version),
+						fmt.Sprintf("%d vCPU · %d GB RAM · %d GB", vm.VCPUs, vm.MemoryGB, vm.DiskGB),
+						vm.PublicIP,
+						vm.MonthlyCost,
+						vm.Region,
+					},
+				})
+			}
+			feat.Stats = []ProStat{
+				{Label: "Running VMs", Value: itoa(runningCount)},
+				{Label: "Total VMs", Value: itoa(len(rows))},
+				{Label: "Allocated vCPUs", Value: itoa(totalVCPUs)},
+				{Label: "Allocated RAM", Value: itoa(totalRAM), Unit: "GB"},
+			}
+		}
+		cancel()
+	}
 
 	funcMap := template.FuncMap{
 		"add": func(a, b int) int { return a + b },
