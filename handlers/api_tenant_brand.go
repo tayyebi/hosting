@@ -156,6 +156,32 @@ func apiTenantBrandGetHandler(w http.ResponseWriter, r *http.Request) {
 				resp.Identity.SupportEmail = bs.SupportEmail
 			}
 			resp.Identity.LogoURL = bs.LogoURL
+			if len(bs.Colors) > 2 {
+				var cols []apiBrandColor
+				if json.Unmarshal(bs.Colors, &cols) == nil && len(cols) > 0 {
+					resp.Colors = cols
+				}
+			}
+		}
+	} else if mb, ok := getMemTenantBrand(tenant.Slug); ok {
+		if mb.CompanyName != "" {
+			resp.Identity.CompanyName = mb.CompanyName
+		}
+		if mb.Tagline != "" {
+			resp.Identity.Tagline = mb.Tagline
+		}
+		if mb.Website != "" {
+			resp.Identity.Website = mb.Website
+		}
+		if mb.SupportEmail != "" {
+			resp.Identity.SupportEmail = mb.SupportEmail
+		}
+		resp.Identity.LogoURL = mb.LogoURL
+		if len(mb.Colors) > 2 {
+			var cols []apiBrandColor
+			if json.Unmarshal(mb.Colors, &cols) == nil && len(cols) > 0 {
+				resp.Colors = cols
+			}
 		}
 	}
 
@@ -165,11 +191,12 @@ func apiTenantBrandGetHandler(w http.ResponseWriter, r *http.Request) {
 // ── PUT /api/tenant/{slug}/brand ──────────────────────────────
 
 type apiUpdateBrandRequest struct {
-	CompanyName  *string `json:"company_name"`
-	Tagline      *string `json:"tagline"`
-	Website      *string `json:"website"`
-	SupportEmail *string `json:"support_email"`
-	LogoURL      *string `json:"logo_url"`
+	CompanyName  *string         `json:"company_name"`
+	Tagline      *string         `json:"tagline"`
+	Website      *string         `json:"website"`
+	SupportEmail *string         `json:"support_email"`
+	LogoURL      *string         `json:"logo_url"`
+	Colors       []apiBrandColor `json:"colors"`
 }
 
 func apiTenantBrandUpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -250,6 +277,39 @@ func apiTenantBrandUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			apiError(w, http.StatusInternalServerError, "Failed to update brand settings.")
 			return
 		}
+		if len(req.Colors) > 0 {
+			if colBytes, err := json.Marshal(req.Colors); err == nil {
+				if err := db.UpsertBrandColors(ctx, Pools.Admin, tenant.DBID, colBytes); err != nil {
+					log.Printf("apiTenantBrandUpdateHandler colors: %v", err)
+				}
+			}
+		}
+	} else {
+		cur, _ := getMemTenantBrand(tenant.Slug)
+		if cur.CompanyName == "" {
+			cur.CompanyName = tenant.Name
+		}
+		if req.CompanyName != nil {
+			cur.CompanyName = strings.TrimSpace(*req.CompanyName)
+		}
+		if req.Tagline != nil {
+			cur.Tagline = *req.Tagline
+		}
+		if req.Website != nil {
+			cur.Website = *req.Website
+		}
+		if req.SupportEmail != nil {
+			cur.SupportEmail = *req.SupportEmail
+		}
+		if req.LogoURL != nil {
+			cur.LogoURL = *req.LogoURL
+		}
+		if len(req.Colors) > 0 {
+			if colBytes, err := json.Marshal(req.Colors); err == nil {
+				cur.Colors = colBytes
+			}
+		}
+		setMemTenantBrand(tenant.Slug, cur)
 	}
 
 	apiOK(w, map[string]any{

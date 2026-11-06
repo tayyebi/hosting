@@ -132,12 +132,18 @@ func apiSysadminTenantsCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if domain != "" {
-		if len(domain) > 253 {
-			apiError(w, http.StatusBadRequest, "Domain must not exceed 253 characters.")
+		norm, err := db.NormalizeDomain(domain)
+		if err != nil {
+			apiError(w, http.StatusBadRequest, "Domain must be a valid hostname (e.g. example.com).")
 			return
 		}
-		if !domainRE.MatchString(domain) {
-			apiError(w, http.StatusBadRequest, "Domain must be a valid hostname (e.g. example.com).")
+		domain = norm
+		if store.domainExists(domain, "") {
+			apiError(w, http.StatusConflict, "Domain \""+domain+"\" is already assigned to another tenant.")
+			return
+		}
+		if origins.domainExists(domain, 0) {
+			apiError(w, http.StatusConflict, "Domain \""+domain+"\" is already registered as a System Origin domain.")
 			return
 		}
 	}
@@ -148,6 +154,7 @@ func apiSysadminTenantsCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	t := Tenant{ID: newID(), Name: name, Slug: slug, Domain: domain}
 	t = store.add(t)
+	origins.invalidateCache()
 
 	go db.InsertAuditEvent(context.Background(), Pools.Admin, user.ID, string(user.Role),
 		"tenant.created", "info", map[string]any{"name": name, "slug": slug, "domain": domain},
@@ -228,12 +235,18 @@ func apiSysadminTenantsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	domain := strings.TrimSpace(req.Domain)
 	if domain != "" {
-		if len(domain) > 253 {
-			apiError(w, http.StatusBadRequest, "Domain must not exceed 253 characters.")
+		norm, err := db.NormalizeDomain(domain)
+		if err != nil {
+			apiError(w, http.StatusBadRequest, "Domain must be a valid hostname (e.g. example.com).")
 			return
 		}
-		if !domainRE.MatchString(domain) {
-			apiError(w, http.StatusBadRequest, "Domain must be a valid hostname (e.g. example.com).")
+		domain = norm
+		if store.domainExists(domain, id) {
+			apiError(w, http.StatusConflict, "Domain \""+domain+"\" is already assigned to another tenant.")
+			return
+		}
+		if origins.domainExists(domain, 0) {
+			apiError(w, http.StatusConflict, "Domain \""+domain+"\" is already registered as a System Origin domain.")
 			return
 		}
 	}
@@ -241,6 +254,7 @@ func apiSysadminTenantsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	t.Name = name
 	t.Domain = domain
 	store.update(t)
+	origins.invalidateCache()
 
 	go db.InsertAuditEvent(context.Background(), Pools.Admin, user.ID, string(user.Role),
 		"tenant.updated", "info", map[string]any{"tenant_id": id, "slug": t.Slug, "name": name, "domain": domain},
@@ -271,6 +285,7 @@ func apiSysadminTenantsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	store.delete(id)
+	origins.invalidateCache()
 	go db.InsertAuditEvent(context.Background(), Pools.Admin, user.ID, string(user.Role),
 		"tenant.deleted", "warn", map[string]any{"tenant_id": id, "slug": t.Slug, "name": t.Name},
 		"", r.Header.Get("X-Request-ID"), clientIP(r))

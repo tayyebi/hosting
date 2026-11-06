@@ -113,6 +113,55 @@ func TenantSlugExists(ctx context.Context, pool *pgxpool.Pool, slug string, excl
 	return exists, err
 }
 
+// TenantDomainExists checks whether another live tenant already holds domain.
+func TenantDomainExists(ctx context.Context, pool *pgxpool.Pool, domain string, excludeID int64) (bool, error) {
+	if strings.TrimSpace(domain) == "" {
+		return false, nil
+	}
+	var exists bool
+	err := pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM tenants
+			WHERE domain = $1 AND id <> $2 AND deleted_at IS NULL
+		)`, strings.TrimSpace(domain), excludeID).Scan(&exists)
+	return exists, err
+}
+
+// GetTenantByDomain resolves a live tenant matching an incoming HTTP host.
+// If fullHost ("host:port") matches a tenant domain configured with a port,
+// that tenant is returned; otherwise bareHost ("host") is matched against
+// portless tenant domains.
+func GetTenantByDomain(ctx context.Context, pool *pgxpool.Pool, fullHost, bareHost string) (TenantRow, bool, error) {
+	if pool == nil || (fullHost == "" && bareHost == "") {
+		return TenantRow{}, false, nil
+	}
+	var t TenantRow
+	err := pool.QueryRow(ctx, `
+		SELECT id, slug, name, COALESCE(domain, ''), plan,
+		       COALESCE(owner_name, ''), COALESCE(owner_email, ''),
+		       created_at, updated_at
+		FROM tenants
+		WHERE deleted_at IS NULL
+		  AND domain IS NOT NULL
+		  AND domain <> ''
+		  AND (
+		      domain = $1
+		      OR (position(':' in domain) = 0 AND domain = $2)
+		  )
+		ORDER BY CASE WHEN domain = $1 THEN 0 ELSE 1 END
+		LIMIT 1`,
+		fullHost, bareHost,
+	).Scan(&t.ID, &t.Slug, &t.Name, &t.Domain, &t.Plan,
+		&t.OwnerName, &t.OwnerEmail, &t.CreatedAt, &t.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return TenantRow{}, false, nil
+	}
+	if err != nil {
+		return TenantRow{}, false, fmt.Errorf("db.GetTenantByDomain: %w", err)
+	}
+	return t, true, nil
+}
+
 // CreateTenant inserts a new tenant row in Postgres.
 func CreateTenant(ctx context.Context, pool *pgxpool.Pool, name, slug, domain string) (TenantRow, error) {
 	var domVal any

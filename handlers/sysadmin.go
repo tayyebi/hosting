@@ -15,6 +15,7 @@ type NavItem struct {
 
 var sysadminNav = []NavItem{
 	{ID: "tenants", Label: "Tenants", Path: "/s/tenants/", Icon: "tenants"},
+	{ID: "origin", Label: "Origin", Path: "/s/origin/", Icon: "origin"},
 	{ID: "logs", Label: "Logs", Path: "/s/logs/", Icon: "logs"},
 	{ID: "replicas", Label: "Replicas", Path: "/s/replicas/", Icon: "replicas"},
 	{ID: "current-replica", Label: "Current Replica", Path: "/s/current-replica/", Icon: "current-replica"},
@@ -67,6 +68,7 @@ func RegisterSysadminRoutes(mux *http.ServeMux) {
 	RegisterSysadminCurrentReplicaRoutes(mux)
 	RegisterDatabaseRoutes(mux)
 	RegisterTenantRoutes(mux)
+	RegisterOriginRoutes(mux)
 	RegisterSSORoutes(mux)
 	RegisterAccountingRoutes(mux)
 	RegisterJobsRoutes(mux)

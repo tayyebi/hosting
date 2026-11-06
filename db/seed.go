@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -126,8 +127,12 @@ func HashPassword(password string) (string, error) {
 		pbkdf2Iterations, hex.EncodeToString(salt), hex.EncodeToString(dk)), nil
 }
 
-// VerifyPassword performs a constant-time check against a HashPassword string.
+// VerifyPassword performs a constant-time check against a HashPassword string
+// (pbkdf2_sha256) or a bcrypt hash produced by tenant self-registration.
 func VerifyPassword(encodedHash, candidate string) bool {
+	if strings.HasPrefix(encodedHash, "$2a$") || strings.HasPrefix(encodedHash, "$2b$") || strings.HasPrefix(encodedHash, "$2y$") {
+		return bcrypt.CompareHashAndPassword([]byte(encodedHash), []byte(candidate)) == nil
+	}
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 4 || parts[0] != "pbkdf2_sha256" {
 		return false
@@ -223,6 +228,102 @@ func AuthenticateUser(ctx context.Context, admin *pgxpool.Pool, email, password 
 	}
 	if pwHash == nil || *pwHash == "" || !VerifyPassword(*pwHash, password) {
 		return AuthenticatedUser{}, false, nil
+	}
+	_, _ = admin.Exec(ctx, `UPDATE users SET last_login_at = now() WHERE id = $1`, u.ID)
+	return u, true, nil
+}
+
+// SysadminAuthStatus reports the outcome of a system-origin authentication check.
+type SysadminAuthStatus int
+
+const (
+	SysadminAuthInvalid SysadminAuthStatus = iota
+	SysadminAuthOK
+	SysadminAuthForbiddenRole
+)
+
+// AuthenticateSysadmin verifies email + password and enforces global_role == 'sysadmin'.
+// If credentials are valid for a non-sysadmin account, SysadminAuthForbiddenRole is returned.
+func AuthenticateSysadmin(ctx context.Context, admin *pgxpool.Pool, email, password string) (AuthenticatedUser, SysadminAuthStatus, error) {
+	var u AuthenticatedUser
+	var pwHash *string
+	err := admin.QueryRow(ctx, `
+		SELECT u.id, u.email, COALESCE(u.name, ''), COALESCE(u.avatar_url, ''),
+		       u.global_role, u.password_hash
+		FROM users u
+		WHERE u.email = $1 AND u.deleted_at IS NULL`,
+		strings.TrimSpace(email),
+	).Scan(&u.ID, &u.Email, &u.Name, &u.AvatarURL, &u.GlobalRole, &pwHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AuthenticatedUser{}, SysadminAuthInvalid, nil
+	}
+	if err != nil {
+		return AuthenticatedUser{}, SysadminAuthInvalid, fmt.Errorf("db.AuthenticateSysadmin: %w", err)
+	}
+	if pwHash == nil || *pwHash == "" || !VerifyPassword(*pwHash, password) {
+		return AuthenticatedUser{}, SysadminAuthInvalid, nil
+	}
+	if u.GlobalRole != "sysadmin" {
+		return u, SysadminAuthForbiddenRole, nil
+	}
+	_, _ = admin.Exec(ctx, `UPDATE users SET last_login_at = now() WHERE id = $1`, u.ID)
+	return u, SysadminAuthOK, nil
+}
+
+// AuthenticateTenantUser verifies email + password and strictly enforces that the
+// account is an active member of the given tenant (via user_tenant_memberships
+// or workspace_memberships). Accounts belonging only to other tenants or global
+// sysadmins without membership in this tenant are rejected.
+func AuthenticateTenantUser(ctx context.Context, admin *pgxpool.Pool, tenantID int64, tenantSlug, email, password string) (AuthenticatedUser, bool, error) {
+	var u AuthenticatedUser
+	var pwHash *string
+	err := admin.QueryRow(ctx, `
+		SELECT u.id, u.email, COALESCE(u.name, ''), COALESCE(u.avatar_url, ''),
+		       'user' AS global_role, u.password_hash,
+		       COALESCE(
+		           (SELECT utm.role
+		            FROM user_tenant_memberships utm
+		            WHERE utm.user_id = u.id
+		              AND utm.tenant_id = $2
+		              AND COALESCE(utm.active, true) = true
+		            LIMIT 1),
+		           (SELECT 'user'
+		            FROM workspace_memberships wm
+		            WHERE wm.user_id = u.id
+		              AND wm.tenant_id = $2
+		            LIMIT 1),
+		           ''
+		       ) AS tenant_role
+		FROM users u
+		WHERE u.email = $1
+		  AND u.deleted_at IS NULL
+		  AND (
+		      EXISTS (
+		          SELECT 1 FROM user_tenant_memberships utm
+		          WHERE utm.user_id = u.id
+		            AND utm.tenant_id = $2
+		            AND COALESCE(utm.active, true) = true
+		      )
+		      OR EXISTS (
+		          SELECT 1 FROM workspace_memberships wm
+		          WHERE wm.user_id = u.id
+		            AND wm.tenant_id = $2
+		      )
+		  )`,
+		strings.TrimSpace(email), tenantID,
+	).Scan(&u.ID, &u.Email, &u.Name, &u.AvatarURL, &u.GlobalRole, &pwHash, &u.TenantRole)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AuthenticatedUser{}, false, nil
+	}
+	if err != nil {
+		return AuthenticatedUser{}, false, fmt.Errorf("db.AuthenticateTenantUser: %w", err)
+	}
+	if pwHash == nil || *pwHash == "" || !VerifyPassword(*pwHash, password) {
+		return AuthenticatedUser{}, false, nil
+	}
+	u.TenantSlug = tenantSlug
+	if u.TenantRole == "" {
+		u.TenantRole = "user"
 	}
 	_, _ = admin.Exec(ctx, `UPDATE users SET last_login_at = now() WHERE id = $1`, u.ID)
 	return u, true, nil

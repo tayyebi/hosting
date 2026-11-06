@@ -1,0 +1,374 @@
+{{define "origin-content"}}
+<style>
+.orig-wrap { display: flex; flex-direction: column; gap: 20px; max-width: 1060px; }
+.orig-alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+.orig-alert--ok { background: rgba(52,199,89,.10); border: 1px solid rgba(52,199,89,.28); color: #1f7a38; }
+[data-theme="dark"] .orig-alert--ok { color: #5ce080; }
+.orig-alert--err { background: rgba(255,59,48,.10); border: 1px solid rgba(255,59,48,.28); color: #c5221f; }
+[data-theme="dark"] .orig-alert--err { color: #ff6961; }
+
+.orig-banner {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
+    padding: 18px 20px; border-radius: 10px;
+    background: var(--ds-surface); border: 1px solid var(--ds-border);
+}
+.orig-banner__left { display: flex; align-items: flex-start; gap: 14px; }
+.orig-banner__dot {
+    width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
+}
+.orig-banner__dot--active { background: #34c759; box-shadow: 0 0 0 4px rgba(52,199,89,.16); }
+.orig-banner__dot--default { background: #ff9500; box-shadow: 0 0 0 4px rgba(255,149,0,.16); }
+.orig-banner__title { font-size: 14.5px; font-weight: 500; color: var(--ds-text); }
+.orig-banner__desc { font-size: 13px; color: var(--ds-text-muted); margin-top: 4px; line-height: 1.55; max-width: 680px; }
+.orig-banner__meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; text-align: right; }
+.orig-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500;
+    border: 1px solid var(--ds-border); background: var(--ds-hover); color: var(--ds-text);
+}
+.orig-pill--primary {
+    background: rgba(0,113,227,.10); border-color: rgba(0,113,227,.26); color: #0071e3;
+}
+[data-theme="dark"] .orig-pill--primary { color: #5aa9ff; }
+.orig-pill--ok {
+    background: rgba(52,199,89,.12); border-color: rgba(52,199,89,.26); color: #1f7a38;
+}
+[data-theme="dark"] .orig-pill--ok { color: #5ce080; }
+.orig-pill--muted { color: var(--ds-text-muted); }
+
+.orig-card {
+    background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: 10px; overflow: hidden;
+}
+.orig-card__head {
+    padding: 16px 20px; border-bottom: 1px solid var(--ds-border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.orig-card__title { font-size: 14.5px; font-weight: 500; color: var(--ds-text); }
+.orig-card__sub { font-size: 12.5px; color: var(--ds-text-muted); margin-top: 2px; }
+.orig-card__body { padding: 18px 20px; }
+
+.orig-add-form {
+    display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) auto;
+    gap: 10px; align-items: end;
+}
+@media (max-width: 760px) {
+    .orig-add-form { grid-template-columns: 1fr; }
+    .orig-banner { flex-direction: column; }
+    .orig-banner__meta { align-items: flex-start; text-align: left; }
+}
+
+.orig-field { display: flex; flex-direction: column; gap: 5px; }
+.orig-label { font-size: 12px; font-weight: 500; color: var(--ds-text-muted); }
+.orig-input, .orig-select {
+    height: 36px; padding: 0 11px; border-radius: 7px;
+    border: 1px solid var(--ds-border-strong, var(--ds-border));
+    background: var(--ds-bg); color: var(--ds-text);
+    font: inherit; font-size: 13px; outline: none;
+    transition: border-color 150ms ease;
+}
+.orig-input:focus, .orig-select:focus { border-color: #0071e3; }
+
+.orig-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 36px; padding: 0 14px; border-radius: 7px;
+    border: 1px solid var(--ds-border-strong, var(--ds-border));
+    background: var(--ds-surface); color: var(--ds-text);
+    font: inherit; font-size: 13px; font-weight: 400; cursor: pointer;
+    text-decoration: none; white-space: nowrap; transition: background 140ms ease, opacity 140ms ease;
+}
+.orig-btn:hover:not(:disabled) { background: var(--ds-hover); }
+.orig-btn:disabled { opacity: .4; cursor: not-allowed; }
+.orig-btn--primary {
+    background: var(--ds-accent); color: var(--ds-surface); border-color: var(--ds-accent); font-weight: 500;
+}
+.orig-btn--primary:hover:not(:disabled) { opacity: .9; background: var(--ds-accent); }
+.orig-btn--sm { height: 28px; padding: 0 9px; font-size: 12px; border-radius: 6px; }
+.orig-btn--danger { color: #ff3b30; border-color: rgba(255,59,48,.28); }
+.orig-btn--danger:hover:not(:disabled) { background: rgba(255,59,48,.08); }
+
+.orig-host-hint {
+    margin-top: 10px; font-size: 12px; color: var(--ds-text-muted);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.orig-chip-btn {
+    border: 1px dashed var(--ds-border-strong, var(--ds-border)); background: transparent;
+    color: var(--ds-text); border-radius: 5px; padding: 2px 8px; font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.orig-chip-btn:hover { background: var(--ds-hover); }
+
+.orig-table-wrap { overflow-x: auto; border-top: 1px solid var(--ds-border); }
+.orig-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.orig-table th {
+    text-align: left; padding: 10px 16px; font-size: 11.5px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--ds-text-muted);
+    border-bottom: 1px solid var(--ds-border); background: var(--ds-hover);
+}
+.orig-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--ds-border); color: var(--ds-text); vertical-align: middle;
+}
+.orig-table tr:last-child td { border-bottom: none; }
+.orig-code {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12.5px; padding: 2px 7px; border-radius: 5px;
+    background: var(--ds-hover); border: 1px solid var(--ds-border);
+}
+.orig-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.orig-actions form { margin: 0; display: inline-flex; }
+
+.orig-empty {
+    padding: 32px 20px; text-align: center; color: var(--ds-text-muted); font-size: 13px;
+    border-top: 1px solid var(--ds-border); line-height: 1.6;
+}
+
+.orig-settings-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;
+}
+.orig-check-row {
+    display: flex; align-items: flex-start; gap: 10px; margin-top: 16px;
+    padding: 12px 14px; border-radius: 8px; border: 1px solid var(--ds-border); background: var(--ds-hover);
+}
+.orig-check-row input[type="checkbox"] { margin-top: 3px; width: 15px; height: 15px; accent-color: #0071e3; }
+</style>
+
+<div class="orig-wrap">
+
+    {{if .FlashSuccess}}
+    <div class="orig-alert orig-alert--ok" role="status">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M5.2 8.2l1.9 1.9 3.7-3.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>{{.FlashSuccess}}</span>
+    </div>
+    {{end}}
+
+    {{if .FlashError}}
+    <div class="orig-alert orig-alert--err" role="alert">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.8v3.8M8 11.2h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>{{.FlashError}}</span>
+    </div>
+    {{end}}
+
+    <!-- Active Routing Mode Banner -->
+    <div class="orig-banner">
+        <div class="orig-banner__left">
+            {{if .EnforcementActive}}
+            <span class="orig-banner__dot orig-banner__dot--active" aria-hidden="true"></span>
+            <div>
+                <div class="orig-banner__title">System Origin Enforcement Active</div>
+                <p class="orig-banner__desc">
+                    System domains display the dedicated <strong>Platform System</strong> sign-in page and permit <strong>System Administrator</strong> logins only.
+                    Direct IP or unrecognized host requests automatically redirect ({{.Settings.RedirectStatusCode}}) to <span class="orig-code">{{.PrimaryRedirectURL}}</span>.
+                    Tenant custom domains continue to serve each tenant's own brand and tenant-scoped sign-in.
+                </p>
+            </div>
+            {{else}}
+            <span class="orig-banner__dot orig-banner__dot--default" aria-hidden="true"></span>
+            <div>
+                <div class="orig-banner__title">Default Unrestricted Mode (No System Domains Defined)</div>
+                <p class="orig-banner__desc">
+                    Because no active system origin domains are configured yet, the platform responds on any non-tenant host using standard sign-in behavior.
+                    Add one or more system domains below to lock system origins to System Administrators and redirect direct access to the first domain in the list.
+                </p>
+            </div>
+            {{end}}
+        </div>
+        <div class="orig-banner__meta">
+            {{if .EnforcementActive}}
+            <span class="orig-pill orig-pill--ok">Enforced · Primary: {{.PrimaryDomain}}</span>
+            {{else}}
+            <span class="orig-pill orig-pill--muted">Unrestricted Default</span>
+            {{end}}
+            {{if .CurrentHost}}
+            <span style="font-size:11.5px;color:var(--ds-text-muted)">Current host: <code class="orig-code">{{.CurrentHost}}</code></span>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- System Origin Domains Card -->
+    <section class="orig-card" aria-label="System origin domains">
+        <div class="orig-card__head">
+            <div>
+                <h2 class="orig-card__title">System Origin Domains</h2>
+                <p class="orig-card__sub">Ordered list of domains representing the Platform System control plane. Direct access redirects to the <strong>first active domain</strong>.</p>
+            </div>
+        </div>
+
+        <div class="orig-card__body">
+            <form method="POST" action="/s/origin/domains/" class="orig-add-form">
+                <div class="orig-field">
+                    <label class="orig-label" for="originDomainInput">Domain Name</label>
+                    <input class="orig-input" id="originDomainInput" name="domain" type="text" placeholder="system.example.com" autocomplete="off" required>
+                </div>
+                <div class="orig-field">
+                    <label class="orig-label" for="originNoteInput">Description / Note (optional)</label>
+                    <input class="orig-input" id="originNoteInput" name="note" type="text" placeholder="Primary control plane">
+                </div>
+                <button type="submit" class="orig-btn orig-btn--primary">Add Domain</button>
+            </form>
+
+            {{if and .CurrentHostIsValid (not .CurrentHostInList)}}
+            <div class="orig-host-hint">
+                <span>Accessing via <code class="orig-code">{{.CurrentHost}}</code>.</span>
+                <button type="button" class="orig-chip-btn" onclick="document.getElementById('originDomainInput').value='{{.CurrentHost}}';document.getElementById('originDomainInput').focus();">
+                    Use {{.CurrentHost}}
+                </button>
+                <span>Ensure DNS for your first active domain resolves to this server before enabling enforcement.</span>
+            </div>
+            {{end}}
+        </div>
+
+        {{if .Domains}}
+        <div class="orig-table-wrap">
+            <table class="orig-table">
+                <thead>
+                    <tr>
+                        <th style="width:180px">Priority</th>
+                        <th>Domain</th>
+                        <th>Note</th>
+                        <th>Access Policy</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Order &amp; Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Domains}}
+                    <tr>
+                        <td>
+                            {{if .IsPrimary}}
+                            <span class="orig-pill orig-pill--primary">#{{.Position}} · Primary Redirect</span>
+                            {{else}}
+                            <span class="orig-pill orig-pill--muted">#{{.Position}}</span>
+                            {{end}}
+                        </td>
+                        <td><code class="orig-code">{{.Domain}}</code></td>
+                        <td>{{if .Note}}{{.Note}}{{else}}<span style="color:var(--ds-text-muted)">—</span>{{end}}</td>
+                        <td style="font-size:12.5px;color:var(--ds-text-muted)">Platform System · Sysadmin Only</td>
+                        <td>
+                            {{if .Enabled}}
+                            <span class="orig-pill orig-pill--ok">Active</span>
+                            {{else}}
+                            <span class="orig-pill orig-pill--muted">Disabled</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            <div class="orig-actions">
+                                {{if not .IsFirst}}
+                                <form method="POST" action="/s/origin/domains/{{.ID}}/move/">
+                                    <input type="hidden" name="direction" value="top">
+                                    <button type="submit" class="orig-btn orig-btn--sm" title="Move to #1 (Primary redirect target)">Make #1</button>
+                                </form>
+                                {{end}}
+                                <form method="POST" action="/s/origin/domains/{{.ID}}/move/">
+                                    <input type="hidden" name="direction" value="up">
+                                    <button type="submit" class="orig-btn orig-btn--sm" title="Move up" {{if .IsFirst}}disabled{{end}}>&uarr;</button>
+                                </form>
+                                <form method="POST" action="/s/origin/domains/{{.ID}}/move/">
+                                    <input type="hidden" name="direction" value="down">
+                                    <button type="submit" class="orig-btn orig-btn--sm" title="Move down" {{if .IsLast}}disabled{{end}}>&darr;</button>
+                                </form>
+                                <form method="POST" action="/s/origin/domains/{{.ID}}/toggle/">
+                                    <button type="submit" class="orig-btn orig-btn--sm">{{if .Enabled}}Disable{{else}}Enable{{end}}</button>
+                                </form>
+                                <form method="POST" action="/s/origin/domains/{{.ID}}/delete/" onsubmit="return confirm('Remove system origin domain {{.Domain}}?');">
+                                    <button type="submit" class="orig-btn orig-btn--sm orig-btn--danger">Remove</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="orig-empty">
+            <strong>No system origin domains configured yet.</strong><br>
+            The platform is operating in default mode. Add your system domain(s) above when you are ready to enforce Platform System routing.
+        </div>
+        {{end}}
+    </section>
+
+    <!-- Direct Access & Proxy Settings Card -->
+    <section class="orig-card" aria-label="Direct access and redirect settings">
+        <div class="orig-card__head">
+            <div>
+                <h2 class="orig-card__title">Direct Access &amp; Redirect Settings</h2>
+                <p class="orig-card__sub">Controls how unrecognized hosts / direct IP requests are redirected once at least one system origin domain is active.</p>
+            </div>
+        </div>
+        <div class="orig-card__body">
+            <form method="POST" action="/s/origin/settings/">
+                <div class="orig-settings-grid">
+                    <div class="orig-field">
+                        <label class="orig-label" for="redirectSchemeSelect">Redirect Scheme</label>
+                        <select class="orig-select" id="redirectSchemeSelect" name="redirect_scheme">
+                            <option value="https" {{if eq .Settings.RedirectScheme "https"}}selected{{end}}>HTTPS (https://) — Recommended</option>
+                            <option value="http" {{if eq .Settings.RedirectScheme "http"}}selected{{end}}>HTTP (http://)</option>
+                        </select>
+                    </div>
+                    <div class="orig-field">
+                        <label class="orig-label" for="redirectStatusSelect">Redirect HTTP Status Code</label>
+                        <select class="orig-select" id="redirectStatusSelect" name="redirect_status_code">
+                            <option value="302" {{if eq .Settings.RedirectStatusCode 302}}selected{{end}}>302 Found (Temporary — Default)</option>
+                            <option value="307" {{if eq .Settings.RedirectStatusCode 307}}selected{{end}}>307 Temporary Redirect (Preserve HTTP Method)</option>
+                            <option value="301" {{if eq .Settings.RedirectStatusCode 301}}selected{{end}}>301 Moved Permanently</option>
+                            <option value="308" {{if eq .Settings.RedirectStatusCode 308}}selected{{end}}>308 Permanent Redirect (Preserve HTTP Method)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label class="orig-check-row">
+                    <input type="checkbox" name="trust_forwarded_headers" value="true" {{if .Settings.TrustForwardedHeaders}}checked{{end}}>
+                    <div>
+                        <div style="font-size:13px;font-weight:500;color:var(--ds-text)">Trust Reverse-Proxy Host Headers (<code class="orig-code">X-Forwarded-Host</code>)</div>
+                        <div style="font-size:12px;color:var(--ds-text-muted);margin-top:2px">
+                            Keep enabled when running behind Nginx, Caddy, Traefik, HAProxy, or Cloudflare so domain matching uses the external client-facing hostname.
+                        </div>
+                    </div>
+                </label>
+
+                <div style="margin-top:16px;display:flex;justify-content:flex-end">
+                    <button type="submit" class="orig-btn orig-btn--primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Tenant Custom Domains Reference Card -->
+    <section class="orig-card" aria-label="Tenant custom domains">
+        <div class="orig-card__head">
+            <div>
+                <h2 class="orig-card__title">Tenant Custom Domains</h2>
+                <p class="orig-card__sub">Domains assigned to tenants automatically display each tenant's brand and scope authentication strictly to users of that tenant.</p>
+            </div>
+            <a href="/s/tenants/" class="orig-btn orig-btn--sm">Manage Tenants &rarr;</a>
+        </div>
+        {{if .TenantDomains}}
+        <div class="orig-table-wrap">
+            <table class="orig-table">
+                <thead>
+                    <tr>
+                        <th>Tenant</th>
+                        <th>Slug</th>
+                        <th>Custom Domain</th>
+                        <th>Login &amp; Brand Scope</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .TenantDomains}}
+                    <tr>
+                        <td style="font-weight:500">{{.Name}}</td>
+                        <td><code class="orig-code">{{.Slug}}</code></td>
+                        <td><code class="orig-code">{{.Domain}}</code></td>
+                        <td style="font-size:12.5px;color:var(--ds-text-muted)">{{.Name}} Brand · Scoped to {{.Name}} users only</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="orig-empty">
+            No tenants currently have a custom domain assigned. Assign custom domains in <a href="/s/tenants/" style="color:#0071e3;text-decoration:none">Tenants</a>.
+        </div>
+        {{end}}
+    </section>
+
+</div>
+{{end}}

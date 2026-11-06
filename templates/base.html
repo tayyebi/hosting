@@ -1,33 +1,13 @@
-{{define "base"}}
-<!DOCTYPE html>
+{{define "base"}}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{block "title" .}}Platform{{end}}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <title>{{block "title" .}}Sign In — Platform{{end}}</title>
     <link rel="stylesheet" href="/static/css/main.css" />
-    <link rel="stylesheet" href="/static/css/additions.css" />
-    <script>
-        // Apply saved theme synchronously to avoid flash-of-wrong-theme
-        (function () {
-            try {
-                var pref = localStorage.getItem('platform_theme') || 'light';
-                var resolved = pref === 'system'
-                    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-                    : pref;
-                document.documentElement.setAttribute('data-theme', resolved);
-            } catch (e) {}
-        })();
-    </script>
-    {{block "head" .}}{{end}}
+    {{block "head-extra" .}}{{end}}
 </head>
 <body>
-    {{block "body" .}}{{end}}
-    <script src="/static/js/main.js"></script>
-    {{block "scripts" .}}{{end}}
+    {{template "content" .}}
 </body>
-</html>
-{{end}}
+</html>{{end}}

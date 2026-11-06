@@ -16,18 +16,30 @@ import (
 )
 
 type RegisterPageData struct {
-	Tenant Tenant
-	Error  string
+	Tenant     Tenant
+	Brand      TenantLoginBrand
+	FormAction string
+	SignInURL  string
+	Error      string
 }
 
-func tenantRegisterPage(w http.ResponseWriter, r *http.Request) {
+func resolveRegisterTenant(r *http.Request) (Tenant, string, string, bool) {
+	oc := originFromContext(r)
+	if oc.Mode == OriginModeTenant && oc.Tenant != nil {
+		return *oc.Tenant, "/register", "/", true
+	}
 	slug := r.PathValue("slug")
+	if slug == "" {
+		return Tenant{}, "", "", false
+	}
 	tenant, found := store.getBySlug(slug)
 	if !found {
-		http.NotFound(w, r)
-		return
+		return Tenant{}, "", "", false
 	}
+	return tenant, "/t/" + tenant.Slug + "/register", "/t/" + tenant.Slug + "/login", true
+}
 
+func renderTenantRegisterPage(w http.ResponseWriter, r *http.Request, tenant Tenant, formAction, signInURL, errMsg string) {
 	paths := []string{
 		filepath.Join("templates", "base.html"),
 		filepath.Join("templates", "tenant", "register.html"),
@@ -37,33 +49,48 @@ func tenantRegisterPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	data := RegisterPageData{Tenant: tenant}
+	brand := resolveTenantLoginBrand(r.Context(), tenant)
+	if strings.TrimSpace(brand.Name) != "" {
+		tenant.Name = brand.Name
+	}
+	data := RegisterPageData{
+		Tenant:     tenant,
+		Brand:      brand,
+		FormAction: formAction,
+		SignInURL:  signInURL,
+		Error:      errMsg,
+	}
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, "Render error: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
+func tenantRegisterPage(w http.ResponseWriter, r *http.Request) {
+	if originFromContext(r).Mode == OriginModeSystem {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	tenant, formAction, signInURL, ok := resolveRegisterTenant(r)
+	if !ok {
+		ServeError(w, r, http.StatusNotFound, "")
+		return
+	}
+	renderTenantRegisterPage(w, r, tenant, formAction, signInURL, "")
+}
+
 func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("slug")
-	tenant, found := store.getBySlug(slug)
-	if !found {
-		http.NotFound(w, r)
+	if originFromContext(r).Mode == OriginModeSystem {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	tenant, formAction, signInURL, ok := resolveRegisterTenant(r)
+	if !ok {
+		ServeError(w, r, http.StatusNotFound, "")
 		return
 	}
 
 	renderErr := func(msg string) {
-		paths := []string{
-			filepath.Join("templates", "base.html"),
-			filepath.Join("templates", "tenant", "register.html"),
-		}
-		tmpl, err := template.ParseFiles(paths...)
-		if err != nil {
-			http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := tmpl.ExecuteTemplate(w, "base", RegisterPageData{Tenant: tenant, Error: msg}); err != nil {
-			http.Error(w, "Render error: "+err.Error(), http.StatusInternalServerError)
-		}
+		renderTenantRegisterPage(w, r, tenant, formAction, signInURL, msg)
 	}
 
 	name := strings.TrimSpace(r.FormValue("name"))
@@ -89,26 +116,32 @@ func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if Pools == nil {
-		renderErr("Registration is temporarily unavailable. Please try again later.")
+		RegisterTestUser(email, name, password, RoleUser, tenant.Slug)
+		newUser := User{
+			Email:      email,
+			Name:       name,
+			Role:       RoleUser,
+			TenantSlug: tenant.Slug,
+		}
+		createSession(w, r, newUser, false)
+		http.Redirect(w, r, "/t/"+tenant.Slug+"/", http.StatusSeeOther)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
 
-	// Resolve tenant DB ID
 	tenantID := tenant.DBID
 	if tenantID == 0 {
-		id, err := db.LookupTenantIDBySlug(ctx, Pools.Admin, slug)
+		id, err := db.LookupTenantIDBySlug(ctx, Pools.Admin, tenant.Slug)
 		if err != nil {
-			log.Printf("tenantRegisterSubmit: resolve tenant %s: %v", slug, err)
+			log.Printf("tenantRegisterSubmit: resolve tenant %s: %v", tenant.Slug, err)
 			renderErr("Registration unavailable — tenant not found.")
 			return
 		}
 		tenantID = id
 	}
 
-	// Check if already registered for this tenant
 	exists, err := db.IsEmailRegistered(ctx, Pools.Admin, email, tenantID)
 	if err != nil {
 		log.Printf("tenantRegisterSubmit: email check: %v", err)
@@ -118,7 +151,6 @@ func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hash password with bcrypt
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("tenantRegisterSubmit: bcrypt: %v", err)
@@ -126,7 +158,6 @@ func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user + tenant membership in DB
 	userID, err := db.RegisterUser(ctx, Pools.Admin, email, name, string(hash), tenantID)
 	if err != nil {
 		log.Printf("tenantRegisterSubmit: register user: %v", err)
@@ -134,17 +165,16 @@ func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Issue a session for the new user
 	newUser := User{
 		ID:         userID,
 		Email:      email,
 		Name:       name,
-		Role:       RoleTenant,
-		TenantSlug: slug,
+		Role:       RoleUser,
+		TenantSlug: tenant.Slug,
 	}
 	createSession(w, r, newUser, false)
 
-	http.Redirect(w, r, "/t/"+slug+"/", http.StatusSeeOther)
+	http.Redirect(w, r, "/t/"+tenant.Slug+"/", http.StatusSeeOther)
 }
 
 func hasUppercase(s string) bool {
@@ -166,6 +196,8 @@ func hasDigit(s string) bool {
 }
 
 func RegisterTenantRegisterPageRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /register", tenantRegisterPage)
+	mux.HandleFunc("POST /register", tenantRegisterSubmit)
 	mux.HandleFunc("GET /t/{slug}/register", tenantRegisterPage)
 	mux.HandleFunc("POST /t/{slug}/register", tenantRegisterSubmit)
 }

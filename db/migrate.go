@@ -32,6 +32,7 @@ func Migrate(pool *pgxpool.Pool, migrations fs.FS) error {
 	if err != nil {
 		return fmt.Errorf("db: postgres driver: %w", err)
 	}
+	defer func() { _ = driver.Close() }()
 
 	m, err := migrate.NewWithInstance("iofs", src, "postgres", driver)
 	if err != nil {

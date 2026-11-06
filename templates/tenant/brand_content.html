@@ -363,30 +363,34 @@
                     <svg width="28" height="28" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 11L8 7L12 11L16 7" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15L8 11L12 15L16 11" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/></svg>
                 </div>
                 <div class="st-avatar-meta">
-                    <div class="st-avatar-name">{{.Tenant.Name}}</div>
+                    <div class="st-avatar-name">{{.Brand.Name}}</div>
                     <div class="st-avatar-hint">SVG, PNG or WebP · Recommended 256×256</div>
                 </div>
-                <button class="st-btn-secondary" aria-label="Upload brand logo">Upload logo</button>
             </div>
 
             <div class="st-group">
-                <label class="st-label">Company name</label>
-                <input class="st-input" type="text" value="{{.Tenant.Name}}">
+                <label class="st-label" for="brandCompanyName">Company name</label>
+                <input class="st-input" id="brandCompanyName" type="text" value="{{.Brand.Name}}">
             </div>
             <div class="st-group">
-                <label class="st-label">Tagline</label>
-                <input class="st-input" type="text" value="Reliable cloud infrastructure for everyone.">
+                <label class="st-label" for="brandTagline">Tagline</label>
+                <input class="st-input" id="brandTagline" type="text" value="{{.Brand.Tagline}}">
             </div>
             <div class="st-group">
-                <label class="st-label">Website</label>
-                <input class="st-input" type="url" value="{{if .Tenant.Domain}}https://{{.Tenant.Domain}}{{end}}" placeholder="https://example.com">
+                <label class="st-label" for="brandLogoURL">Logo URL (optional)</label>
+                <input class="st-input" id="brandLogoURL" type="url" value="{{.Brand.LogoURL}}" placeholder="https://cdn.example.com/logo.svg">
             </div>
             <div class="st-group">
-                <label class="st-label">Support email</label>
-                <input class="st-input" type="email" value="support@{{if .Tenant.Domain}}{{.Tenant.Domain}}{{else}}example.com{{end}}">
+                <label class="st-label" for="brandWebsite">Website</label>
+                <input class="st-input" id="brandWebsite" type="url" value="{{.Brand.Website}}" placeholder="https://example.com">
             </div>
-            <div class="st-btn-row">
-                <button class="st-btn-primary" aria-label="Save identity settings">Save identity</button>
+            <div class="st-group">
+                <label class="st-label" for="brandSupportEmail">Support email</label>
+                <input class="st-input" id="brandSupportEmail" type="email" value="{{.Brand.SupportEmail}}">
+            </div>
+            <div class="st-btn-row" style="display:flex;align-items:center;gap:12px">
+                <button class="st-btn-primary" type="button" onclick="saveBrandIdentity()" aria-label="Save identity settings">Save identity</button>
+                <span id="brandSaveStatus" style="font-size:12.5px;color:var(--ds-text-muted)"></span>
             </div>
         </section>
 
@@ -640,8 +644,8 @@
     <div class="bp-canvas">
         <div class="bp-preview" id="bpPreview">
             <div class="bp-logo">
-                <div class="bp-logo__m" id="bpMark">A</div>
-                <div class="bp-logo__t" id="bpName">Acme Cloud</div>
+                <div class="bp-logo__m" id="bpMark">{{.Brand.Initial}}</div>
+                <div class="bp-logo__t" id="bpName">{{.Brand.Name}}</div>
             </div>
             <div class="bp-pal" role="group" aria-label="Accent colour picker">
                 <span class="bp-pal__c on" data-c="#7c5cff" style="background:#7c5cff" role="radio" aria-checked="true" aria-label="Purple accent"></span>
@@ -664,9 +668,8 @@
     <div class="bp-actions">
         <div class="bp-actions__h">Tip — press <kbd>⌘</kbd>+<kbd>S</kbd> to save and publish to all customer-facing pages.</div>
         <div class="bp-actions__btns">
-            <button class="btn btn--ghost btn--sm" aria-label="Reset brand preview">Reset</button>
-            <button class="btn btn--ghost btn--sm" aria-label="Open preview in new tab">Open in new tab</button>
-            <button class="btn btn--primary btn--sm" aria-label="Publish brand changes">Publish changes</button>
+            <a class="btn btn--ghost btn--sm" href="/t/{{.Tenant.Slug}}/login" target="_blank" rel="noopener" aria-label="Open preview in new tab">Open login page</a>
+            <button class="btn btn--primary btn--sm" type="button" onclick="saveBrandIdentity()" aria-label="Publish brand changes">Publish changes</button>
         </div>
     </div>
 </div>
@@ -674,6 +677,37 @@
 </div><!-- /.brd -->
 
 <script>
+function saveBrandIdentity() {
+    var statusEl = document.getElementById('brandSaveStatus');
+    var nameEl = document.getElementById('brandCompanyName');
+    var payload = {
+        company_name: nameEl ? nameEl.value : '',
+        tagline: (document.getElementById('brandTagline') || {}).value || '',
+        logo_url: (document.getElementById('brandLogoURL') || {}).value || '',
+        website: (document.getElementById('brandWebsite') || {}).value || '',
+        support_email: (document.getElementById('brandSupportEmail') || {}).value || ''
+    };
+    if (statusEl) statusEl.textContent = 'Saving…';
+    fetch('/api/tenant/{{.Tenant.Slug}}/brand', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+      .then(function(res) {
+        if (!res.ok) {
+            if (statusEl) statusEl.textContent = (res.data && res.data.error) || 'Failed to save.';
+            return;
+        }
+        if (statusEl) statusEl.textContent = 'Saved';
+        var bpName = document.getElementById('bpName');
+        var bpMark = document.getElementById('bpMark');
+        if (bpName && payload.company_name) bpName.textContent = payload.company_name;
+        if (bpMark && payload.company_name) bpMark.textContent = payload.company_name.trim().charAt(0).toUpperCase();
+        if (window.mockToast) window.mockToast('Brand saved & published to customer-facing pages');
+    }).catch(function() {
+        if (statusEl) statusEl.textContent = 'Network error.';
+    });
+}
 function switchSection(btn, id) {
     document.querySelectorAll('.settings-nav__item').forEach(b => b.classList.remove('settings-nav__item--active'));
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('settings-section--active'));
