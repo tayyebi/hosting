@@ -192,6 +192,9 @@ func TestTenantResourcesAPICrossTenantIsolation(t *testing.T) {
 	}()
 
 	mux := http.NewServeMux()
+	RegisterSysadminRoutes(mux)
+	RegisterTenantDashboardRoutes(mux)
+	RegisterTenantResourcesRoutes(mux)
 	RegisterAPIRoutes(mux)
 
 	// Unauthenticated HTTP requests to tenant resource & supply host endpoints -> 401

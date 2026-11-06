@@ -33,13 +33,21 @@ jobs:
         run: |
           set -euo pipefail
           docker compose up -d --build
+          READY=0
           for i in $(seq 1 40); do
-            if curl -fsS http://127.0.0.1:8021/healthz | grep -q '"status":"ok"'; then
-              break
+            if curl -fsS http://127.0.0.1:8021/healthz > /tmp/healthz.json 2>/dev/null; then
+              if grep -q '"status":"ok"' /tmp/healthz.json; then
+                READY=1
+                break
+              fi
             fi
             sleep 2
           done
-          HEALTH=$(curl -fsS http://127.0.0.1:8021/healthz)
+          if [ "$READY" != "1" ]; then
+            echo "::error title=HealthTimeout::app did not report healthy on :8021"
+            exit 1
+          fi
+          HEALTH=$(cat /tmp/healthz.json)
           echo "::notice title=Healthz::${HEALTH}"
 
           # 1. Login as seeded sysadmin
@@ -104,5 +112,5 @@ jobs:
       - name: Dump compose logs on failure
         if: failure()
         run: |
-          LOG_TAIL=$(docker compose logs --no-color --tail=80 app postgres | tr '\n' ' ' | cut -c1-900)
-          echo "::error title=ComposeLogs::${LOG_TAIL}"
+          LOG_TAIL=$(docker compose logs --no-color --tail=50 app | tr '\n' ' ' | cut -c1-900)
+          echo "::error title=AppLogs::${LOG_TAIL}"

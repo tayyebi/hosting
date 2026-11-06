@@ -1256,15 +1256,15 @@ func resourceDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RegisterTenantResourcesRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /t/{slug}/resources/", tenantMiddleware(resourcesHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/onboard/", tenantMiddleware(resourceOnboardFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/probe/", tenantMiddleware(tenantHostProbeFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/provision/", tenantMiddleware(tenantHostProvisionFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/status/", tenantMiddleware(tenantHostStatusFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/delete/", tenantMiddleware(tenantHostDeleteFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/ips/", tenantMiddleware(tenantAddIPsFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/ips/", tenantMiddleware(tenantAddIPsFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/ips/{ip_id}/delete/", tenantMiddleware(tenantDeleteIPFormHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/{id}/status/", tenantMiddleware(resourceStatusHandler))
-	mux.HandleFunc("POST /t/{slug}/resources/{id}/delete/", tenantMiddleware(resourceDeleteHandler))
+	mux.HandleFunc("GET /t/{slug}/resources/{$}", tenantMiddleware(resourcesHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/onboard/{$}", tenantMiddleware(resourceOnboardFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/probe/{$}", tenantMiddleware(tenantHostProbeFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/provision/{$}", tenantMiddleware(tenantHostProvisionFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/status/{$}", tenantMiddleware(tenantHostStatusFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/delete/{$}", tenantMiddleware(tenantHostDeleteFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/hosts/{id}/ips/{$}", tenantMiddleware(tenantAddIPsFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/ips/{$}", tenantMiddleware(tenantAddIPsFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/ips/{ip_id}/delete/{$}", tenantMiddleware(tenantDeleteIPFormHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/{id}/status/{$}", tenantMiddleware(resourceStatusHandler))
+	mux.HandleFunc("POST /t/{slug}/resources/{id}/delete/{$}", tenantMiddleware(resourceDeleteHandler))
 }
