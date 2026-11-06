@@ -143,7 +143,7 @@ func TestTenantResourcesTemplateRendersSupplyHostsIPPoolsAndZeroDummyData(t *tes
 
 func TestSysadminInfrastructureRemovedAndAccountingRendersCleanly(t *testing.T) {
 	for _, item := range sysadminNav {
-		if item.Key == "infrastructure" || strings.Contains(item.Path, "/s/infrastructure") {
+		if item.ID == "infrastructure" || strings.Contains(item.Path, "/s/infrastructure") {
 			t.Fatalf("expected /s/infrastructure to be removed from sysadminNav, found %+v", item)
 		}
 	}
