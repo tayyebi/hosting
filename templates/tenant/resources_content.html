@@ -493,11 +493,13 @@
                     <tbody>
                         {{range .Rows}}
                         <tr class="inv-row--clickable inv-res-row"
+                            data-row-kind="{{.RowKind}}"
+                            data-host-id="{{.NumericID}}"
                             data-cat="{{.CategoryKey}}"
                             data-status="{{.Status}}"
                             data-search="{{.Name}} {{.SubLabel}} {{.HostOrIP}} {{.Region}} {{.BadgeLabel}}"
                             data-detail="{{.DetailJSON}}"
-                            {{if eq .RowKind "supply_host"}}onclick="window.location.href='/t/{{$.TenantSlug}}/resources/?view='+encodeURIComponent(currentInvView())+'&host={{.NumericID}}'"{{else}}onclick="openGenericDetail(this)"{{end}}>
+                            onclick="handleInvRowClick(this)">
                             <td>
                                 <div class="res-name">{{.Name}}</div>
                                 <div class="res-id">{{.SubLabel}}</div>
@@ -1245,6 +1247,15 @@
         var rv = document.getElementById('ipModalReturnView');
         if (rv) rv.value = returnView || '';
         document.getElementById('ipPoolModal').hidden = false;
+    };
+
+    window.handleInvRowClick = function(tr) {
+        if (!tr) return;
+        if (tr.dataset.rowKind === 'supply_host' && tr.dataset.hostId) {
+            window.location.href = '/t/' + tenantSlug + '/resources/?view=' + encodeURIComponent(currentInvView()) + '&host=' + encodeURIComponent(tr.dataset.hostId);
+            return;
+        }
+        openGenericDetail(tr);
     };
 
     window.openGenericDetail = function(tr) {

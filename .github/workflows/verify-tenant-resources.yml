@@ -21,7 +21,12 @@ jobs:
           set -euo pipefail
           go vet ./...
           go build ./...
-          go test -v ./...
+          if ! go test -v ./... > /tmp/gotest.out 2>&1; then
+            FAIL_SUMMARY=$(grep -E "(FAIL|Error|panic|template)" /tmp/gotest.out | tr '\n' ' ' | cut -c1-900)
+            echo "::error title=GoTestFailed::${FAIL_SUMMARY}"
+            cat /tmp/gotest.out
+            exit 1
+          fi
           echo "::notice title=GoTests::go vet, go build, and go test passed"
 
       - name: Live Compose + Migration 0045 + Tenant Resources E2E
