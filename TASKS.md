@@ -748,9 +748,9 @@
 - [x] Fix Linux build exclusion bug on `db/maintenance_windows.go` (`_windows.go` Go OS suffix) so the full codebase compiles cleanly across Linux and Windows
 
 ## 5. First Real Infrastructure Case — Linux Nested VPS + Auto-Provisioning + Manual IP Pool
-- [x] Add migration `0044_supply_hosts_and_ip_pool` creating `supply_hosts`, `supply_host_ips`, and extending `resources` with `parent_resource_id`, `supply_host_id`, and `external_ref`
+- [x] Add migration `0044_supply_hosts_and_ip_pool` and `0045_tenant_scoped_supply_hosts` creating tenant-isolated `supply_hosts` and `supply_host_ips` (with `FORCE ROW LEVEL SECURITY` `tenant_isolation` policies) and extending `resources` with `parent_resource_id`, `supply_host_id`, and `external_ref`
 - [x] Implement real `LinuxNestedQEMUDriver` (`providers/linux_nested_qemu.go`) supporting SSH connectivity & hardware/KVM capability probing, automated QEMU/KVM + libvirt virtualization stack installation (`BootstrapHost`), and guest VM creation/deletion with static IP cloud-init configuration
-- [x] Implement `db/supply_hosts.go` for CRUD on supply hosts, auto-provisioning status/log updates, manual bulk/single IP inventory management, and transactional `FOR UPDATE SKIP LOCKED` IP allocation & release
-- [x] Add Sysadmin Infrastructure UI (`/s/infrastructure/`) and REST API (`/api/sysadmin/infrastructure/*`) to onboard a Linux Nested VPS, trigger virtualization stack auto-provisioning, view live provision logs, and manually add/manage assignable IPs on that server
-- [x] Wire customer VM purchase/creation (`CreateComputeVM` & compute API handlers) to schedule onto an active `ready` Linux Nested VPS host, allocate a free IP from that server's manual IP pool as a child payable `resources` item, and invoke the driver
+- [x] Implement tenant-scoped `db/supply_hosts.go` for CRUD on supply hosts, auto-provisioning status/log updates, manual bulk/single IP inventory management, and transactional `FOR UPDATE SKIP LOCKED` IP allocation & release strictly isolated by `tenant_id`
+- [x] Wire Tenant Resources Console (`/t/{slug}/resources/`) and REST API (`/api/tenant/{slug}/resources/*`) — reusing the Resource Tree (`inv-tree`), unified inventory table (`inv-table`), slide-in inspector (`inv-detail`), modals (`#onboardModal`, `#ipPoolModal`), and live capacity panel (`inv-capacity-panel`) — to onboard Linux Nested VPS servers, trigger SSH auto-provisioning, and manage manual assignable IP pools (removing `/s/infrastructure/`)
+- [x] Wire customer VM purchase/creation (`CreateComputeVM` & compute API handlers) to schedule onto an active `ready` Linux Nested VPS host owned by that tenant, allocate a free IP from that server's manual IP pool as a child payable `resources` item, and invoke the driver
 

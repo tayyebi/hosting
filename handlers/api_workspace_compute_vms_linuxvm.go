@@ -260,7 +260,7 @@ func apiWSComputeVMsLinuxCreateHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoAssignableInventory) {
-				apiError(w, http.StatusConflict, "No online provisioned supply host with available assignable IPs in inventory. Onboard a Linux Nested VPS, run Auto-Provision, and add manual IPs in /s/infrastructure/.")
+				apiError(w, http.StatusConflict, "No online provisioned supply host with available assignable IPs in tenant inventory. Onboard a Linux Nested VPS, run Auto-Provision, and add manual IPs in /t/"+slug+"/resources/.")
 				return
 			}
 			apiError(w, http.StatusBadGateway, "VM provisioning failed: "+err.Error())

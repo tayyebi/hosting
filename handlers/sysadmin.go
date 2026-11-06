@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 )
 
-
 type NavItem struct {
 	ID    string
 	Label string
@@ -15,7 +14,6 @@ type NavItem struct {
 }
 
 var sysadminNav = []NavItem{
-	{ID: "infrastructure", Label: "Infrastructure", Path: "/s/infrastructure/", Icon: "infrastructure"},
 	{ID: "tenants", Label: "Tenants", Path: "/s/tenants/", Icon: "tenants"},
 	{ID: "logs", Label: "Logs", Path: "/s/logs/", Icon: "logs"},
 	{ID: "replicas", Label: "Replicas", Path: "/s/replicas/", Icon: "replicas"},
@@ -62,9 +60,8 @@ func sysadminPage(activeNav, pageTitle string) http.HandlerFunc {
 
 func RegisterSysadminRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/s/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/s/infrastructure/", http.StatusSeeOther)
+		http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 	})
-	RegisterSysadminInfrastructureRoutes(mux)
 	mux.HandleFunc("/s/logs/", LogsPage)
 	RegisterReplicaRoutes(mux)
 	RegisterSysadminCurrentReplicaRoutes(mux)
