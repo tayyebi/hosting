@@ -23,7 +23,7 @@ if exist .env (
     )
 )
 
-echo [Platform] Starting on :3000
+echo [Platform] Starting on :8021
 .\platform.exe
 goto :eof
 

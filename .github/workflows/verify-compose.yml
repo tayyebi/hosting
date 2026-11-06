@@ -10,34 +10,47 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Boot stack with zero-config compose.yaml
+      - name: Boot stack with compose.yaml
         run: |
           set -euo pipefail
+          chmod +x scripts/db-init.sh
           docker compose config >/dev/null
           docker compose up -d --wait
           docker compose ps
-          docker compose logs app
 
-      - name: Verify /healthz, /login, and seeded sysadmin authentication
+      - name: Verify port 8021, passwordless DB, and internal network isolation
         run: |
           set -euo pipefail
-          HEALTH="$(curl -fsS http://127.0.0.1:3000/healthz)"
-          echo "Health response: ${HEALTH}"
+
+          # 1. Verify /healthz on 8021
+          HEALTH="$(curl -fsS http://127.0.0.1:8021/healthz)"
+          echo "::notice::/healthz => ${HEALTH}"
           echo "${HEALTH}" | grep -q '"status":"ok"'
           echo "${HEALTH}" | grep -q '"db":"ok"'
 
-          HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/login)"
-          echo "/login status: ${HTTP_CODE}"
-          [ "${HTTP_CODE}" = "200" ]
+          # 2. Verify /login page on 8021
+          LOGIN_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8021/login)"
+          echo "::notice::GET /login HTTP status => ${LOGIN_CODE}"
+          [ "${LOGIN_CODE}" = "200" ]
 
-          # Also test when .env is copied from .env.example (ensuring @localhost:5432 in .env does not break container networking)
-          cp .env.example .env
-          docker compose up -d --wait
-          HEALTH2="$(curl -fsS http://127.0.0.1:3000/healthz)"
-          echo "Health response with .env present: ${HEALTH2}"
-          echo "${HEALTH2}" | grep -q '"status":"ok"'
-          echo "${HEALTH2}" | grep -q '"db":"ok"'
-          rm -f .env
+          # 3. Verify PostgreSQL container is strictly on an internal:true network with zero published ports
+          PG_CID="$(docker compose ps -q postgres)"
+          PG_PORTS="$(docker inspect -f '{{json .HostConfig.PortBindings}}' "${PG_CID}")"
+          PG_NETS="$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "${PG_CID}")"
+          echo "::notice::Postgres PortBindings=${PG_PORTS} Networks=${PG_NETS}"
+          [ "${PG_PORTS}" = "{}" ] || [ "${PG_PORTS}" = "null" ]
+
+          for NET in ${PG_NETS}; do
+            IS_INTERNAL="$(docker network inspect -f '{{.Internal}}' "${NET}")"
+            echo "::notice::Network ${NET} Internal=${IS_INTERNAL}"
+            [ "${IS_INTERNAL}" = "true" ]
+          done
+
+          # 4. Verify only web port 8021 is published by app container
+          APP_CID="$(docker compose ps -q app)"
+          APP_PORTS="$(docker inspect -f '{{json .HostConfig.PortBindings}}' "${APP_CID}")"
+          echo "::notice::App PortBindings=${APP_PORTS}"
+          echo "${APP_PORTS}" | grep -q '8021'
 
       - name: Tear down stack
         if: always()

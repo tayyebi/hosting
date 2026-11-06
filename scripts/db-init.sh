@@ -5,23 +5,30 @@
 #   - platform_app     (normal runtime role; RLS applied)
 #   - platform_readonly (SELECT-only; used by the sysadmin SQL console)
 #
-# POSTGRES_USER in compose.yaml is already set to platform_admin, so the
-# cluster is bootstrapped with platform_admin as the superuser. This script
-# only creates the two additional runtime roles and grants base privileges.
+# In compose.yaml, PostgreSQL runs passwordless (POSTGRES_HOST_AUTH_METHOD=trust)
+# inside an isolated internal Docker network. Optional PG_APP_PASSWORD and
+# PG_READONLY_PASSWORD values are still supported for external setups.
 
 set -euo pipefail
 
-: "${PG_APP_PASSWORD:?PG_APP_PASSWORD must be set}"
-: "${PG_READONLY_PASSWORD:?PG_READONLY_PASSWORD must be set}"
+APP_PW_SQL=""
+if [ -n "${PG_APP_PASSWORD:-}" ]; then
+    APP_PW_SQL=" PASSWORD '${PG_APP_PASSWORD}'"
+fi
+
+RO_PW_SQL=""
+if [ -n "${PG_READONLY_PASSWORD:-}" ]; then
+    RO_PW_SQL=" PASSWORD '${PG_READONLY_PASSWORD}'"
+fi
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     DO \$\$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'platform_app') THEN
-            CREATE ROLE platform_app LOGIN PASSWORD '${PG_APP_PASSWORD}';
+            CREATE ROLE platform_app LOGIN${APP_PW_SQL};
         END IF;
         IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'platform_readonly') THEN
-            CREATE ROLE platform_readonly LOGIN PASSWORD '${PG_READONLY_PASSWORD}';
+            CREATE ROLE platform_readonly LOGIN${RO_PW_SQL};
         END IF;
     END
     \$\$;

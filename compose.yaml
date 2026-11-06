@@ -4,15 +4,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: platform_admin
-      POSTGRES_PASSWORD: ${PG_ADMIN_PASSWORD:-admin_dev_password}
       POSTGRES_DB: platform
-      PG_APP_PASSWORD: ${PG_APP_PASSWORD:-app_dev_password}
-      PG_READONLY_PASSWORD: ${PG_READONLY_PASSWORD:-readonly_dev_password}
-    expose:
-      - "5432"
-    # Uncomment to access PostgreSQL directly from the host machine:
-    # ports:
-    #   - "127.0.0.1:5432:5432"
+      POSTGRES_HOST_AUTH_METHOD: trust
+    networks:
+      - internal
     volumes:
       - platform-pgdata:/var/lib/postgresql/data
       - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
@@ -33,9 +28,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://platform_app:${PG_APP_PASSWORD:-app_dev_password}@postgres:5432/platform?sslmode=disable
-      DATABASE_URL_ADMIN: postgres://platform_admin:${PG_ADMIN_PASSWORD:-admin_dev_password}@postgres:5432/platform?sslmode=disable
-      DATABASE_URL_READONLY: postgres://platform_readonly:${PG_READONLY_PASSWORD:-readonly_dev_password}@postgres:5432/platform?sslmode=disable
+      PORT: "8021"
+      DATABASE_URL: postgres://platform_app@postgres:5432/platform?sslmode=disable
+      DATABASE_URL_ADMIN: postgres://platform_admin@postgres:5432/platform?sslmode=disable
+      DATABASE_URL_READONLY: postgres://platform_readonly@postgres:5432/platform?sslmode=disable
       DB_MAX_CONNS: ${DB_MAX_CONNS:-25}
       DB_MIN_CONNS: ${DB_MIN_CONNS:-2}
       PLATFORM_ENV: ${PLATFORM_ENV:-development}
@@ -43,14 +39,24 @@ services:
       SYSADMIN_NAME: ${SYSADMIN_NAME:-System Administrator}
       SYSADMIN_PASSWORD: ${SYSADMIN_PASSWORD:-sysadmin123}
       AUDIT_LOG_RETENTION_DAYS: ${AUDIT_LOG_RETENTION_DAYS:-90}
+    networks:
+      - internal
+      - web
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-8021}:8021"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8021/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  web:
+    driver: bridge
 
 volumes:
   platform-pgdata:

@@ -15,5 +15,5 @@ rm -f ./platform.exe ./platform
 echo "[Platform] Building..."
 go build -o platform.exe .
 
-echo "[Platform] Starting on :3000"
+echo "[Platform] Starting on :8021"
 ./platform.exe

@@ -22,9 +22,9 @@ COPY templates /app/templates
 COPY static /app/static
 
 USER hosting
-EXPOSE 3000
+EXPOSE 8021
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=5 \
-  CMD wget -q -O /dev/null http://127.0.0.1:3000/healthz || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1:8021/healthz || exit 1
 
 ENTRYPOINT ["/app/hosting"]

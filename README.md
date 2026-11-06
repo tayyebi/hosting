@@ -6,7 +6,7 @@ A multi-tenant cloud and infrastructure hosting control plane built with Go and 
 
 ### Quick Start (Docker Compose)
 
-With Docker and Docker Compose installed, pull the repository and bring up the full stack (PostgreSQL 16 + control plane):
+Pull the repository and bring up the full stack:
 
 ```bash
 git pull
@@ -15,43 +15,15 @@ docker-compose up
 
 *(Or `docker compose up -d` to run in the background.)*
 
-On startup, PostgreSQL initializes the three database roles (`platform_admin`, `platform_app`, `platform_readonly`), the application container runs embedded SQL migrations (`migrations/*.sql`), seeds the initial System Super Administrator, and listens on `http://localhost:3000` (health check at `GET /healthz`).
-
-Optional overrides can be configured by copying `.env.example` to `.env` before starting (`PG_ADMIN_PASSWORD`, `PG_APP_PASSWORD`, `PG_READONLY_PASSWORD`, `SYSADMIN_EMAIL`, `SYSADMIN_NAME`, `SYSADMIN_PASSWORD`, `APP_PORT`).
+- **Database isolation**: PostgreSQL 16 runs passwordless (`trust`) inside an `internal: true` Docker network (`internal`) with no ports exposed outside Docker, initializing the three database roles (`platform_admin`, `platform_app`, `platform_readonly`).
+- **Web control plane**: The application runs embedded SQL migrations (`migrations/*.sql`), seeds the initial System Super Administrator, and exposes only port **`8021`** (`http://localhost:8021`, health check at `GET /healthz`).
+- **Optional overrides**: Set `APP_PORT`, `SYSADMIN_EMAIL`, `SYSADMIN_NAME`, or `SYSADMIN_PASSWORD` in `.env` if you want to customize defaults.
 
 ### Manual Setup (Without Docker)
 
-#### 1. Initialize PostgreSQL Roles
-
-On an existing PostgreSQL 16+ instance, run [`scripts/db-init.sh`](scripts/db-init.sh) as your Postgres superuser with `POSTGRES_USER=platform_admin`, `POSTGRES_DB=platform`, `PG_APP_PASSWORD`, and `PG_READONLY_PASSWORD` set.
-
-#### 2. Configure Environment Variables
-
-Copy `.env.example` to `.env` and adjust credentials for your PostgreSQL host:
-
-```bash
-DATABASE_URL=postgres://platform_app:app_dev_password@localhost:5432/platform?sslmode=disable
-DATABASE_URL_ADMIN=postgres://platform_admin:admin_dev_password@localhost:5432/platform?sslmode=disable
-DATABASE_URL_READONLY=postgres://platform_readonly:readonly_dev_password@localhost:5432/platform?sslmode=disable
-
-SYSADMIN_EMAIL=sysadmin@platform.io
-SYSADMIN_NAME="System Administrator"
-SYSADMIN_PASSWORD=sysadmin123
-```
-
-#### 3. Run From a Released Archive or Source
-
-From a GitHub Release archive (`hosting-linux-amd64.tar.gz` or `hosting-linux-arm64.tar.gz`, keeping `templates/` and `static/` next to the binary):
-
-```bash
-mkdir -p /opt/hosting
-tar -xzf hosting-linux-amd64.tar.gz -C /opt/hosting
-cd /opt/hosting
-set -a && source .env && set +a
-./hosting
-```
-
-Or build directly from source (Go 1.26+):
+1. Initialize the three roles on an existing PostgreSQL 16+ instance using [`scripts/db-init.sh`](scripts/db-init.sh) (`POSTGRES_USER=platform_admin`, `POSTGRES_DB=platform`, and optional `PG_APP_PASSWORD` / `PG_READONLY_PASSWORD`).
+2. Copy `.env.example` to `.env` and adjust `DATABASE_URL`, `DATABASE_URL_ADMIN`, `DATABASE_URL_READONLY`, and `PORT` (defaults to `8021`).
+3. Run from a GitHub Release archive (`hosting-linux-amd64.tar.gz` or `hosting-linux-arm64.tar.gz`, keeping `templates/` and `static/` next to the binary) or build from source (Go 1.26+):
 
 ```bash
 go build -trimpath -ldflags="-s -w" -o hosting .
