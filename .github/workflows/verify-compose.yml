@@ -33,10 +33,10 @@ jobs:
           echo "::notice::GET / HTTP status => ${ROOT_CODE}"
           [ "${ROOT_CODE}" = "200" ]
 
-          AUTH_CODE="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8021/api/v1/auth/login \
+          AUTH_CODE="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8021/api/login \
             -H 'Content-Type: application/json' \
             -d '{"email":"sysadmin@platform.io","password":"sysadmin123"}')"
-          echo "::notice::POST /api/v1/auth/login HTTP status => ${AUTH_CODE}"
+          echo "::notice::POST /api/login HTTP status => ${AUTH_CODE}"
           [ "${AUTH_CODE}" = "200" ]
 
           # 3. Verify PostgreSQL container is strictly on an internal:true network with zero published ports
