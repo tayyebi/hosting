@@ -81,6 +81,11 @@ func apiDocsHandler(w http.ResponseWriter, r *http.Request) {
 			{Method: "GET", Path: "/api/sysadmin/tenants/{id}", Summary: "Get tenant", Description: "Returns a single tenant by ID.", Tag: "Sysadmin"},
 			{Method: "PATCH", Path: "/api/sysadmin/tenants/{id}", Summary: "Update tenant", Description: "Update a tenant's name or domain. Slug is immutable.", Tag: "Sysadmin"},
 			{Method: "DELETE", Path: "/api/sysadmin/tenants/{id}", Summary: "Delete tenant", Description: "Delete a tenant by ID.", Tag: "Sysadmin"},
+			{Method: "GET", Path: "/api/sysadmin/origin", Summary: "Get origin configuration", Description: "Returns system-level origin settings, ordered system domains, active enforcement mode, and tenant domain summary.", Tag: "Sysadmin"},
+			{Method: "PUT", Path: "/api/sysadmin/origin", Summary: "Update origin settings", Description: "Updates redirect scheme, status code, proxy header trust, and optional domain order.", Tag: "Sysadmin"},
+			{Method: "POST", Path: "/api/sysadmin/origin/domains", Summary: "Add system origin domain", Description: "Appends a domain to the system origin list.", Tag: "Sysadmin"},
+			{Method: "PATCH", Path: "/api/sysadmin/origin/domains/{id}", Summary: "Update system origin domain", Description: "Updates note, enabled state, or list position (top/up/down).", Tag: "Sysadmin"},
+			{Method: "DELETE", Path: "/api/sysadmin/origin/domains/{id}", Summary: "Delete system origin domain", Description: "Removes a domain from the system origin list.", Tag: "Sysadmin"},
 			{Method: "GET", Path: "/api/sysadmin/logs", Summary: "System logs", Description: "Returns system log entries with histogram buckets. Supports level, service, and search filters.", Tag: "Sysadmin"},
 			{Method: "GET", Path: "/api/sysadmin/jobs", Summary: "Background jobs", Description: "Returns background jobs, queue health, workers, and KPIs. Supports status, queue, and search filters.", Tag: "Sysadmin"},
 			{Method: "GET", Path: "/api/sysadmin/database", Summary: "Database schema", Description: "Returns database schemas, tables, and columns.", Tag: "Sysadmin"},
@@ -689,6 +694,11 @@ func RegisterAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sysadmin/tenants/{id}", apiSysadminTenantsGetHandler)
 	mux.HandleFunc("PATCH /api/sysadmin/tenants/{id}", apiSysadminTenantsUpdateHandler)
 	mux.HandleFunc("DELETE /api/sysadmin/tenants/{id}", apiSysadminTenantsDeleteHandler)
+	mux.HandleFunc("GET /api/sysadmin/origin", apiSysadminOriginGetHandler)
+	mux.HandleFunc("PUT /api/sysadmin/origin", apiSysadminOriginUpdateHandler)
+	mux.HandleFunc("POST /api/sysadmin/origin/domains", apiSysadminOriginAddDomainHandler)
+	mux.HandleFunc("PATCH /api/sysadmin/origin/domains/{id}", apiSysadminOriginPatchDomainHandler)
+	mux.HandleFunc("DELETE /api/sysadmin/origin/domains/{id}", apiSysadminOriginDeleteDomainHandler)
 	mux.HandleFunc("GET /api/sysadmin/logs", apiSysadminLogsHandler)
 	mux.HandleFunc("GET /api/sysadmin/jobs", apiSysadminJobsHandler)
 	mux.HandleFunc("GET /api/sysadmin/database", apiSysadminDatabaseHandler)

@@ -58,3 +58,20 @@ func UpsertBrandSettings(ctx context.Context, pool *pgxpool.Pool, tenantID int64
 	}
 	return nil
 }
+
+func UpsertBrandColors(ctx context.Context, pool *pgxpool.Pool, tenantID int64, colors json.RawMessage) error {
+	if len(colors) == 0 {
+		colors = json.RawMessage(`[]`)
+	}
+	_, err := pool.Exec(ctx, `
+		INSERT INTO tenant_brand_settings (tenant_id, colors)
+		VALUES ($1, $2::jsonb)
+		ON CONFLICT (tenant_id) DO UPDATE SET
+		    colors     = EXCLUDED.colors,
+		    updated_at = now()`,
+		tenantID, string(colors))
+	if err != nil {
+		return fmt.Errorf("db.UpsertBrandColors: %w", err)
+	}
+	return nil
+}

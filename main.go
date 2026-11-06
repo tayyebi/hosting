@@ -105,7 +105,7 @@ func securityHeaders(next http.Handler) http.Handler {
 				"script-src 'self' 'unsafe-inline'; "+
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "+
 				"font-src 'self' https://fonts.gstatic.com; "+
-				"img-src 'self' data:; "+
+				"img-src 'self' data: https:; "+
 				"connect-src 'self'")
 		h.Del("Server")
 		h.Del("X-Powered-By")
@@ -135,7 +135,9 @@ func main() {
 	if err := db.Migrate(pools.Admin, migSub); err != nil {
 		log.Fatalf("migrations: %v", err)
 	}
-	if err := db.Seed(ctx, pools.Admin); err != nil {
+	seedCtx, seedCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer seedCancel()
+	if err := db.Seed(seedCtx, pools.Admin); err != nil {
 		log.Fatalf("seed: %v", err)
 	}
 	handlers.Pools = pools
@@ -195,6 +197,8 @@ func main() {
 
 	// Auth
 	mux.HandleFunc("/login", handlers.LoginHandler)
+	mux.HandleFunc("GET /t/{slug}/login", handlers.TenantLoginPage)
+	mux.HandleFunc("POST /t/{slug}/login", handlers.TenantLoginHandler)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
 	mux.HandleFunc("/forgot-password", handlers.ForgotPasswordHandler)
 	mux.HandleFunc("/sso-guide", handlers.SSOGuideHandler)
@@ -255,7 +259,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              "0.0.0.0:" + port,
-		Handler:           requestLogger(securityHeaders(apiNoCache(limitRequestBody(requireJSONContentType(handlers.APIRateLimit(mux)))))),
+		Handler:           requestLogger(securityHeaders(handlers.OriginMiddleware(apiNoCache(limitRequestBody(requireJSONContentType(handlers.APIRateLimit(mux))))))),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      60 * time.Second,

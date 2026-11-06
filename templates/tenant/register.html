@@ -84,7 +84,7 @@
             </div>
             {{end}}
 
-            <form class="auth-form" action="/t/{{.Tenant.Slug}}/register" method="POST" novalidate
+            <form class="auth-form" action="{{if .FormAction}}{{.FormAction}}{{else}}/t/{{.Tenant.Slug}}/register{{end}}" method="POST" novalidate
                   role="form" aria-label="Create account">
 
                 <div class="form-group">
@@ -219,7 +219,7 @@
 
             <p class="auth-form-footer" aria-label="Sign in prompt">
                 Already have an account?
-                <a href="/t/{{.Tenant.Slug}}/" class="form-link form-link--bold">Sign in</a>
+                <a href="{{if .SignInURL}}{{.SignInURL}}{{else}}/t/{{.Tenant.Slug}}/login{{end}}" class="form-link form-link--bold">Sign in</a>
             </p>
 
             <p class="auth-form-footer" style="margin-top:8px;" aria-label="Developer resources">

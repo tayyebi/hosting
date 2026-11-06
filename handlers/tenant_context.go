@@ -28,13 +28,20 @@ func tenantFromContext(r *http.Request) (Tenant, bool) {
 // any tenant, tenant-role users may only enter their own (by slug match).
 func tenantMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slug := r.PathValue("slug")
+
 		user, ok := getSession(r)
 		if !ok {
+			oc := originFromContext(r)
+			if oc.Mode == OriginModeDefault && slug != "" {
+				if _, found := store.getBySlug(slug); found {
+					http.Redirect(w, r, "/t/"+slug+"/login", http.StatusSeeOther)
+					return
+				}
+			}
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-
-		slug := r.PathValue("slug")
 		if !validTenantSlug.MatchString(slug) {
 			http.NotFound(w, r)
 			return

@@ -38,13 +38,65 @@ type User struct {
 
 type SessionUser = User
 
-// fallbackSysadminMu guards fallbackSysadminPassword when Pools == nil (e.g. unit tests without DB).
-var fallbackSysadminMu sync.Mutex
-var fallbackSysadminPassword string
+// fallbackSysadminMu guards fallbackSysadminPassword and in-memory test accounts
+// used ONLY when Pools == nil (unit test mode without PostgreSQL).
+var (
+	fallbackSysadminMu       sync.Mutex
+	fallbackSysadminPassword string
 
-// authenticateCredentials verifies user credentials against PostgreSQL `users`
-// when Pools is configured. Only when Pools == nil (isolated unit test mode)
-// does it fall back to the bootstrap System Super Administrator credentials.
+	memUsersMu   sync.RWMutex
+	memTestUsers []memTestUser
+
+	memSessionsMu sync.RWMutex
+	memSessions   = map[string]memSessionEntry{}
+)
+
+type memTestUser struct {
+	ID         int64
+	Email      string
+	Name       string
+	Password   string
+	Role       Role
+	TenantSlug string
+}
+
+type memSessionEntry struct {
+	User      User
+	ExpiresAt time.Time
+}
+
+// RegisterTestUser registers an in-memory user account for unit tests running with Pools == nil.
+func RegisterTestUser(email, name, password string, role Role, tenantSlug string) {
+	memUsersMu.Lock()
+	defer memUsersMu.Unlock()
+	id := int64(len(memTestUsers) + 100)
+	memTestUsers = append(memTestUsers, memTestUser{
+		ID:         id,
+		Email:      strings.TrimSpace(email),
+		Name:       name,
+		Password:   password,
+		Role:       role,
+		TenantSlug: tenantSlug,
+	})
+}
+
+// ResetTestAuthState clears in-memory test users and sessions (used in unit tests).
+func ResetTestAuthState() {
+	memUsersMu.Lock()
+	memTestUsers = nil
+	memUsersMu.Unlock()
+
+	memSessionsMu.Lock()
+	memSessions = map[string]memSessionEntry{}
+	memSessionsMu.Unlock()
+
+	fallbackSysadminMu.Lock()
+	fallbackSysadminPassword = ""
+	fallbackSysadminMu.Unlock()
+}
+
+// authenticateCredentials verifies user credentials in default (unrestricted) mode.
+// When Pools != nil, PostgreSQL `users` is authoritative.
 func authenticateCredentials(ctx context.Context, email, password string) (User, bool) {
 	email = strings.TrimSpace(email)
 	if email == "" || password == "" {
@@ -66,7 +118,7 @@ func authenticateCredentials(ctx context.Context, email, password string) (User,
 		role := RoleUser
 		if u.GlobalRole == "sysadmin" {
 			role = RoleSysAdmin
-		} else if u.TenantRole == "tenant" || u.TenantSlug != "" {
+		} else if u.TenantRole == "tenant" {
 			role = RoleTenant
 		}
 		return User{
@@ -80,6 +132,21 @@ func authenticateCredentials(ctx context.Context, email, password string) (User,
 	}
 
 	// Fallback ONLY when running without a database pool.
+	memUsersMu.RLock()
+	for _, mu := range memTestUsers {
+		if strings.EqualFold(mu.Email, email) && subtle.ConstantTimeCompare([]byte(mu.Password), []byte(password)) == 1 {
+			memUsersMu.RUnlock()
+			return User{
+				ID:         mu.ID,
+				Email:      mu.Email,
+				Name:       mu.Name,
+				Role:       mu.Role,
+				TenantSlug: mu.TenantSlug,
+			}, true
+		}
+	}
+	memUsersMu.RUnlock()
+
 	bootEmail, bootName, bootPass := db.SysadminBootstrapCredentials()
 	fallbackSysadminMu.Lock()
 	if fallbackSysadminPassword == "" {
@@ -99,6 +166,106 @@ func authenticateCredentials(ctx context.Context, email, password string) (User,
 		Name:  bootName,
 		Role:  RoleSysAdmin,
 	}, true
+}
+
+// authenticateSysadminCredentials enforces that ONLY platform system administrators
+// (RoleSysAdmin) may authenticate on a configured System Origin domain.
+func authenticateSysadminCredentials(ctx context.Context, email, password string) (User, db.SysadminAuthStatus) {
+	email = strings.TrimSpace(email)
+	if email == "" || password == "" {
+		return User{}, db.SysadminAuthInvalid
+	}
+
+	if Pools != nil {
+		authCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		u, status, err := db.AuthenticateSysadmin(authCtx, Pools.Admin, email, password)
+		if err != nil {
+			log.Printf("auth: AuthenticateSysadmin error: %v", err)
+			return User{}, db.SysadminAuthInvalid
+		}
+		if status != db.SysadminAuthOK {
+			return User{ID: u.ID, Email: u.Email, Name: u.Name}, status
+		}
+		return User{
+			ID:        u.ID,
+			Email:     u.Email,
+			Name:      u.Name,
+			Role:      RoleSysAdmin,
+			AvatarURL: u.AvatarURL,
+		}, db.SysadminAuthOK
+	}
+
+	// Unit-test mode (Pools == nil)
+	u, ok := authenticateCredentials(ctx, email, password)
+	if !ok {
+		return User{}, db.SysadminAuthInvalid
+	}
+	if u.Role != RoleSysAdmin {
+		return u, db.SysadminAuthForbiddenRole
+	}
+	u.TenantSlug = ""
+	return u, db.SysadminAuthOK
+}
+
+// authenticateTenantCredentials strictly scopes login to accounts belonging to `tenant`.
+func authenticateTenantCredentials(ctx context.Context, tenant Tenant, email, password string) (User, bool) {
+	email = strings.TrimSpace(email)
+	if email == "" || password == "" || tenant.Slug == "" {
+		return User{}, false
+	}
+
+	if Pools != nil {
+		if tenant.DBID <= 0 {
+			return User{}, false
+		}
+		authCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		u, ok, err := db.AuthenticateTenantUser(authCtx, Pools.Admin, tenant.DBID, tenant.Slug, email, password)
+		if err != nil {
+			log.Printf("auth: AuthenticateTenantUser(%s) error: %v", tenant.Slug, err)
+			return User{}, false
+		}
+		if !ok {
+			return User{}, false
+		}
+		role := RoleUser
+		if u.TenantRole == "tenant" {
+			role = RoleTenant
+		}
+		return User{
+			ID:         u.ID,
+			Email:      u.Email,
+			Name:       u.Name,
+			Role:       role,
+			AvatarURL:  u.AvatarURL,
+			TenantSlug: tenant.Slug,
+		}, true
+	}
+
+	// Unit-test mode (Pools == nil): match only users belonging to tenant.Slug.
+	memUsersMu.RLock()
+	defer memUsersMu.RUnlock()
+	for _, mu := range memTestUsers {
+		if mu.TenantSlug == tenant.Slug &&
+			strings.EqualFold(mu.Email, email) &&
+			subtle.ConstantTimeCompare([]byte(mu.Password), []byte(password)) == 1 {
+			role := mu.Role
+			if role == RoleSysAdmin {
+				role = RoleTenant
+			}
+			return User{
+				ID:         mu.ID,
+				Email:      mu.Email,
+				Name:       mu.Name,
+				Role:       role,
+				TenantSlug: tenant.Slug,
+			}, true
+		}
+	}
+	return User{}, false
 }
 
 func changeAccountPassword(ctx context.Context, user User, currentPw, newPw string) (bool, error) {
@@ -130,36 +297,39 @@ func createSession(w http.ResponseWriter, r *http.Request, user User, remember b
 	}
 
 	if Pools == nil {
-		log.Println("session: Pools is nil — Postgres not wired; refusing to issue session")
-		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
-		return
-	}
+		memSessionsMu.Lock()
+		memSessions[id] = memSessionEntry{
+			User:      user,
+			ExpiresAt: time.Now().Add(ttl),
+		}
+		memSessionsMu.Unlock()
+	} else {
+		userID := user.ID
+		if userID == 0 {
+			var err error
+			userID, err = db.UpsertUser(r.Context(), Pools.Admin, user.Email, user.Name, normaliseGlobalRole(user.Role))
+			if err != nil {
+				log.Printf("session: upsert user for %s: %v", user.Email, err)
+				http.Error(w, "database error", http.StatusInternalServerError)
+				return
+			}
+		}
+		user.ID = userID
 
-	userID := user.ID
-	if userID == 0 {
-		var err error
-		userID, err = db.UpsertUser(r.Context(), Pools.Admin, user.Email, user.Name, normaliseGlobalRole(user.Role))
-		if err != nil {
-			log.Printf("session: upsert user for %s: %v", user.Email, err)
+		var tenantID int64
+		if user.TenantSlug != "" {
+			_ = Pools.Admin.QueryRow(r.Context(),
+				`SELECT id FROM tenants WHERE slug = $1 AND deleted_at IS NULL`,
+				user.TenantSlug).Scan(&tenantID)
+		}
+
+		ip := clientIP(r)
+		ua := r.UserAgent()
+		if err := db.CreateSession(r.Context(), Pools.Admin, userID, tenantID, id, ttl, ip, ua); err != nil {
+			log.Printf("session: insert session for %s: %v", user.Email, err)
 			http.Error(w, "database error", http.StatusInternalServerError)
 			return
 		}
-	}
-	user.ID = userID
-
-	var tenantID int64
-	if user.TenantSlug != "" {
-		_ = Pools.Admin.QueryRow(r.Context(),
-			`SELECT id FROM tenants WHERE slug = $1 AND deleted_at IS NULL`,
-			user.TenantSlug).Scan(&tenantID)
-	}
-
-	ip := clientIP(r)
-	ua := r.UserAgent()
-	if err := db.CreateSession(r.Context(), Pools.Admin, userID, tenantID, id, ttl, ip, ua); err != nil {
-		log.Printf("session: insert session for %s: %v", user.Email, err)
-		http.Error(w, "database error", http.StatusInternalServerError)
-		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -175,48 +345,80 @@ func createSession(w http.ResponseWriter, r *http.Request, user User, remember b
 
 func getSession(r *http.Request) (User, bool) {
 	c, err := r.Cookie("platform_session")
-	if err != nil {
+	if err != nil || c.Value == "" {
 		return User{}, false
 	}
+
+	var u User
 	if Pools == nil {
-		return User{}, false
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-
-	rec, err := db.LookupSession(ctx, Pools.Admin, c.Value)
-	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			log.Printf("session: lookup: %v", err)
+		memSessionsMu.RLock()
+		entry, ok := memSessions[c.Value]
+		memSessionsMu.RUnlock()
+		if !ok || time.Now().After(entry.ExpiresAt) {
+			return User{}, false
 		}
-		return User{}, false
-	}
+		u = entry.User
+	} else {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
 
-	u := User{
-		ID:         rec.UserID,
-		Email:      rec.Email,
-		Name:       rec.Name,
-		TenantSlug: rec.TenantSlug,
-	}
-	switch rec.GlobalRole {
-	case "sysadmin":
-		u.Role = RoleSysAdmin
-	default:
-		if rec.TenantSlug != "" {
+		rec, err := db.LookupSession(ctx, Pools.Admin, c.Value)
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				log.Printf("session: lookup: %v", err)
+			}
+			return User{}, false
+		}
+		if rec.TenantID > 0 && rec.TenantSlug == "" {
+			// Tenant was deleted after session creation.
+			return User{}, false
+		}
+
+		u = User{
+			ID:         rec.UserID,
+			Email:      rec.Email,
+			Name:       rec.Name,
+			TenantSlug: rec.TenantSlug,
+		}
+		if rec.GlobalRole == "sysadmin" && rec.TenantID == 0 {
+			u.Role = RoleSysAdmin
+		} else if rec.TenantRole == "tenant" {
 			u.Role = RoleTenant
 		} else {
 			u.Role = RoleUser
 		}
 	}
+
+	// Enforce origin-scoped session validity:
+	oc := originFromContext(r)
+	switch oc.Mode {
+	case OriginModeSystem:
+		if u.Role != RoleSysAdmin {
+			return User{}, false
+		}
+	case OriginModeTenant:
+		if oc.Tenant == nil || u.TenantSlug != oc.Tenant.Slug {
+			return User{}, false
+		}
+		if u.Role == RoleSysAdmin {
+			u.Role = RoleTenant
+		}
+	}
+
 	return u, true
 }
 
 func destroySession(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("platform_session")
-	if err == nil && Pools != nil {
-		if revErr := db.RevokeSession(r.Context(), Pools.Admin, c.Value); revErr != nil {
-			log.Printf("session: revoke: %v", revErr)
+	if err == nil && c.Value != "" {
+		if Pools != nil {
+			if revErr := db.RevokeSession(r.Context(), Pools.Admin, c.Value); revErr != nil {
+				log.Printf("session: revoke: %v", revErr)
+			}
+		} else {
+			memSessionsMu.Lock()
+			delete(memSessions, c.Value)
+			memSessionsMu.Unlock()
 		}
 	}
 	http.SetCookie(w, &http.Cookie{

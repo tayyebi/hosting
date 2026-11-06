@@ -17,8 +17,8 @@ type apiLoginRequest struct {
 }
 
 type apiLoginResponse struct {
-	OK    bool   `json:"ok"`
-	Token string `json:"token,omitempty"`
+	OK    bool         `json:"ok"`
+	Token string       `json:"token,omitempty"`
 	User  *apiUserInfo `json:"user,omitempty"`
 }
 
@@ -54,7 +54,37 @@ func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionUser, ok := authenticateCredentials(r.Context(), req.Email, req.Password)
+	oc := originFromContext(r)
+	var (
+		sessionUser User
+		ok          bool
+	)
+
+	switch oc.Mode {
+	case OriginModeSystem:
+		u, status := authenticateSysadminCredentials(r.Context(), req.Email, req.Password)
+		if status == db.SysadminAuthForbiddenRole {
+			recordLoginFailure(ip)
+			if Pools != nil {
+				go db.InsertAuditEvent(context.Background(), Pools.Admin, u.ID, "user",
+					"auth.login.denied", "warn", map[string]any{"email": req.Email, "origin": oc.MatchedDomain},
+					"non-sysadmin API login rejected on system origin", reqID, ip)
+			}
+			apiError(w, http.StatusForbidden, "Only platform system administrators can sign in on this domain.")
+			return
+		}
+		if status == db.SysadminAuthOK {
+			sessionUser = u
+			ok = true
+		}
+	case OriginModeTenant:
+		if oc.Tenant != nil {
+			sessionUser, ok = authenticateTenantCredentials(r.Context(), *oc.Tenant, req.Email, req.Password)
+		}
+	default:
+		sessionUser, ok = authenticateCredentials(r.Context(), req.Email, req.Password)
+	}
+
 	if !ok {
 		justLocked := recordLoginFailure(ip)
 		if Pools != nil {
@@ -73,14 +103,11 @@ func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
 		go db.InsertAuditEvent(context.Background(), Pools.Admin, sessionUser.ID, string(sessionUser.Role), "auth.login.success", "info", map[string]any{"email": req.Email}, "", reqID, ip)
 	}
 
-	// Read back the cookie value as the token for the JSON response.
 	token := ""
 	for _, c := range w.Header().Values("Set-Cookie") {
-		// The session cookie was just set; surface the value.
 		if len(c) > len("platform_session=") {
 			token = "session-cookie-set"
 		}
-		_ = c
 	}
 
 	apiOK(w, apiLoginResponse{

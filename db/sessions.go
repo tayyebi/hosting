@@ -20,6 +20,7 @@ type SessionRecord struct {
 	Name       string
 	GlobalRole string // "sysadmin" | "user"
 	TenantSlug string // empty when sysadmin
+	TenantRole string // "tenant" | "user" | ""
 	ExpiresAt  time.Time
 }
 
@@ -63,10 +64,15 @@ func LookupSession(ctx context.Context, admin *pgxpool.Pool, token string) (*Ses
                COALESCE(u.name, ''),
                u.global_role,
                COALESCE(t.slug, ''),
+               COALESCE(utm.role, ''),
                s.expires_at
           FROM sessions s
-          JOIN users u ON u.id = s.user_id
-          LEFT JOIN tenants t ON t.id = s.tenant_id
+          JOIN users u ON u.id = s.user_id AND u.deleted_at IS NULL
+          LEFT JOIN tenants t ON t.id = s.tenant_id AND t.deleted_at IS NULL
+          LEFT JOIN user_tenant_memberships utm
+                 ON utm.user_id = u.id
+                AND utm.tenant_id = s.tenant_id
+                AND COALESCE(utm.active, true) = true
          WHERE s.token_hash = $1
            AND s.revoked_at IS NULL
            AND s.expires_at > now()
@@ -75,7 +81,7 @@ func LookupSession(ctx context.Context, admin *pgxpool.Pool, token string) (*Ses
 
 	var r SessionRecord
 	if err := row.Scan(&r.UserID, &r.TenantID, &r.Email, &r.Name,
-		&r.GlobalRole, &r.TenantSlug, &r.ExpiresAt); err != nil {
+		&r.GlobalRole, &r.TenantSlug, &r.TenantRole, &r.ExpiresAt); err != nil {
 		return nil, err
 	}
 	return &r, nil

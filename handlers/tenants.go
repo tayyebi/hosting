@@ -302,6 +302,61 @@ func (s *tenantsStore) slugExists(slug, excludeID string) bool {
 	return false
 }
 
+// domainExists returns true if another tenant already uses the given domain.
+func (s *tenantsStore) domainExists(domain, excludeID string) bool {
+	norm, err := db.NormalizeDomain(domain)
+	if err != nil {
+		norm = strings.ToLower(strings.TrimSpace(domain))
+	}
+	if norm == "" {
+		return false
+	}
+	if Pools != nil {
+		var exNum int64
+		if excludeID != "" {
+			exNum, _ = strconv.ParseInt(excludeID, 10, 64)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		exists, dbErr := db.TenantDomainExists(ctx, Pools.Admin, norm, exNum)
+		if dbErr == nil {
+			return exists
+		}
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, t := range s.tenants {
+		if strings.EqualFold(t.Domain, norm) && t.ID != excludeID {
+			return true
+		}
+	}
+	return false
+}
+
+// getByDomain resolves an active tenant whose custom Domain matches the incoming host.
+func (s *tenantsStore) getByDomain(fullHost, bareHost string) (Tenant, bool) {
+	if fullHost == "" && bareHost == "" {
+		return Tenant{}, false
+	}
+	if Pools != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+		defer cancel()
+		row, ok, err := db.GetTenantByDomain(ctx, Pools.Admin, fullHost, bareHost)
+		if err == nil && ok {
+			return tenantFromRow(row), true
+		}
+		return Tenant{}, false
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, t := range s.tenants {
+		if t.Domain != "" && db.HostMatchesConfiguredDomain(fullHost, bareHost, t.Domain) {
+			return t, true
+		}
+	}
+	return Tenant{}, false
+}
+
 // ── page data ────────────────────────────────────────────────
 
 type tenantsInnerData struct {
@@ -397,7 +452,24 @@ func tenantsCreateHandler(w http.ResponseWriter, r *http.Request) {
 		renderTenantsPage(w, r, "Slug \""+slug+"\" is already in use.", nil)
 		return
 	}
+	if domain != "" {
+		norm, err := db.NormalizeDomain(domain)
+		if err != nil {
+			renderTenantsPage(w, r, "Domain must be a valid hostname (e.g. cloud.acme.com).", nil)
+			return
+		}
+		domain = norm
+		if store.domainExists(domain, "") {
+			renderTenantsPage(w, r, "Domain \""+domain+"\" is already assigned to another tenant.", nil)
+			return
+		}
+		if origins.domainExists(domain, 0) {
+			renderTenantsPage(w, r, "Domain \""+domain+"\" is already registered as a System Origin domain.", nil)
+			return
+		}
+	}
 	store.add(Tenant{ID: newID(), Name: name, Slug: slug, Domain: domain})
+	origins.invalidateCache()
 	http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 }
 
@@ -445,13 +517,34 @@ func tenantsUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		renderTenantsPage(w, r, "Slug \""+slug+"\" is already in use.", &t)
 		return
 	}
+	if domain != "" {
+		norm, err := db.NormalizeDomain(domain)
+		if err != nil {
+			t, _ := store.get(id)
+			renderTenantsPage(w, r, "Domain must be a valid hostname (e.g. cloud.acme.com).", &t)
+			return
+		}
+		domain = norm
+		if store.domainExists(domain, id) {
+			t, _ := store.get(id)
+			renderTenantsPage(w, r, "Domain \""+domain+"\" is already assigned to another tenant.", &t)
+			return
+		}
+		if origins.domainExists(domain, 0) {
+			t, _ := store.get(id)
+			renderTenantsPage(w, r, "Domain \""+domain+"\" is already registered as a System Origin domain.", &t)
+			return
+		}
+	}
 	store.update(Tenant{ID: id, Name: name, Slug: slug, Domain: domain})
+	origins.invalidateCache()
 	http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 }
 
 func tenantsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	store.delete(id)
+	origins.invalidateCache()
 	http.Redirect(w, r, "/s/tenants/", http.StatusSeeOther)
 }
 
