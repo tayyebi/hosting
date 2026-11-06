@@ -102,13 +102,20 @@ func openOne(ctx context.Context, url string, maxConns, minConns int32) (*pgxpoo
 	if err != nil {
 		return nil, fmt.Errorf("new: %w", err)
 	}
-	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := pool.Ping(pingCtx); err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("ping: %w", err)
+	for {
+		pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		err = pool.Ping(pingCtx)
+		cancel()
+		if err == nil {
+			return pool, nil
+		}
+		select {
+		case <-ctx.Done():
+			pool.Close()
+			return nil, fmt.Errorf("ping: %w", err)
+		case <-time.After(500 * time.Millisecond):
+		}
 	}
-	return pool, nil
 }
 
 func envInt(name string, fallback int) int {

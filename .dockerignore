@@ -1,0 +1,8 @@
+.git
+.github
+.env
+dist
+*.exe
+platform
+hosting
+cookies.txt

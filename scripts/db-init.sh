@@ -5,7 +5,7 @@
 #   - platform_app     (normal runtime role; RLS applied)
 #   - platform_readonly (SELECT-only; used by the sysadmin SQL console)
 #
-# POSTGRES_USER in docker-compose is already set to platform_admin, so the
+# POSTGRES_USER in compose.yaml is already set to platform_admin, so the
 # cluster is bootstrapped with platform_admin as the superuser. This script
 # only creates the two additional runtime roles and grants base privileges.
 

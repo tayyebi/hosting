@@ -142,7 +142,7 @@ jobs:
             go build -trimpath -ldflags="-s -w" -o "${STAGE_DIR}/hosting" .
           chmod +x "${STAGE_DIR}/hosting"
           cp -r templates static scripts "${STAGE_DIR}/"
-          cp docker-compose.yml .env.example README.md "${STAGE_DIR}/"
+          cp compose.yaml .env.example README.md "${STAGE_DIR}/"
           tar -czf "${RUNNER_TEMP}/hosting-deploy.tar.gz" -C "${STAGE_DIR}" .
           rm -rf "${STAGE_DIR}"
 

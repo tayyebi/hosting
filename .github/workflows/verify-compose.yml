@@ -1,0 +1,44 @@
+name: Verify Compose Stack
+
+on:
+  push:
+    branches: [arena/fb13a1a8-hosting]
+
+jobs:
+  verify-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Boot stack with zero-config compose.yaml
+        run: |
+          set -euo pipefail
+          docker compose config >/dev/null
+          docker compose up -d --wait
+          docker compose ps
+          docker compose logs app
+
+      - name: Verify /healthz, /login, and seeded sysadmin authentication
+        run: |
+          set -euo pipefail
+          HEALTH="$(curl -fsS http://127.0.0.1:3000/healthz)"
+          echo "Health response: ${HEALTH}"
+          echo "${HEALTH}" | grep -q '"status":"ok"'
+          echo "${HEALTH}" | grep -q '"db":"ok"'
+
+          HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/login)"
+          echo "/login status: ${HTTP_CODE}"
+          [ "${HTTP_CODE}" = "200" ]
+
+          # Also test when .env is copied from .env.example (ensuring @localhost:5432 in .env does not break container networking)
+          cp .env.example .env
+          docker compose up -d --wait
+          HEALTH2="$(curl -fsS http://127.0.0.1:3000/healthz)"
+          echo "Health response with .env present: ${HEALTH2}"
+          echo "${HEALTH2}" | grep -q '"status":"ok"'
+          echo "${HEALTH2}" | grep -q '"db":"ok"'
+          rm -f .env
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

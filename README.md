@@ -4,44 +4,44 @@ A multi-tenant cloud and infrastructure hosting control plane built with Go and 
 
 ## Setup Guide
 
-### Prerequisites
+### Quick Start (Docker Compose)
 
-- **PostgreSQL 16+** (or Docker with Docker Compose)
-- **Go 1.26+** (if building from source)
-
-### 1. Start PostgreSQL and Initialize Roles
-
-The platform uses three database roles (`platform_admin` for migrations and sysadmin operations, `platform_app` with Row-Level Security enforced, and `platform_readonly` for the SQL console).
-
-Using Docker Compose:
+With Docker and Docker Compose installed, pull the repository and bring up the full stack (PostgreSQL 16 + control plane):
 
 ```bash
-cp .env.example .env
-docker compose up -d
+git pull
+docker-compose up
 ```
 
-Or on an existing PostgreSQL instance, run [`scripts/db-init.sh`](scripts/db-init.sh) as your Postgres superuser with `POSTGRES_USER=platform_admin`, `POSTGRES_DB=platform`, `PG_APP_PASSWORD`, and `PG_READONLY_PASSWORD` set.
+*(Or `docker compose up -d` to run in the background.)*
 
-### 2. Configure Environment Variables
+On startup, PostgreSQL initializes the three database roles (`platform_admin`, `platform_app`, `platform_readonly`), the application container runs embedded SQL migrations (`migrations/*.sql`), seeds the initial System Super Administrator, and listens on `http://localhost:3000` (health check at `GET /healthz`).
 
-Edit `.env` (or export variables directly in your environment / systemd unit):
+Optional overrides can be configured by copying `.env.example` to `.env` before starting (`PG_ADMIN_PASSWORD`, `PG_APP_PASSWORD`, `PG_READONLY_PASSWORD`, `SYSADMIN_EMAIL`, `SYSADMIN_NAME`, `SYSADMIN_PASSWORD`, `APP_PORT`).
+
+### Manual Setup (Without Docker)
+
+#### 1. Initialize PostgreSQL Roles
+
+On an existing PostgreSQL 16+ instance, run [`scripts/db-init.sh`](scripts/db-init.sh) as your Postgres superuser with `POSTGRES_USER=platform_admin`, `POSTGRES_DB=platform`, `PG_APP_PASSWORD`, and `PG_READONLY_PASSWORD` set.
+
+#### 2. Configure Environment Variables
+
+Copy `.env.example` to `.env` and adjust credentials for your PostgreSQL host:
 
 ```bash
 DATABASE_URL=postgres://platform_app:app_dev_password@localhost:5432/platform?sslmode=disable
 DATABASE_URL_ADMIN=postgres://platform_admin:admin_dev_password@localhost:5432/platform?sslmode=disable
 DATABASE_URL_READONLY=postgres://platform_readonly:readonly_dev_password@localhost:5432/platform?sslmode=disable
 
-# Initial System Super Administrator seeded on first boot:
 SYSADMIN_EMAIL=sysadmin@platform.io
 SYSADMIN_NAME="System Administrator"
 SYSADMIN_PASSWORD=sysadmin123
 ```
 
-### 3. Build and Run
+#### 3. Run From a Released Archive or Source
 
-#### Option A — From a Released Archive
-
-Download the archive for your architecture (`hosting-linux-amd64.tar.gz` or `hosting-linux-arm64.tar.gz`) from GitHub Releases and extract it into a working directory (keep `templates/` and `static/` next to the binary):
+From a GitHub Release archive (`hosting-linux-amd64.tar.gz` or `hosting-linux-arm64.tar.gz`, keeping `templates/` and `static/` next to the binary):
 
 ```bash
 mkdir -p /opt/hosting
@@ -51,7 +51,7 @@ set -a && source .env && set +a
 ./hosting
 ```
 
-#### Option B — From Source
+Or build directly from source (Go 1.26+):
 
 ```bash
 go build -trimpath -ldflags="-s -w" -o hosting .
@@ -59,9 +59,7 @@ set -a && source .env && set +a
 ./hosting
 ```
 
-On startup, embedded database migrations (`migrations/*.sql`) and the System Super Administrator seeder run automatically, and the HTTP server listens on `0.0.0.0:3000` (health check at `GET /healthz`).
-
-### 4. Optional Automated Linux Deployment (GitHub Actions)
+### Optional Automated Linux Deployment (GitHub Actions)
 
 Configure the following repository secrets to enable automatic deployment to a target Linux server on release:
 
