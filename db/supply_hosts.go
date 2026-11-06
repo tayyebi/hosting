@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	// ErrNoAssignableInventory indicates no online, ready supply host has a free
-	// IP address available to fulfill a customer VM purchase.
-	ErrNoAssignableInventory = errors.New("no online provisioned supply host with available assignable IPs in inventory")
+	// ErrNoAssignableInventory indicates no online, ready supply host for this
+	// tenant has a free IP address available to fulfill a customer VM purchase.
+	ErrNoAssignableInventory = errors.New("no online provisioned supply host with available assignable IPs in tenant inventory")
 
 	// ErrHostHasActiveWorkloads prevents deleting a supply host while customer
 	// resources or assigned IPs remain bound to it.
@@ -28,9 +28,10 @@ var (
 	ErrIPCurrentlyAssigned = errors.New("IP address is currently assigned to a customer resource")
 )
 
-// SupplyHostRecord represents a row in `supply_hosts` plus live inventory counters.
+// SupplyHostRecord represents a tenant-scoped row in `supply_hosts` plus live inventory counters.
 type SupplyHostRecord struct {
 	ID                int64
+	TenantID          int64
 	Name              string
 	HostnameOrIP      string
 	SSHPort           int
@@ -93,8 +94,9 @@ func (h SupplyHostRecord) ToProviderHost() providers.SupplyHost {
 	}
 }
 
-// CreateSupplyHostInput carries fields to onboard a new SupplyHost (such as a Linux Nested VPS).
+// CreateSupplyHostInput carries fields to onboard a new tenant SupplyHost (such as a Linux Nested VPS).
 type CreateSupplyHostInput struct {
+	TenantID         int64
 	Name             string
 	HostnameOrIP     string
 	SSHPort          int
@@ -116,6 +118,7 @@ type CreateSupplyHostInput struct {
 
 func ensureRegionID(ctx context.Context, pool *pgxpool.Pool, slug string) (*int64, string) {
 	slug = strings.ToLower(strings.TrimSpace(slug))
+	slug = strings.ReplaceAll(slug, " ", "-")
 	if slug == "" {
 		slug = "eu-central-1"
 	}
@@ -132,8 +135,11 @@ func ensureRegionID(ctx context.Context, pool *pgxpool.Pool, slug string) (*int6
 	return &id, slug
 }
 
-// CreateSupplyHost registers a new supply host (e.g. Linux Nested VPS) in inventory.
+// CreateSupplyHost registers a new tenant-scoped supply host in inventory.
 func CreateSupplyHost(ctx context.Context, pool *pgxpool.Pool, in CreateSupplyHostInput) (SupplyHostRecord, error) {
+	if in.TenantID <= 0 {
+		return SupplyHostRecord{}, errors.New("tenant_id is required")
+	}
 	name := strings.TrimSpace(in.Name)
 	hostAddr := strings.TrimSpace(in.HostnameOrIP)
 	if name == "" || hostAddr == "" {
@@ -184,19 +190,19 @@ func CreateSupplyHost(ctx context.Context, pool *pgxpool.Pool, in CreateSupplyHo
 	var id int64
 	err := pool.QueryRow(ctx, `
 		INSERT INTO supply_hosts (
-			name, hostname_or_ip, ssh_port, ssh_user, auth_method, ssh_credential,
+			tenant_id, name, hostname_or_ip, ssh_port, ssh_user, auth_method, ssh_credential,
 			driver_kind, ownership_type, region_id, region_slug,
 			bridge_interface, storage_pool_path,
 			cpu_cores, ram_mb, disk_gb,
 			monthly_cost_cents, currency, created_by
 		) VALUES (
-			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10,
-			$11, $12,
-			$13, $14, $15,
-			$16, $17, $18
+			$1, $2, $3, $4, $5, $6, $7,
+			$8, $9, $10, $11,
+			$12, $13,
+			$14, $15, $16,
+			$17, $18, $19
 		) RETURNING id`,
-		name, hostAddr, port, sshUser, authMethod, in.SSHCredential,
+		in.TenantID, name, hostAddr, port, sshUser, authMethod, in.SSHCredential,
 		driverKind, ownership, regionID, regionSlug,
 		bridge, storagePath,
 		in.CPUCores, in.RAMMB, in.DiskGB,
@@ -205,12 +211,12 @@ func CreateSupplyHost(ctx context.Context, pool *pgxpool.Pool, in CreateSupplyHo
 	if err != nil {
 		return SupplyHostRecord{}, fmt.Errorf("db.CreateSupplyHost: %w", err)
 	}
-	rec, _, err := GetSupplyHostByID(ctx, pool, id)
+	rec, _, err := GetTenantSupplyHostByID(ctx, pool, in.TenantID, id)
 	return rec, err
 }
 
 const supplyHostSelectCols = `
-	h.id, h.name, h.hostname_or_ip, h.ssh_port, h.ssh_user, h.auth_method, h.ssh_credential,
+	h.id, h.tenant_id, h.name, h.hostname_or_ip, h.ssh_port, h.ssh_user, h.auth_method, h.ssh_credential,
 	h.driver_kind, h.ownership_type, h.region_id, h.region_slug,
 	h.bridge_interface, h.storage_pool_path,
 	h.cpu_cores, h.ram_mb, h.disk_gb, h.kvm_available,
@@ -248,7 +254,7 @@ const supplyHostJoins = `
 func scanSupplyHost(row pgx.Row) (SupplyHostRecord, error) {
 	var h SupplyHostRecord
 	err := row.Scan(
-		&h.ID, &h.Name, &h.HostnameOrIP, &h.SSHPort, &h.SSHUser, &h.AuthMethod, &h.SSHCredential,
+		&h.ID, &h.TenantID, &h.Name, &h.HostnameOrIP, &h.SSHPort, &h.SSHUser, &h.AuthMethod, &h.SSHCredential,
 		&h.DriverKind, &h.OwnershipType, &h.RegionID, &h.RegionSlug,
 		&h.BridgeInterface, &h.StoragePoolPath,
 		&h.CPUCores, &h.RAMMB, &h.DiskGB, &h.KVMAvailable,
@@ -263,12 +269,13 @@ func scanSupplyHost(row pgx.Row) (SupplyHostRecord, error) {
 	return h, err
 }
 
-// ListSupplyHosts returns all non-deleted supply hosts with live IP & VM counts.
-func ListSupplyHosts(ctx context.Context, pool *pgxpool.Pool) ([]SupplyHostRecord, error) {
+// ListSupplyHostsByTenant returns all non-deleted supply hosts for a tenant with live IP & VM counts.
+func ListSupplyHostsByTenant(ctx context.Context, pool *pgxpool.Pool, tenantID int64) ([]SupplyHostRecord, error) {
 	rows, err := pool.Query(ctx,
-		`SELECT `+supplyHostSelectCols+supplyHostJoins+` WHERE h.deleted_at IS NULL ORDER BY h.id ASC`)
+		`SELECT `+supplyHostSelectCols+supplyHostJoins+` WHERE h.tenant_id = $1 AND h.deleted_at IS NULL ORDER BY h.id ASC`,
+		tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("db.ListSupplyHosts: %w", err)
+		return nil, fmt.Errorf("db.ListSupplyHostsByTenant: %w", err)
 	}
 	defer rows.Close()
 
@@ -283,7 +290,21 @@ func ListSupplyHosts(ctx context.Context, pool *pgxpool.Pool) ([]SupplyHostRecor
 	return out, rows.Err()
 }
 
-// GetSupplyHostByID fetches a single non-deleted supply host.
+// GetTenantSupplyHostByID fetches a single non-deleted supply host scoped to a tenant.
+func GetTenantSupplyHostByID(ctx context.Context, pool *pgxpool.Pool, tenantID, id int64) (SupplyHostRecord, bool, error) {
+	h, err := scanSupplyHost(pool.QueryRow(ctx,
+		`SELECT `+supplyHostSelectCols+supplyHostJoins+` WHERE h.tenant_id = $1 AND h.id = $2 AND h.deleted_at IS NULL`,
+		tenantID, id))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return SupplyHostRecord{}, false, nil
+	}
+	if err != nil {
+		return SupplyHostRecord{}, false, fmt.Errorf("db.GetTenantSupplyHostByID: %w", err)
+	}
+	return h, true, nil
+}
+
+// GetSupplyHostByID fetches a single non-deleted supply host by primary key.
 func GetSupplyHostByID(ctx context.Context, pool *pgxpool.Pool, id int64) (SupplyHostRecord, bool, error) {
 	h, err := scanSupplyHost(pool.QueryRow(ctx,
 		`SELECT `+supplyHostSelectCols+supplyHostJoins+` WHERE h.id = $1 AND h.deleted_at IS NULL`, id))
@@ -309,7 +330,7 @@ func MarkHostProvisioningStart(ctx context.Context, pool *pgxpool.Pool, hostID i
 }
 
 // MarkHostProvisioningComplete records successful virtualization stack bootstrap
-// and automatically activates the host in `online` inventory!
+// and automatically activates the host in `online` inventory.
 func MarkHostProvisioningComplete(ctx context.Context, pool *pgxpool.Pool, hostID int64, cap providers.HostCapacity, logText string) error {
 	_, err := pool.Exec(ctx, `
 		UPDATE supply_hosts
@@ -367,28 +388,40 @@ func UpdateHostProbeCapacity(ctx context.Context, pool *pgxpool.Pool, hostID int
 	return err
 }
 
-// SetHostInventoryStatus updates scheduling eligibility (`online`, `maintenance`, `offline`, `pending`).
-func SetHostInventoryStatus(ctx context.Context, pool *pgxpool.Pool, hostID int64, status string) error {
+// SetTenantHostInventoryStatus updates scheduling eligibility (`online`, `maintenance`, `offline`, `pending`) for a tenant's host.
+func SetTenantHostInventoryStatus(ctx context.Context, pool *pgxpool.Pool, tenantID, hostID int64, status string) error {
 	switch status {
 	case "pending", "online", "maintenance", "offline":
 	default:
 		return fmt.Errorf("invalid inventory_status %q", status)
 	}
-	_, err := pool.Exec(ctx, `
+	tag, err := pool.Exec(ctx, `
 		UPDATE supply_hosts
-		SET inventory_status = $2, updated_at = now()
-		WHERE id = $1 AND deleted_at IS NULL`, hostID, status)
-	return err
+		SET inventory_status = $3, updated_at = now()
+		WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NULL`, tenantID, hostID, status)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	return nil
 }
 
-// DeleteSupplyHost soft-deletes a supply host if it has no assigned IPs or active VMs.
-func DeleteSupplyHost(ctx context.Context, pool *pgxpool.Pool, hostID int64) error {
+// DeleteTenantSupplyHost soft-deletes a tenant's supply host if it has no assigned IPs or active VMs.
+func DeleteTenantSupplyHost(ctx context.Context, pool *pgxpool.Pool, tenantID, hostID int64) error {
+	if _, found, err := GetTenantSupplyHostByID(ctx, pool, tenantID, hostID); err != nil {
+		return err
+	} else if !found {
+		return pgx.ErrNoRows
+	}
+
 	var busyCount int
 	if err := pool.QueryRow(ctx, `
 		SELECT (
-			(SELECT COUNT(*) FROM supply_host_ips WHERE host_id = $1 AND status = 'assigned') +
-			(SELECT COUNT(*) FROM resources WHERE supply_host_id = $1 AND deleted_at IS NULL AND status IN ('active','provisioning'))
-		)::int`, hostID).Scan(&busyCount); err != nil {
+			(SELECT COUNT(*) FROM supply_host_ips WHERE tenant_id = $1 AND host_id = $2 AND status = 'assigned') +
+			(SELECT COUNT(*) FROM resources WHERE tenant_id = $1 AND supply_host_id = $2 AND deleted_at IS NULL AND status IN ('active','provisioning'))
+		)::int`, tenantID, hostID).Scan(&busyCount); err != nil {
 		return err
 	}
 	if busyCount > 0 {
@@ -399,12 +432,12 @@ func DeleteSupplyHost(ctx context.Context, pool *pgxpool.Pool, hostID int64) err
 		return err
 	}
 	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `DELETE FROM supply_host_ips WHERE host_id = $1`, hostID); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM supply_host_ips WHERE tenant_id = $1 AND host_id = $2`, tenantID, hostID); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE supply_hosts SET deleted_at = now(), inventory_status = 'offline', updated_at = now()
-		WHERE id = $1 AND deleted_at IS NULL`, hostID); err != nil {
+		WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NULL`, tenantID, hostID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -412,9 +445,10 @@ func DeleteSupplyHost(ctx context.Context, pool *pgxpool.Pool, hostID int64) err
 
 // ── Manual Assignable IP Pool (`supply_host_ips`) ────────────────────────────
 
-// SupplyHostIP represents one IPv4/IPv6 entry manually added to a supply host's pool.
+// SupplyHostIP represents one IPv4/IPv6 entry manually added to a tenant's supply host pool.
 type SupplyHostIP struct {
 	ID                   int64
+	TenantID             int64
 	HostID               int64
 	HostName             string
 	IPAddress            string
@@ -530,8 +564,14 @@ func ParseManualIPList(raw string, defaultCIDR int, gateway, mac string, monthly
 	return out, nil
 }
 
-// AddSupplyHostIPs inserts a batch of manually-entered assignable IPs onto a server.
-func AddSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64, entries []ManualIPEntry) ([]SupplyHostIP, error) {
+// AddTenantSupplyHostIPs inserts a batch of manually-entered assignable IPs onto a tenant's server.
+func AddTenantSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, tenantID, hostID int64, entries []ManualIPEntry) ([]SupplyHostIP, error) {
+	if _, found, err := GetTenantSupplyHostByID(ctx, pool, tenantID, hostID); err != nil {
+		return nil, err
+	} else if !found {
+		return nil, pgx.ErrNoRows
+	}
+
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -545,27 +585,27 @@ func AddSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64, ent
 		}
 		_, err := tx.Exec(ctx, `
 			INSERT INTO supply_host_ips (
-				host_id, ip_address, cidr_prefix, gateway, mac_address,
+				tenant_id, host_id, ip_address, cidr_prefix, gateway, mac_address,
 				ip_version, monthly_cost_cents, retail_price_cents, status, notes
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'available', $9)
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available', $10)
 			ON CONFLICT (ip_address) DO NOTHING`,
-			hostID, e.IPAddress, e.CIDRPrefix, e.Gateway, e.MACAddress,
+			tenantID, hostID, e.IPAddress, e.CIDRPrefix, e.Gateway, e.MACAddress,
 			e.IPVersion, e.MonthlyCostCents, retail, e.Notes,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("db.AddSupplyHostIPs(%s): %w", e.IPAddress, err)
+			return nil, fmt.Errorf("db.AddTenantSupplyHostIPs(%s): %w", e.IPAddress, err)
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
-	return ListSupplyHostIPs(ctx, pool, hostID)
+	return ListTenantSupplyHostIPs(ctx, pool, tenantID, hostID)
 }
 
-// ListSupplyHostIPs returns all IPs in `supply_host_ips` for a host (or all hosts when hostID == 0).
-func ListSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64) ([]SupplyHostIP, error) {
+// ListTenantSupplyHostIPs returns all IPs in `supply_host_ips` for a tenant (filtered to hostID when > 0).
+func ListTenantSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, tenantID, hostID int64) ([]SupplyHostIP, error) {
 	query := `
-		SELECT ip.id, ip.host_id, h.name, ip.ip_address, ip.cidr_prefix,
+		SELECT ip.id, ip.tenant_id, ip.host_id, h.name, ip.ip_address, ip.cidr_prefix,
 		       ip.gateway, ip.mac_address, ip.ip_version,
 		       ip.monthly_cost_cents, ip.retail_price_cents, ip.currency,
 		       ip.status, ip.assigned_resource_id, ip.assigned_vm_resource_id,
@@ -573,17 +613,18 @@ func ListSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64) ([
 		FROM supply_host_ips ip
 		JOIN supply_hosts h ON h.id = ip.host_id AND h.deleted_at IS NULL
 		LEFT JOIN resources vm_res ON vm_res.id = ip.assigned_vm_resource_id
+		WHERE ip.tenant_id = $1 AND h.tenant_id = $1
 	`
-	var args []any
+	args := []any{tenantID}
 	if hostID > 0 {
-		query += ` WHERE ip.host_id = $1`
+		query += ` AND ip.host_id = $2`
 		args = append(args, hostID)
 	}
 	query += ` ORDER BY ip.host_id ASC, ip.id ASC`
 
 	rows, err := pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("db.ListSupplyHostIPs: %w", err)
+		return nil, fmt.Errorf("db.ListTenantSupplyHostIPs: %w", err)
 	}
 	defer rows.Close()
 
@@ -591,7 +632,7 @@ func ListSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64) ([
 	for rows.Next() {
 		var item SupplyHostIP
 		if err := rows.Scan(
-			&item.ID, &item.HostID, &item.HostName, &item.IPAddress, &item.CIDRPrefix,
+			&item.ID, &item.TenantID, &item.HostID, &item.HostName, &item.IPAddress, &item.CIDRPrefix,
 			&item.Gateway, &item.MACAddress, &item.IPVersion,
 			&item.MonthlyCostCents, &item.RetailPriceCents, &item.Currency,
 			&item.Status, &item.AssignedResourceID, &item.AssignedVMResourceID,
@@ -604,12 +645,12 @@ func ListSupplyHostIPs(ctx context.Context, pool *pgxpool.Pool, hostID int64) ([
 	return out, rows.Err()
 }
 
-// DeleteSupplyHostIP removes an unassigned IP from a host's pool.
-func DeleteSupplyHostIP(ctx context.Context, pool *pgxpool.Pool, ipID int64) error {
+// DeleteTenantSupplyHostIP removes an unassigned IP from a tenant's host pool.
+func DeleteTenantSupplyHostIP(ctx context.Context, pool *pgxpool.Pool, tenantID, ipID int64) error {
 	var status string
-	err := pool.QueryRow(ctx, `SELECT status FROM supply_host_ips WHERE id = $1`, ipID).Scan(&status)
+	err := pool.QueryRow(ctx, `SELECT status FROM supply_host_ips WHERE tenant_id = $1 AND id = $2`, tenantID, ipID).Scan(&status)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
+		return pgx.ErrNoRows
 	}
 	if err != nil {
 		return err
@@ -617,14 +658,74 @@ func DeleteSupplyHostIP(ctx context.Context, pool *pgxpool.Pool, ipID int64) err
 	if status == "assigned" {
 		return ErrIPCurrentlyAssigned
 	}
-	_, err = pool.Exec(ctx, `DELETE FROM supply_host_ips WHERE id = $1 AND status <> 'assigned'`, ipID)
+	_, err = pool.Exec(ctx, `DELETE FROM supply_host_ips WHERE tenant_id = $1 AND id = $2 AND status <> 'assigned'`, tenantID, ipID)
 	return err
+}
+
+// ── Tenant Provisioned Guest VMs View ────────────────────────────────────────
+
+// TenantProvisionedVM summarizes a customer VM provisioned onto one of a tenant's supply hosts.
+type TenantProvisionedVM struct {
+	ResourceID int64
+	Name       string
+	Status     string
+	IPAddress  string
+	HostName   string
+	RegionSlug string
+	Distro     string
+	Version    string
+	VCPUs      int
+	MemoryGB   int
+	DiskGB     int
+	CreatedAt  time.Time
+}
+
+// ListTenantProvisionedVMs returns non-deleted customer compute_vm resources for a tenant.
+func ListTenantProvisionedVMs(ctx context.Context, pool *pgxpool.Pool, tenantID int64) ([]TenantProvisionedVM, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT r.id, r.name, r.status,
+		       COALESCE(lvm.public_ip, cvm.ip_address, ''),
+		       COALESCE(h.name, ''),
+		       COALESCE(h.region_slug, ''),
+		       COALESCE(lvm.distro, 'Linux'),
+		       COALESCE(lvm.version, ''),
+		       COALESCE(lvm.vcpus, cvm.vcpus, 0),
+		       COALESCE(lvm.memory_gb, cvm.memory_gb::int, 0),
+		       COALESCE(lvm.disk_gb, cvm.disk_gb, 0),
+		       r.created_at
+		FROM resources r
+		LEFT JOIN workspace_linux_vms lvm ON lvm.resource_id = r.id
+		LEFT JOIN workspace_compute_vms cvm ON cvm.resource_id = r.id
+		LEFT JOIN supply_hosts h ON h.id = r.supply_host_id
+		WHERE r.tenant_id = $1
+		  AND r.kind = 'compute_vm'
+		  AND r.parent_resource_id IS NULL
+		  AND r.deleted_at IS NULL
+		ORDER BY r.id DESC`, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("db.ListTenantProvisionedVMs: %w", err)
+	}
+	defer rows.Close()
+
+	var out []TenantProvisionedVM
+	for rows.Next() {
+		var vm TenantProvisionedVM
+		if err := rows.Scan(
+			&vm.ResourceID, &vm.Name, &vm.Status, &vm.IPAddress,
+			&vm.HostName, &vm.RegionSlug, &vm.Distro, &vm.Version,
+			&vm.VCPUs, &vm.MemoryGB, &vm.DiskGB, &vm.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, vm)
+	}
+	return out, rows.Err()
 }
 
 // ── Customer VM Scheduling + Atomic Assignable IP Allocation ─────────────────
 
 // CustomerVMOrderRequest describes a customer VM purchase to be scheduled onto
-// an `online` + `ready` supply host and assigned an IP from its manual pool.
+// an `online` + `ready` supply host belonging to the same tenant and assigned an IP from its pool.
 type CustomerVMOrderRequest struct {
 	TenantID           int64
 	WorkspaceID        int64
@@ -658,8 +759,8 @@ type AllocatedVMOrder struct {
 }
 
 // AllocateHostAndIPForVM atomically selects an `online` + `ready` supply host
-// with at least one `available` IP (`FOR UPDATE SKIP LOCKED`), creates the
-// parent VM `resources` row (`workspace_compute_vms` + `workspace_linux_vms`),
+// belonging to `req.TenantID` with at least one `available` IP (`FOR UPDATE SKIP LOCKED`),
+// creates the parent VM `resources` row (`workspace_compute_vms` + `workspace_linux_vms`),
 // creates the child payable IP `resources` row (`parent_resource_id`,
 // `workspace_assigned_ips`), and marks the IP `assigned`.
 func AllocateHostAndIPForVM(ctx context.Context, pool *pgxpool.Pool, req CustomerVMOrderRequest) (AllocatedVMOrder, error) {
@@ -671,28 +772,30 @@ func AllocateHostAndIPForVM(ctx context.Context, pool *pgxpool.Pool, req Custome
 
 	prefRegion := strings.ToLower(strings.TrimSpace(req.PreferredRegion))
 
-	// Lock one available IP on an online + ready host, preferring exact region match first.
+	// Lock one available IP on an online + ready host owned by req.TenantID, preferring exact region match first.
 	var ip SupplyHostIP
 	var hostID int64
 	err = tx.QueryRow(ctx, `
-		SELECT ip.id, ip.host_id, ip.ip_address, ip.cidr_prefix,
+		SELECT ip.id, ip.tenant_id, ip.host_id, ip.ip_address, ip.cidr_prefix,
 		       ip.gateway, ip.mac_address, ip.ip_version,
 		       ip.monthly_cost_cents, ip.retail_price_cents, ip.currency
 		FROM supply_host_ips ip
 		JOIN supply_hosts h ON h.id = ip.host_id
-		WHERE ip.status = 'available'
+		WHERE ip.tenant_id = $1
+		  AND h.tenant_id = $1
+		  AND ip.status = 'available'
 		  AND ip.ip_version = 4
 		  AND h.deleted_at IS NULL
 		  AND h.inventory_status = 'online'
 		  AND h.virt_stack_status = 'ready'
 		ORDER BY
-		  CASE WHEN $1 <> '' AND h.region_slug = $1 THEN 0 ELSE 1 END ASC,
+		  CASE WHEN $2 <> '' AND h.region_slug = $2 THEN 0 ELSE 1 END ASC,
 		  ip.id ASC
 		LIMIT 1
 		FOR UPDATE OF ip SKIP LOCKED`,
-		prefRegion,
+		req.TenantID, prefRegion,
 	).Scan(
-		&ip.ID, &hostID, &ip.IPAddress, &ip.CIDRPrefix,
+		&ip.ID, &ip.TenantID, &hostID, &ip.IPAddress, &ip.CIDRPrefix,
 		&ip.Gateway, &ip.MACAddress, &ip.IPVersion,
 		&ip.MonthlyCostCents, &ip.RetailPriceCents, &ip.Currency,
 	)
@@ -756,8 +859,6 @@ func AllocateHostAndIPForVM(ctx context.Context, pool *pgxpool.Pool, req Custome
 		osImg = strings.ToLower(distro) + "-" + ver
 	}
 
-	// Insert into both CTI tables (`workspace_compute_vms` and `workspace_linux_vms`)
-	// so every compute leaf view & Linux VMs view reflects the live VM and its assigned IP!
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO workspace_compute_vms (
 			resource_id, vm_class, instance_type, vcpus, memory_gb,
@@ -805,7 +906,7 @@ func AllocateHostAndIPForVM(ctx context.Context, pool *pgxpool.Pool, req Custome
 		return AllocatedVMOrder{}, fmt.Errorf("db.AllocateHostAndIPForVM insert workspace_assigned_ips: %w", err)
 	}
 
-	// 3. Mark the manual IP pool row assigned!
+	// 3. Mark the manual IP pool row assigned
 	if _, err := tx.Exec(ctx, `
 		UPDATE supply_host_ips
 		SET status                  = 'assigned',
@@ -862,15 +963,12 @@ func FinalizeCustomerVMProvisioning(ctx context.Context, pool *pgxpool.Pool, vmR
 		return tx.Commit(ctx)
 	}
 
-	// Driver provisioning failed: release the IP back to `available` and mark VM failed/deleted.
 	_, _, _ = ReleaseCustomerVMAndIP(ctx, pool, vmResourceID)
 	return nil
 }
 
 // ReleaseCustomerVMAndIP soft-deletes a customer VM and its child payable IP
 // resource and returns the IP to `status = 'available'` in `supply_host_ips`.
-// It returns the SupplyHostRecord and externalRef (if any) so the caller can
-// also invoke `driver.DeleteInstance`.
 func ReleaseCustomerVMAndIP(ctx context.Context, pool *pgxpool.Pool, vmResourceID int64) (*SupplyHostRecord, string, error) {
 	var hostID *int64
 	var externalRef string
@@ -892,7 +990,6 @@ func ReleaseCustomerVMAndIP(ctx context.Context, pool *pgxpool.Pool, vmResourceI
 	}
 	defer tx.Rollback(ctx)
 
-	// Return any assigned IPs back to `available` in the server's manual IP pool!
 	if _, err := tx.Exec(ctx, `
 		UPDATE supply_host_ips
 		SET status                  = 'available',
@@ -904,7 +1001,6 @@ func ReleaseCustomerVMAndIP(ctx context.Context, pool *pgxpool.Pool, vmResourceI
 		return nil, "", err
 	}
 
-	// Soft-delete child payable resources (e.g. IPv4) + parent VM resource
 	if _, err := tx.Exec(ctx, `
 		UPDATE resources
 		SET deleted_at = now(), status = 'deleted', updated_at = now()

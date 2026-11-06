@@ -1584,6 +1584,6 @@ func RegisterAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/tenant/{slug}/workspace/{id}/multicloud/cost/cloud-optimizer/{oid}", apiWSMulticloudCostOptimizerGetHandler)
 	mux.HandleFunc("DELETE /api/tenant/{slug}/workspace/{id}/multicloud/cost/cloud-optimizer/{oid}", apiWSMulticloudCostOptimizerDeleteHandler)
 
-	// Sysadmin — Infrastructure Supply Hosts & Manual Assignable IP Pools
-	RegisterSysadminInfrastructureAPIRoutes(mux)
+	// Tenant — Supply Hosts & Manual Assignable IP Pools (under /api/tenant/{slug}/resources/*)
+	RegisterTenantInfrastructureAPIRoutes(mux)
 }

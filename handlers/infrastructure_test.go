@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"html/template"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -27,20 +29,49 @@ func TestOnlySysadminBootstrapCredentialsAcceptedWithoutDB(t *testing.T) {
 	}
 }
 
-func TestSysadminInfrastructureAndAccountingTemplatesRenderCleanly(t *testing.T) {
-	infraTmpl, err := template.ParseFiles(filepath.Join("..", "templates", "sysadmin", "infrastructure_content.html"))
+func TestTenantResourcesTemplateRendersSupplyHostsIPPoolsAndZeroDummyData(t *testing.T) {
+	resTmpl, err := template.ParseFiles(filepath.Join("..", "templates", "tenant", "resources_content.html"))
 	if err != nil {
-		t.Fatalf("parse infrastructure_content.html: %v", err)
+		t.Fatalf("parse tenant resources_content.html: %v", err)
 	}
-	host := infraHostView{
+
+	// 1. Empty state: zero dummy rows, full Resource Tree taxonomy + IP Address Pools present
+	var emptyBuf bytes.Buffer
+	emptyData := resourcesInnerData{
+		TenantSlug:  "cloud-one",
+		ActiveView:  "all",
+		GroupCounts: map[string]int{},
+		CatCounts:   map[string]int{},
+	}
+	if err := resTmpl.ExecuteTemplate(&emptyBuf, "tenant-page-content", emptyData); err != nil {
+		t.Fatalf("render empty tenant-page-content: %v", err)
+	}
+	emptyHTML := emptyBuf.String()
+	for _, forbidden := range []string{"DummyProvider", "summyprovider", "acme.io", "prx-cluster-prod", "2,048 cores"} {
+		if strings.Contains(emptyHTML, forbidden) {
+			t.Fatalf("expected zero hardcoded dummy strings in resources_content.html, found %q", forbidden)
+		}
+	}
+	for _, required := range []string{"Linux Nested VPS (QEMU/KVM)", "IP Address Pools", "On-board New Resource"} {
+		if !strings.Contains(emptyHTML, required) {
+			t.Fatalf("expected %q in tenant resources_content.html", required)
+		}
+	}
+
+	// 2. Populated state: supply host + slide-in inspector + manual assignable IP pool
+	host := TenantHostView{
 		SupplyHostRecord: db.SupplyHostRecord{
 			ID:              1,
+			TenantID:        10,
 			Name:            "fra-nested-vps-01",
 			HostnameOrIP:    "203.0.113.10",
 			SSHPort:         22,
 			SSHUser:         "root",
 			DriverKind:      "linux_nested_qemu",
+			OwnershipType:   "rented",
 			RegionSlug:      "eu-central-1",
+			BridgeInterface: "br0",
+			StoragePoolPath: "/var/lib/libvirt/images",
 			CPUCores:        8,
 			RAMMB:           16384,
 			DiskGB:          160,
@@ -50,41 +81,78 @@ func TestSysadminInfrastructureAndAccountingTemplatesRenderCleanly(t *testing.T)
 			AvailableIPs:    2,
 			TotalIPs:        2,
 		},
+		CategoryKey:        "linux-vps",
+		BadgeLabel:         "Linux VPS",
+		BadgeClass:         "res-type-badge--linux",
 		MonthlyCostDisplay: "$24.00",
-		RAMGBDisplay:       "16.0 GB",
-		IPs: []infraIPView{
+		RAMGBDisplay:       "16 GB",
+		IPs: []TenantIPView{
 			{
-				SupplyHostIP:  db.SupplyHostIP{ID: 10, HostID: 1, IPAddress: "198.51.100.10", CIDRPrefix: 24, Gateway: "198.51.100.1", Status: "available"},
+				SupplyHostIP:  db.SupplyHostIP{ID: 10, TenantID: 10, HostID: 1, HostName: "fra-nested-vps-01", IPAddress: "198.51.100.10", CIDRPrefix: 24, Gateway: "198.51.100.1", Status: "available"},
 				CostDisplay:   "$0.50",
 				RetailDisplay: "$2.00",
 			},
 		},
 	}
+
 	var buf bytes.Buffer
-	err = infraTmpl.ExecuteTemplate(&buf, "sysadmin-infrastructure-content", infraPageData{
-		Hosts:             []infraHostView{host},
-		SelectedHost:      &host,
-		TotalHosts:        1,
-		ReadyOnlineHosts:  1,
-		TotalVCPUs:        8,
-		TotalRAMGB:        16,
-		TotalDiskGB:       160,
-		AvailableIPs:      2,
-		TotalIPs:          2,
-		MonthlySupplyCost: "$24.00",
+	err = resTmpl.ExecuteTemplate(&buf, "tenant-page-content", resourcesInnerData{
+		TenantSlug:   "cloud-one",
+		ActiveView:   "linux-vps",
+		TotalCount:   1,
+		OnlineCount:  1,
+		GroupCounts:  map[string]int{"linux-vps": 1, "ip-pool": 1},
+		CatCounts:    map[string]int{"servers": 1, "networking": 1},
+		Hosts:        []TenantHostView{host},
+		IPs:          host.IPs,
+		SelectedHost: &host,
+		AvailableIPs: 2,
+		TotalIPs:     2,
+		Rows: []TenantInventoryRow{
+			{
+				RowKind:        "supply_host",
+				NumericID:      1,
+				ID:             "host-1",
+				CategoryKey:    "linux-vps",
+				Name:           "fra-nested-vps-01",
+				SubLabel:       "Linux VPS · eu-central-1",
+				BadgeLabel:     "Linux VPS",
+				BadgeClass:     "res-type-badge--linux",
+				Status:         "online",
+				StatusLabel:    "Online",
+				StatusDotClass: "res-dot--ok",
+				HostOrIP:       "203.0.113.10:22",
+				Region:         "eu-central-1",
+				CPUDisplay:     "8 vCPU",
+				RAMDisplay:     "16 GB",
+				Tags:           []string{"rented", "KVM"},
+				DetailJSON:     "{}",
+			},
+		},
 	})
 	if err != nil {
-		t.Fatalf("render sysadmin-infrastructure-content: %v", err)
+		t.Fatalf("render populated tenant-page-content: %v", err)
 	}
-	if !strings.Contains(buf.String(), "198.51.100.10") || !strings.Contains(buf.String(), "fra-nested-vps-01") {
-		t.Fatalf("expected rendered infrastructure page to contain host and manual IP pool")
+	rendered := buf.String()
+	for _, needle := range []string{"fra-nested-vps-01", "198.51.100.10/24", "Auto-Provision QEMU/KVM", "Assignable IP Pool"} {
+		if !strings.Contains(rendered, needle) {
+			t.Fatalf("expected rendered tenant resources page to contain %q", needle)
+		}
+	}
+}
+
+func TestSysadminInfrastructureRemovedAndAccountingRendersCleanly(t *testing.T) {
+	for _, item := range sysadminNav {
+		if item.ID == "infrastructure" || strings.Contains(item.Path, "/s/infrastructure") {
+			t.Fatalf("expected /s/infrastructure to be removed from sysadminNav, found %+v", item)
+		}
 	}
 
 	acctTmpl, err := template.ParseFiles(filepath.Join("..", "templates", "sysadmin", "accounting_content.html"))
 	if err != nil {
 		t.Fatalf("parse accounting_content.html: %v", err)
 	}
-	buf.Reset()
+	var buf bytes.Buffer
 	if err := acctTmpl.ExecuteTemplate(&buf, "sysadmin-accounting-content", accountingPageData{
 		MRRDisplay:         "$0.00",
 		SupplyCostDisplay:  "$0.00",
@@ -104,10 +172,68 @@ func TestSysadminInfrastructureAndAccountingTemplatesRenderCleanly(t *testing.T)
 	if err := shellTmpl.ExecuteTemplate(&buf, "sysadmin-base", SysadminData{
 		User:      User{Name: "System Administrator", Email: "tayyebimohammadreza@gmail.com", Role: RoleSysAdmin},
 		Nav:       sysadminNav,
-		ActiveNav: "infrastructure",
-		PageTitle: "Infrastructure & IP Pools",
+		ActiveNav: "tenants",
+		PageTitle: "Tenants",
 		Content:   template.HTML("<p>ok</p>"),
 	}); err != nil {
 		t.Fatalf("render sysadmin-base: %v", err)
+	}
+	if strings.Contains(buf.String(), "/s/infrastructure") {
+		t.Fatalf("expected sysadmin shell not to reference /s/infrastructure")
+	}
+}
+
+func TestTenantResourcesAPICrossTenantIsolation(t *testing.T) {
+	alpha := store.add(Tenant{ID: "t-alpha", Name: "Alpha Cloud", Slug: "alpha-test"})
+	beta := store.add(Tenant{ID: "t-beta", Name: "Beta Cloud", Slug: "beta-test"})
+	defer func() {
+		store.delete(alpha.ID)
+		store.delete(beta.ID)
+	}()
+
+	mux := http.NewServeMux()
+	RegisterSysadminRoutes(mux)
+	RegisterTenantDashboardRoutes(mux)
+	RegisterTenantResourcesRoutes(mux)
+	RegisterAPIRoutes(mux)
+
+	// Unauthenticated HTTP requests to tenant resource & supply host endpoints -> 401
+	for _, path := range []string{
+		"/api/tenant/alpha-test/resources",
+		"/api/tenant/alpha-test/resources/hosts",
+		"/api/tenant/alpha-test/resources/ips",
+	} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("expected 401 for unauthenticated %s, got %d", path, rec.Code)
+		}
+	}
+
+	alphaAdmin := User{
+		ID:         101,
+		Email:      "admin@alpha.io",
+		Name:       "Alpha Admin",
+		Role:       RoleTenant,
+		TenantSlug: "alpha-test",
+	}
+
+	// Own tenant -> 200 OK
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "alpha-test"); code != http.StatusOK {
+		t.Fatalf("expected 200 for own tenant, got %d", code)
+	}
+	// Cross-tenant -> 403 Forbidden
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "beta-test"); code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for cross-tenant access, got %d", code)
+	}
+	// Regular workspace end-user -> 403 Forbidden on tenant admin infrastructure API
+	endUser := User{ID: 202, Email: "client@alpha.io", Role: RoleUser, TenantSlug: "alpha-test"}
+	if _, code, _ := authorizeTenantAdmin(context.Background(), endUser, true, "alpha-test"); code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for non-admin end user, got %d", code)
+	}
+	// Unknown tenant -> 404 Not Found
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "missing-slug"); code != http.StatusNotFound {
+		t.Fatalf("expected 404 Not Found for unknown tenant, got %d", code)
 	}
 }

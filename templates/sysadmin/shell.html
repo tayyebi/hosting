@@ -32,14 +32,7 @@
                class="ds-nav__item {{if eq $.ActiveNav .ID}}ds-nav__item--active{{end}}"
                title="{{.Label}}">
                 <span class="ds-nav__icon">
-                    {{if eq .Icon "infrastructure"}}
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <rect x="2" y="2.5" width="14" height="5" rx="1.2" stroke="currentColor" stroke-width="1.2"/>
-                        <rect x="2" y="10.5" width="14" height="5" rx="1.2" stroke="currentColor" stroke-width="1.2"/>
-                        <circle cx="5" cy="5" r="1" fill="currentColor"/>
-                        <circle cx="5" cy="13" r="1" fill="currentColor"/>
-                    </svg>
-                    {{else if eq .Icon "tenants"}}
+                    {{if eq .Icon "tenants"}}
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                         <path d="M2 15V7l7-4.5L16 7v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                         <rect x="6.5" y="10" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
