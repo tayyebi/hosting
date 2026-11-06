@@ -28,10 +28,16 @@ jobs:
           echo "${HEALTH}" | grep -q '"status":"ok"'
           echo "${HEALTH}" | grep -q '"db":"ok"'
 
-          # 2. Verify /login page on 8021
-          LOGIN_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8021/login)"
-          echo "::notice::GET /login HTTP status => ${LOGIN_CODE}"
-          [ "${LOGIN_CODE}" = "200" ]
+          # 2. Verify login page on GET / (200) and seeded sysadmin authentication
+          ROOT_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8021/)"
+          echo "::notice::GET / HTTP status => ${ROOT_CODE}"
+          [ "${ROOT_CODE}" = "200" ]
+
+          AUTH_CODE="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8021/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"sysadmin@platform.io","password":"sysadmin123"}')"
+          echo "::notice::POST /api/v1/auth/login HTTP status => ${AUTH_CODE}"
+          [ "${AUTH_CODE}" = "200" ]
 
           # 3. Verify PostgreSQL container is strictly on an internal:true network with zero published ports
           PG_CID="$(docker compose ps -q postgres)"
