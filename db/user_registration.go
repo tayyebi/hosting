@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// RegisterUser creates (or updates) a user row with a bcrypt password hash and
+// RegisterUser creates (or updates) a user row with an already-hashed password and
 // links the user to the given tenant as a 'tenant' member. Returns the user ID.
 // Uses INSERT … ON CONFLICT so the call is idempotent for email re-use: the
 // password_hash and name are updated if the account already exists.

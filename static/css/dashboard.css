@@ -976,6 +976,8 @@
 
 .st-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
 .st-label { font-size: 13px; font-weight: 400; color: #2c2c2e; }
+.st-group__hint { font-size: 12.5px; color: #6e6e73; margin: -8px 0 18px; }
+[data-theme="dark"] .st-group__hint { color: var(--ds-text-muted, #9aa0b4); }
 
 .st-input {
     height: 40px; padding: 0 12px; border: 1.5px solid #e8e8ed; border-radius: 6px;

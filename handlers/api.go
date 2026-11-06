@@ -22,11 +22,15 @@ func apiCreated(w http.ResponseWriter, data any) {
 }
 
 // apiError writes a JSON error response.
+//
+// "error" is the human-readable reason shown to users; it mirrors "message" so
+// clients that surface either field never display the bare status text (e.g.
+// "Bad Request"). "code" repeats the HTTP status code.
 func apiError(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]any{
-		"error":   http.StatusText(code),
+		"error":   message,
 		"message": message,
 		"code":    code,
 	})
@@ -38,7 +42,7 @@ func apiValidationError(w http.ResponseWriter, fields map[string]string) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	json.NewEncoder(w).Encode(map[string]any{
-		"error":   "Validation Error",
+		"error":   "One or more fields failed validation.",
 		"message": "One or more fields failed validation.",
 		"code":    http.StatusUnprocessableEntity,
 		"errors":  fields,

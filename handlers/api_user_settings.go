@@ -3,7 +3,10 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -109,6 +112,10 @@ func formatHours(h int) string {
 
 // ── POST /api/user/password ────────────────────────────────
 
+// maxPasswordLength bounds submitted passwords so PBKDF2/bcrypt hashing can't
+// be abused with megabytes of input.
+const maxPasswordLength = 256
+
 type apiChangePasswordRequest struct {
 	Current string `json:"current"`
 	New     string `json:"new"`
@@ -122,24 +129,32 @@ func apiChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !passwordChangeRateLimiter.allow(fmt.Sprintf("%d", user.ID)) {
-		w.Header().Set("Retry-After", "3600")
-		apiError(w, http.StatusTooManyRequests, "Too many password changes. Try again in 1 hour.")
-		return
-	}
-
 	var req apiChangePasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		apiError(w, http.StatusBadRequest, "Invalid JSON.")
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
+		apiError(w, http.StatusBadRequest, "Invalid request body: expected a JSON object.")
 		return
 	}
 
-	if req.Current == "" || req.New == "" || req.Confirm == "" {
-		apiError(w, http.StatusBadRequest, "All fields are required.")
+	// Validate the payload before spending the rate-limit budget (and before
+	// running the expensive password hash) so malformed input is free.
+	if req.Current == "" {
+		apiError(w, http.StatusBadRequest, "Current password is required.")
+		return
+	}
+	if req.New == "" {
+		apiError(w, http.StatusBadRequest, "New password is required.")
+		return
+	}
+	if req.Confirm == "" {
+		apiError(w, http.StatusBadRequest, "Please confirm the new password.")
 		return
 	}
 	if len(req.New) < 8 {
 		apiError(w, http.StatusBadRequest, "New password must be at least 8 characters.")
+		return
+	}
+	if len(req.New) > maxPasswordLength {
+		apiError(w, http.StatusBadRequest, "New password must be 256 characters or fewer.")
 		return
 	}
 	if !hasUppercase(req.New) || !hasDigit(req.New) {
@@ -150,14 +165,21 @@ func apiChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		apiError(w, http.StatusBadRequest, "New password and confirmation do not match.")
 		return
 	}
-
 	if req.New == req.Current {
 		apiError(w, http.StatusBadRequest, "New password must differ from the current one.")
 		return
 	}
+
+	if !passwordChangeRateLimiter.allow(fmt.Sprintf("%d", user.ID)) {
+		w.Header().Set("Retry-After", "3600")
+		apiError(w, http.StatusTooManyRequests, "Too many password change attempts. Try again in 1 hour.")
+		return
+	}
+
 	changed, err := changeAccountPassword(r.Context(), user, req.Current, req.New)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "Failed to update password.")
+		log.Printf("password change: user %d: %v", user.ID, err)
+		apiError(w, http.StatusInternalServerError, "Failed to update password. Please try again.")
 		return
 	}
 	if !changed {
@@ -169,16 +191,20 @@ func apiChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	if Pools != nil && user.ID > 0 {
 		if cookie, err := r.Cookie("platform_session"); err == nil {
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-			defer cancel()
 			if err := db.RevokeOtherSessions(ctx, Pools.Admin, user.ID, cookie.Value); err != nil {
 				// Non-fatal: log but don't fail the password change.
-				_ = err
+				log.Printf("password change: revoke other sessions for user %d: %v", user.ID, err)
 			}
+			cancel()
 		}
 		go db.InsertAuditEvent(context.Background(), Pools.Admin, user.ID, string(user.Role), "auth.password.change", "info", map[string]any{"email": user.Email}, "", w.Header().Get("X-Request-ID"), clientIP(r))
 	}
 
-	apiOK(w, map[string]string{"status": "ok"})
+	apiOK(w, map[string]any{
+		"status":  "ok",
+		"ok":      true,
+		"message": "Password updated successfully.",
+	})
 }
 
 // ── PATCH /api/user/settings ───────────────────────────────

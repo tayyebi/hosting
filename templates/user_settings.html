@@ -233,23 +233,26 @@
                 <h2 class="settings-section__title">Security</h2>
                 <p class="settings-section__sub">Manage your password, two-factor authentication and active sessions.</p>
 
-                <div id="pw-error" class="alert alert--error" hidden></div>
-                <div id="pw-success" class="alert alert--success" hidden>Password updated successfully.</div>
-                <div class="st-group">
-                    <label class="st-label">Current password</label>
-                    <input class="st-input" id="pw-current" type="password" placeholder="••••••••" autocomplete="current-password" />
-                </div>
-                <div class="st-group">
-                    <label class="st-label">New password</label>
-                    <input class="st-input" id="pw-new" type="password" placeholder="Min. 8 characters" autocomplete="new-password" />
-                </div>
-                <div class="st-group">
-                    <label class="st-label">Confirm new password</label>
-                    <input class="st-input" id="pw-confirm" type="password" placeholder="••••••••" autocomplete="new-password" />
-                </div>
-                <div class="st-btn-row" style="margin-bottom:0;">
-                    <button class="st-btn-primary" onclick="changePassword(this)">Update password</button>
-                </div>
+                <div id="pw-error" class="alert alert--error" role="alert" hidden></div>
+                <div id="pw-success" class="alert alert--success" role="status" hidden>Password updated successfully.</div>
+                <form id="pw-form" autocomplete="off" novalidate onsubmit="changePassword(this.querySelector('button[type=submit]')); return false;">
+                    <div class="st-group">
+                        <label class="st-label" for="pw-current">Current password</label>
+                        <input class="st-input" id="pw-current" type="password" placeholder="••••••••" autocomplete="current-password" required />
+                    </div>
+                    <div class="st-group">
+                        <label class="st-label" for="pw-new">New password</label>
+                        <input class="st-input" id="pw-new" type="password" placeholder="Min. 8 characters" autocomplete="new-password" required />
+                    </div>
+                    <div class="st-group">
+                        <label class="st-label" for="pw-confirm">Confirm new password</label>
+                        <input class="st-input" id="pw-confirm" type="password" placeholder="••••••••" autocomplete="new-password" required />
+                    </div>
+                    <div class="st-group__hint">At least 8 characters, including one uppercase letter and one number.</div>
+                    <div class="st-btn-row" style="margin-bottom:0;">
+                        <button type="submit" class="st-btn-primary">Update password</button>
+                    </div>
+                </form>
 
                 <div class="settings-divider"></div>
 
@@ -585,36 +588,58 @@ function changePassword(btn) {
     var con = document.getElementById('pw-confirm').value;
     var errEl = document.getElementById('pw-error');
     var okEl  = document.getElementById('pw-success');
+
+    function showError(msg) {
+        errEl.textContent = msg;
+        errEl.hidden = false;
+        okEl.hidden = true;
+    }
+
     errEl.hidden = true; okEl.hidden = true;
-    if (!cur || !nw || !con) { errEl.textContent = 'All fields are required.'; errEl.hidden = false; return; }
+
+    // Mirror the server-side rules so obvious mistakes never hit the network.
+    if (!cur || !nw || !con) { showError('All fields are required.'); return; }
+    if (nw.length < 8) { showError('New password must be at least 8 characters.'); return; }
+    if (!/[A-Z]/.test(nw) || !/[0-9]/.test(nw)) {
+        showError('New password must contain at least one uppercase letter and one number.'); return;
+    }
+    if (nw !== con) { showError('New password and confirmation do not match.'); return; }
+    if (nw === cur) { showError('New password must differ from the current one.'); return; }
+
     var orig = btn.textContent;
     btn.disabled = true; btn.textContent = 'Saving\u2026';
+
+    function restore() { btn.disabled = false; btn.textContent = orig; }
+
     fetch('/api/user/password', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({current: cur, new: nw, confirm: con})
-    }).then(function(r) { return r.json(); }).then(function(d) {
-        btn.disabled = false; btn.textContent = orig;
-        if (d.error) { errEl.textContent = d.error; errEl.hidden = false; }
-        else {
+    }).then(function(r) {
+        return r.text().then(function(text) {
+            var data = {};
+            try { data = text ? JSON.parse(text) : {}; } catch (e) { data = {}; }
+            // Prefer the server's human-readable reason; never fall back to the
+            // bare status text ("Bad Request") now that "error" carries it.
+            var msg = data.message || data.error ||
+                      (r.ok ? '' : ('Request failed (' + r.status + ((r.statusText && r.statusText !== 'Bad Request') ? ' ' + r.statusText : '') + ').'));
+            return {ok: r.ok, status: r.status, data: data, message: msg};
+        });
+    }).then(function(res) {
+        restore();
+        if (res.ok) {
+            okEl.textContent = res.data.message || 'Password updated successfully.';
             okEl.hidden = false;
             document.getElementById('pw-current').value = '';
             document.getElementById('pw-new').value = '';
             document.getElementById('pw-confirm').value = '';
+        } else {
+            showError(res.message || ('Could not update password (HTTP ' + res.status + ').'));
         }
     }).catch(function() {
-        btn.disabled = false; btn.textContent = orig;
-        errEl.textContent = 'Network error. Please try again.'; errEl.hidden = false;
+        restore();
+        showError('Network error. Please try again.');
     });
-}
-
-function revokeKey(btn) {
-    if (!confirm('Revoke this API key? This cannot be undone.')) return;
-    var id = btn.dataset.keyId;
-    btn.disabled = true;
-    fetch('/api/user/apikeys/' + id, {method: 'DELETE'})
-        .then(function(r) { if (r.ok) btn.closest('.st-apikey').remove(); else btn.disabled = false; })
-        .catch(function() { btn.disabled = false; });
 }
 
 // ── Active sessions ──────────────────────────────────────────
