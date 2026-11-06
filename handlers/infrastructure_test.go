@@ -194,50 +194,43 @@ func TestTenantResourcesAPICrossTenantIsolation(t *testing.T) {
 	mux := http.NewServeMux()
 	RegisterAPIRoutes(mux)
 
-	// Unauthenticated request -> 401
-	unauthReq := httptest.NewRequest(http.MethodGet, "/api/tenant/alpha-test/resources", nil)
-	unauthRec := httptest.NewRecorder()
-	mux.ServeHTTP(unauthRec, unauthReq)
-	if unauthRec.Code != http.StatusUnauthorized {
-		t.Fatalf("expected 401 for unauthenticated request, got %d", unauthRec.Code)
+	// Unauthenticated HTTP requests to tenant resource & supply host endpoints -> 401
+	for _, path := range []string{
+		"/api/tenant/alpha-test/resources",
+		"/api/tenant/alpha-test/resources/hosts",
+		"/api/tenant/alpha-test/resources/ips",
+	} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("expected 401 for unauthenticated %s, got %d", path, rec.Code)
+		}
 	}
 
-	// Mint session cookie for Alpha tenant admin
-	seedRec := httptest.NewRecorder()
-	seedReq := httptest.NewRequest(http.MethodGet, "/", nil)
-	createSession(seedRec, seedReq, User{
+	alphaAdmin := User{
 		ID:         101,
 		Email:      "admin@alpha.io",
 		Name:       "Alpha Admin",
 		Role:       RoleTenant,
 		TenantSlug: "alpha-test",
-	}, false)
-	cookies := seedRec.Result().Cookies()
-	if len(cookies) == 0 {
-		t.Fatalf("expected session cookie to be issued")
 	}
 
-	// Own tenant resources -> 200 OK
-	ownReq := httptest.NewRequest(http.MethodGet, "/api/tenant/alpha-test/resources", nil)
-	ownReq.AddCookie(cookies[0])
-	ownRec := httptest.NewRecorder()
-	mux.ServeHTTP(ownRec, ownReq)
-	if ownRec.Code != http.StatusOK {
-		t.Fatalf("expected 200 for own tenant resources, got %d (%s)", ownRec.Code, ownRec.Body.String())
+	// Own tenant -> 200 OK
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "alpha-test"); code != http.StatusOK {
+		t.Fatalf("expected 200 for own tenant, got %d", code)
 	}
-
-	// Cross-tenant resources & supply hosts -> 403 Forbidden
-	for _, crossPath := range []string{
-		"/api/tenant/beta-test/resources",
-		"/api/tenant/beta-test/resources/hosts",
-		"/api/tenant/beta-test/resources/ips",
-	} {
-		req := httptest.NewRequest(http.MethodGet, crossPath, nil)
-		req.AddCookie(cookies[0])
-		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, req)
-		if rec.Code != http.StatusForbidden {
-			t.Fatalf("expected 403 Forbidden for cross-tenant %s, got %d", crossPath, rec.Code)
-		}
+	// Cross-tenant -> 403 Forbidden
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "beta-test"); code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for cross-tenant access, got %d", code)
+	}
+	// Regular workspace end-user -> 403 Forbidden on tenant admin infrastructure API
+	endUser := User{ID: 202, Email: "client@alpha.io", Role: RoleUser, TenantSlug: "alpha-test"}
+	if _, code, _ := authorizeTenantAdmin(context.Background(), endUser, true, "alpha-test"); code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for non-admin end user, got %d", code)
+	}
+	// Unknown tenant -> 404 Not Found
+	if _, code, _ := authorizeTenantAdmin(context.Background(), alphaAdmin, true, "missing-slug"); code != http.StatusNotFound {
+		t.Fatalf("expected 404 Not Found for unknown tenant, got %d", code)
 	}
 }

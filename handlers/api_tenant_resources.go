@@ -101,28 +101,33 @@ func filterResources(all []Resource, search, status, rtype string) []Resource {
 
 // ── Tenant Auth + DB Resolution Helper ───────────────────────────────────────
 
-func requireTenantAdminAPI(w http.ResponseWriter, r *http.Request) (User, Tenant, bool) {
-	user, ok := getSession(r)
-	if !ok {
-		apiError(w, http.StatusUnauthorized, "Authentication required.")
-		return User{}, Tenant{}, false
+func authorizeTenantAdmin(ctx context.Context, user User, userOK bool, slug string) (Tenant, int, string) {
+	if !userOK {
+		return Tenant{}, http.StatusUnauthorized, "Authentication required."
 	}
-	slug := r.PathValue("slug")
 	t, found := store.getBySlug(slug)
 	if !found {
-		apiError(w, http.StatusNotFound, "Tenant not found.")
-		return User{}, Tenant{}, false
+		return Tenant{}, http.StatusNotFound, "Tenant not found."
 	}
 	if user.Role != RoleSysAdmin && (user.Role != RoleTenant || user.TenantSlug != slug) {
-		apiError(w, http.StatusForbidden, "Access denied.")
-		return User{}, Tenant{}, false
+		return Tenant{}, http.StatusForbidden, "Access denied."
 	}
 	if t.DBID == 0 && Pools != nil {
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		qCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		if dbID, err := db.LookupTenantIDBySlug(ctx, Pools.Admin, slug); err == nil {
+		if dbID, err := db.LookupTenantIDBySlug(qCtx, Pools.Admin, slug); err == nil {
 			t.DBID = dbID
 		}
+	}
+	return t, http.StatusOK, ""
+}
+
+func requireTenantAdminAPI(w http.ResponseWriter, r *http.Request) (User, Tenant, bool) {
+	user, ok := getSession(r)
+	t, status, msg := authorizeTenantAdmin(r.Context(), user, ok, r.PathValue("slug"))
+	if status != http.StatusOK {
+		apiError(w, status, msg)
+		return User{}, Tenant{}, false
 	}
 	return user, t, true
 }
