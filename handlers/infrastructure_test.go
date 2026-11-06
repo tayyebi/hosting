@@ -184,8 +184,8 @@ func TestSysadminInfrastructureRemovedAndAccountingRendersCleanly(t *testing.T) 
 }
 
 func TestTenantResourcesAPICrossTenantIsolation(t *testing.T) {
-	alpha := store.add(Tenant{ID: "t-alpha", Name: "Alpha Cloud", Slug: "alpha-test", Status: "active"})
-	beta := store.add(Tenant{ID: "t-beta", Name: "Beta Cloud", Slug: "beta-test", Status: "active"})
+	alpha := store.add(Tenant{ID: "t-alpha", Name: "Alpha Cloud", Slug: "alpha-test"})
+	beta := store.add(Tenant{ID: "t-beta", Name: "Beta Cloud", Slug: "beta-test"})
 	defer func() {
 		store.delete(alpha.ID)
 		store.delete(beta.ID)
