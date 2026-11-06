@@ -11,8 +11,6 @@ import (
 	"unicode"
 
 	"platform/db"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterPageData struct {
@@ -151,14 +149,17 @@ func tenantRegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// Hash the password with the same PBKDF2 scheme used everywhere else so
+	// sign-in and password changes stay consistent for self-registered users.
+	hash, err := db.HashPassword(password)
 	if err != nil {
-		log.Printf("tenantRegisterSubmit: bcrypt: %v", err)
+		log.Printf("tenantRegisterSubmit: hash password: %v", err)
 		renderErr("Registration failed. Please try again.")
 		return
 	}
 
-	userID, err := db.RegisterUser(ctx, Pools.Admin, email, name, string(hash), tenantID)
+	// Create user + tenant membership in DB
+	userID, err := db.RegisterUser(ctx, Pools.Admin, email, name, hash, tenantID)
 	if err != nil {
 		log.Printf("tenantRegisterSubmit: register user: %v", err)
 		renderErr("Registration failed. Please try again.")

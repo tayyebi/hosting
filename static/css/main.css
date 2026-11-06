@@ -658,3 +658,18 @@ b, strong { font-weight: 400; }
     border-color: #f87171;
     box-shadow: 0 0 0 3px rgba(248,113,113,.18);
 }
+
+/* ============================================================
+   The hidden attribute must always win
+   ============================================================
+   Components such as .alert and .modal-backdrop set an explicit
+   `display` value, which overrides the browser default for
+   [hidden]. Without this rule an element toggled via
+   `el.hidden = true` — e.g. the "Password updated successfully."
+   banner on /u/settings/ — stays visible even though it is
+   marked hidden. Making it !important keeps the HTML attribute
+   authoritative everywhere. */
+
+[hidden] {
+    display: none !important;
+}

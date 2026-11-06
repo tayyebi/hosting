@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"platform/db"
@@ -22,6 +23,15 @@ func UserSettingsPage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
+	}
+
+	// Accounts created without a display name (e.g. sysadmin bootstrap without
+	// SYSADMIN_NAME) still need a usable label for the avatar/breadcrumb.
+	if strings.TrimSpace(user.Name) == "" {
+		user.Name = user.Email
+		if i := strings.IndexByte(user.Name, '@'); i > 0 {
+			user.Name = user.Name[:i]
+		}
 	}
 
 	data := UserSettingsData{
@@ -48,11 +58,27 @@ func UserSettingsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, err := template.New("user_settings.html").Funcs(template.FuncMap{
+		// slice is used for the avatar initial. It must never panic: a missing
+		// name or a multi-byte first rune previously made the whole page fail
+		// to render.
 		"slice": func(s string, a, b int) string {
-			if b > len(s) {
-				b = len(s)
+			if s == "" {
+				return "?"
 			}
-			return s[a:b]
+			rs := []rune(s)
+			if a < 0 {
+				a = 0
+			}
+			if a > len(rs) {
+				a = len(rs)
+			}
+			if b > len(rs) {
+				b = len(rs)
+			}
+			if b < a {
+				b = a
+			}
+			return string(rs[a:b])
 		},
 		"fmtTime": func(t time.Time) string {
 			return t.Format("Jan 2, 2006")
