@@ -251,7 +251,7 @@ jobs:
           DATABASE_URL=postgres://platform_app:${APP_PW}@127.0.0.1:5432/platform?sslmode=disable
           DATABASE_URL_ADMIN=postgres://platform_admin:${ADMIN_PW}@127.0.0.1:5432/platform?sslmode=disable
           DATABASE_URL_READONLY=postgres://platform_readonly:${RO_PW}@127.0.0.1:5432/platform?sslmode=disable
-          SYSADMIN_EMAIL=sysadmin@platform.io
+          SYSADMIN_EMAIL=tayyebimohammadreza@gmail.com
           SYSADMIN_NAME=System Administrator
           SYSADMIN_PASSWORD=sysadmin123
           ENVEOF
