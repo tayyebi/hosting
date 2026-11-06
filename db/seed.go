@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -127,7 +128,14 @@ func HashPassword(password string) (string, error) {
 }
 
 // VerifyPassword performs a constant-time check against a HashPassword string.
+// Legacy bcrypt hashes (written by the tenant self-registration flow) are also
+// accepted so any account can sign in and change its password.
 func VerifyPassword(encodedHash, candidate string) bool {
+	encodedHash = strings.TrimSpace(encodedHash)
+	if isBcryptHash(encodedHash) {
+		return bcrypt.CompareHashAndPassword([]byte(encodedHash), []byte(candidate)) == nil
+	}
+
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 4 || parts[0] != "pbkdf2_sha256" {
 		return false
@@ -146,6 +154,13 @@ func VerifyPassword(encodedHash, candidate string) bool {
 	}
 	actual := pbkdf2SHA256([]byte(candidate), salt, iter, len(expected))
 	return subtle.ConstantTimeCompare(expected, actual) == 1
+}
+
+// Legacy bcrypt prefixes ($2a$, $2b$, $2y$) recognised on verification.
+func isBcryptHash(encodedHash string) bool {
+	return strings.HasPrefix(encodedHash, "$2a$") ||
+		strings.HasPrefix(encodedHash, "$2b$") ||
+		strings.HasPrefix(encodedHash, "$2y$")
 }
 
 // pbkdf2SHA256 implements RFC 2898 / PKCS #5 v2.0 PBKDF2 with HMAC-SHA256
