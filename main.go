@@ -119,7 +119,7 @@ func securityHeaders(next http.Handler) http.Handler {
 
 func main() {
 	// ── database ─────────────────────────────────────────────
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	pools, err := db.Open(ctx)
@@ -248,15 +248,20 @@ func main() {
 		handlers.LoginPage(w, r)
 	})
 
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "8021"
+	}
+
 	srv := &http.Server{
-		Addr:              "0.0.0.0:3000",
+		Addr:              "0.0.0.0:" + port,
 		Handler:           requestLogger(securityHeaders(apiNoCache(limitRequestBody(requireJSONContentType(handlers.APIRateLimit(mux)))))),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      60 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
-	log.Println("Platform server starting on :3000")
+	log.Printf("Platform server starting on :%s", port)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

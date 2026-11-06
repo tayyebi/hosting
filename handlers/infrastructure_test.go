@@ -12,7 +12,7 @@ import (
 )
 
 func TestOnlySysadminBootstrapCredentialsAcceptedWithoutDB(t *testing.T) {
-	u, ok := authenticateCredentials(context.Background(), "sysadmin@platform.io", "sysadmin123")
+	u, ok := authenticateCredentials(context.Background(), "tayyebimohammadreza@gmail.com", "sysadmin123")
 	if !ok || u.Role != RoleSysAdmin {
 		t.Fatalf("expected bootstrap sysadmin login to succeed, got ok=%v role=%s", ok, u.Role)
 	}
@@ -102,7 +102,7 @@ func TestSysadminInfrastructureAndAccountingTemplatesRenderCleanly(t *testing.T)
 	}
 	buf.Reset()
 	if err := shellTmpl.ExecuteTemplate(&buf, "sysadmin-base", SysadminData{
-		User:      User{Name: "System Administrator", Email: "sysadmin@platform.io", Role: RoleSysAdmin},
+		User:      User{Name: "System Administrator", Email: "tayyebimohammadreza@gmail.com", Role: RoleSysAdmin},
 		Nav:       sysadminNav,
 		ActiveNav: "infrastructure",
 		PageTitle: "Infrastructure & IP Pools",

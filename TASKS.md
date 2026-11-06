@@ -743,7 +743,7 @@
 - [x] Layer C — `MarginLedger` (`CostEvent`, `RevenueEvent`, and `MarginView` computing `GrossMargin = Revenue - SupplyCost - PaymentFee - SLACredit` grouped by Cost Center) in `accounting/`
 
 ## 4. Clean Slate — Drop Dummy Data & Keep Only Real Seeders
-- [x] Remove dummy demo seeders from `db/seed.go` (demo tenants `buyvm`/`abrnoc`/`hosting`, fake `system_logs`, fake `background_job_workers`, fake `background_jobs`, fake `replicas`, fake `billing_*` logs/webhooks) and keep only the System Super Administrator seeder (`sysadmin@platform.io`, configurable via env)
+- [x] Remove dummy demo seeders from `db/seed.go` (demo tenants `buyvm`/`abrnoc`/`hosting`, fake `system_logs`, fake `background_job_workers`, fake `background_jobs`, fake `replicas`, fake `billing_*` logs/webhooks) and keep only the System Super Administrator seeder (`tayyebimohammadreza@gmail.com`, configurable via env)
 - [x] Purge hardcoded in-memory dummy fixture maps across `handlers/` (`buyvm`/`abrnoc`/`hosting` tenants, fake clients, fake VMs/resources, static mock tables) and wire tenant & workspace resolution directly to PostgreSQL
 - [x] Fix Linux build exclusion bug on `db/maintenance_windows.go` (`_windows.go` Go OS suffix) so the full codebase compiles cleanly across Linux and Windows
 

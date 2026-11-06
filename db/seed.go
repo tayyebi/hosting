@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	DefaultSysadminEmail    = "sysadmin@platform.io"
+	DefaultSysadminEmail    = "tayyebimohammadreza@gmail.com"
 	DefaultSysadminName     = "System Administrator"
 	DefaultSysadminPassword = "sysadmin123"
 
