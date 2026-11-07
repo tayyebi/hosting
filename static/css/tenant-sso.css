@@ -1,0 +1,258 @@
+/* Tenant-scoped sign-in provider settings */
+.tenant-sso-page {
+    width: 100%;
+    max-width: 920px;
+    min-width: 0;
+}
+
+.tenant-sso-page .ds-page-header {
+    margin-bottom: 22px;
+}
+
+.tenant-sso-page .ds-page-subtitle {
+    max-width: 680px;
+}
+
+.tenant-sso-flash {
+    margin: 0 0 16px;
+    padding: 11px 14px;
+    border: 1px solid rgba(52, 199, 89, .24);
+    border-radius: 8px;
+    background: rgba(52, 199, 89, .08);
+    color: #237a35;
+    font-size: 13px;
+}
+
+.tenant-sso-form {
+    width: 100%;
+    max-width: 760px;
+}
+
+.tenant-sso-panel {
+    overflow: hidden;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 10px;
+    background: var(--ds-surface, #fff);
+    box-shadow: 0 2px 8px rgba(0,0,0,.035);
+}
+
+.tenant-sso-panel__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--ds-border, rgba(0,0,0,.08));
+}
+
+.tenant-sso-panel__header h2 {
+    color: var(--ds-text, #1d1d1f);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -.2px;
+}
+
+.tenant-sso-panel__header p {
+    margin-top: 4px;
+    color: var(--ds-text-muted, #6e6e73);
+    font-size: 13px;
+}
+
+.tenant-sso-panel__scope {
+    flex: 0 0 auto;
+    padding: 4px 9px;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 999px;
+    color: var(--ds-text-muted, #6e6e73);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tenant-sso-provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    min-height: 76px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    cursor: pointer;
+}
+
+.tenant-sso-provider-row:last-child {
+    border-bottom: 0;
+}
+
+.tenant-sso-provider-row:hover {
+    background: var(--ds-hover, rgba(0,0,0,.025));
+}
+
+.tenant-sso-provider-row__identity,
+.tenant-sso-provider-row__control {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.tenant-sso-provider-row__identity {
+    gap: 12px;
+}
+
+.tenant-sso-provider-row__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 10px;
+    background: var(--ds-bg, #f5f5f7);
+    color: var(--ds-text, #1d1d1f);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tenant-sso-provider-row__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.tenant-sso-provider-row__name {
+    color: var(--ds-text, #1d1d1f);
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.tenant-sso-provider-row__protocol {
+    color: var(--ds-text-muted, #6e6e73);
+    font-size: 12px;
+}
+
+.tenant-sso-provider-row__control {
+    justify-content: flex-end;
+    gap: 14px;
+    flex: 0 0 auto;
+}
+
+.tenant-sso-provider-row__state {
+    color: var(--ds-text-muted, #6e6e73);
+    font-size: 11.5px;
+    text-align: right;
+}
+
+.tenant-sso-toggle {
+    position: relative;
+    display: inline-flex;
+    width: 42px;
+    height: 24px;
+    flex: 0 0 42px;
+}
+
+.tenant-sso-toggle input {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.tenant-sso-toggle__track {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ds-border-strong, rgba(0,0,0,.14));
+    border-radius: 999px;
+    background: var(--ds-border-strong, #d2d2d7);
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.tenant-sso-toggle__track::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    content: "";
+    transition: transform .18s ease;
+}
+
+.tenant-sso-toggle input:checked + .tenant-sso-toggle__track {
+    border-color: #0071e3;
+    background: #0071e3;
+}
+
+.tenant-sso-toggle input:checked + .tenant-sso-toggle__track::after {
+    transform: translateX(18px);
+}
+
+.tenant-sso-toggle input:focus-visible + .tenant-sso-toggle__track {
+    outline: 2px solid #0071e3;
+    outline-offset: 3px;
+}
+
+.tenant-sso-note {
+    max-width: 760px;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border: 1px solid var(--ds-border, rgba(0,0,0,.08));
+    border-radius: 8px;
+    background: var(--ds-surface, #fff);
+    color: var(--ds-text-muted, #6e6e73);
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+
+.tenant-sso-note strong {
+    color: var(--ds-text, #1d1d1f);
+    font-weight: 500;
+}
+
+.tenant-sso-actions {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 760px;
+    margin-top: 16px;
+}
+
+[data-theme="dark"] .tenant-sso-flash {
+    border-color: rgba(52,199,89,.25);
+    background: rgba(52,199,89,.12);
+    color: #6ee79a;
+}
+
+[data-theme="dark"] .tenant-sso-toggle input:checked + .tenant-sso-toggle__track {
+    border-color: #0a84ff;
+    background: #0a84ff;
+}
+
+@media (max-width: 600px) {
+    .tenant-sso-panel__header,
+    .tenant-sso-provider-row {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    .tenant-sso-provider-row {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .tenant-sso-provider-row__control {
+        align-items: flex-end;
+        flex-direction: column-reverse;
+        gap: 7px;
+    }
+
+    .tenant-sso-provider-row__state {
+        max-width: 116px;
+        font-size: 10.5px;
+    }
+}

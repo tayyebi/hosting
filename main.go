@@ -223,6 +223,7 @@ func main() {
 	handlers.RegisterTenantSLARoutes(mux)
 	handlers.RegisterTenantRegistrationRoutes(mux)
 	handlers.RegisterTenantRegisterPageRoutes(mux)
+	handlers.RegisterTenantSSORoutes(mux)
 	handlers.RegisterTenantResourcesRoutes(mux)
 	handlers.RegisterTenantMonitoringRoutes(mux)
 	handlers.RegisterTenantIDSRoutes(mux)

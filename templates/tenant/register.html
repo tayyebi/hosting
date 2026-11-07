@@ -1,6 +1,6 @@
 {{define "title"}}Create an account — {{.Tenant.Name}}{{end}}
 
-{{define "body"}}
+{{define "content"}}
 <div class="auth-layout login-page">
 
     <!-- Left panel: tenant branding -->
@@ -76,6 +76,21 @@
                 <h2 class="auth-form-title">Create your account</h2>
                 <p class="auth-form-subtitle">Join {{.Tenant.Name}} — it only takes a moment</p>
             </div>
+
+            {{if .SSOProviders}}
+            <section class="tenant-sso-options tenant-sso-options--register" aria-label="{{.Tenant.Name}} registration providers">
+                <p class="tenant-sso-options__heading">Organization sign-in options</p>
+                <div class="tenant-sso-options__grid" role="list">
+                    {{range .SSOProviders}}
+                    <div class="tenant-sso-option" role="listitem" data-provider="{{.Key}}">
+                        <span class="tenant-sso-option__mark" aria-hidden="true">{{if eq .Key "custom_oidc"}}OIDC{{else if eq .Key "custom_saml"}}SAML{{else if eq .Key "github"}}GH{{else}}{{slice .Name 0 1}}{{end}}</span>
+                        <span class="tenant-sso-option__name">{{.Name}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </section>
+            <div class="auth-divider tenant-sso-options__divider">or create an account with email</div>
+            {{end}}
 
             {{if .Error}}
             <div class="alert alert--error" role="alert">
@@ -222,10 +237,6 @@
                 <a href="{{if .SignInURL}}{{.SignInURL}}{{else}}/t/{{.Tenant.Slug}}/login{{end}}" class="form-link form-link--bold">Sign in</a>
             </p>
 
-            <p class="auth-form-footer" style="margin-top:8px;" aria-label="Developer resources">
-                Developer?
-                <a href="/sso-guide" class="form-link form-link--bold">SSO integration guide</a>
-            </p>
 
         </div>
 
