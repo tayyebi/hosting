@@ -111,6 +111,7 @@ type LoginPageData struct {
 	ForgotPasswordURL string
 	RegisterURL       string
 	TenantBrand       TenantLoginBrand
+	SSOProviders      []db.TenantSSOProvider
 	Error             string
 	Email             string
 }
@@ -142,6 +143,7 @@ func buildLoginPageData(r *http.Request, explicitTenant *Tenant, email, errMsg s
 				ForgotPasswordURL: "/forgot-password",
 				RegisterURL:       regURL,
 				TenantBrand:       resolveTenantLoginBrand(r.Context(), *oc.Tenant),
+				SSOProviders:      enabledTenantSSOProviders(r.Context(), *oc.Tenant),
 				Email:             email,
 				Error:             errMsg,
 			}
@@ -168,6 +170,7 @@ func buildLoginPageData(r *http.Request, explicitTenant *Tenant, email, errMsg s
 			ForgotPasswordURL: "/forgot-password?tenant=" + explicitTenant.Slug,
 			RegisterURL:       regURL,
 			TenantBrand:       resolveTenantLoginBrand(r.Context(), *explicitTenant),
+			SSOProviders:      enabledTenantSSOProviders(r.Context(), *explicitTenant),
 			Email:             email,
 			Error:             errMsg,
 		}

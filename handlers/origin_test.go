@@ -32,6 +32,7 @@ func setupOriginTestMux(t *testing.T) http.Handler {
 		origins.ResetForTest()
 		ResetTestAuthState()
 		ResetLoginRateLimiter()
+		resetTenantSSOSettingsForTest()
 		for _, ten := range store.list() {
 			store.delete(ten.ID)
 		}
@@ -49,10 +50,12 @@ func setupOriginTestMux(t *testing.T) http.Handler {
 	mux.HandleFunc("POST /t/{slug}/login", TenantLoginHandler)
 	mux.HandleFunc("/logout", LogoutHandler)
 	mux.HandleFunc("/forgot-password", ForgotPasswordHandler)
+	mux.HandleFunc("/sso-guide", SSOGuideHandler)
 	RegisterSysadminRoutes(mux)
 	RegisterTenantDashboardRoutes(mux)
 	RegisterTenantBrandRoutes(mux)
 	RegisterTenantRegisterPageRoutes(mux)
+	RegisterTenantSSORoutes(mux)
 	RegisterAPIRoutes(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -135,6 +138,12 @@ func TestDefaultModeWhenNoSystemOriginDefined(t *testing.T) {
 	}
 	if strings.Contains(body, "Only system administrators can sign in") {
 		t.Fatalf("did not expect system-only login banner when no system domain is defined")
+	}
+	if strings.Contains(body, "SSO Guide") {
+		t.Fatalf("default login should not show the system-level SSO Guide")
+	}
+	if strings.Contains(body, "Google") || strings.Contains(body, "GitHub") {
+		t.Fatalf("default login should not show tenant third-party providers")
 	}
 
 	// 2. Both sysadmin AND tenant users can sign in normally in default mode.
@@ -270,6 +279,106 @@ func TestSystemOriginDomainsRedirectAndSysadminOnlyAuth(t *testing.T) {
 	})
 	if sysOnSys.Code != http.StatusSeeOther || sysOnSys.Header().Get("Location") != "/s/" {
 		t.Fatalf("expected sysadmin login on system domain to redirect to /s/, got status=%d loc=%q", sysOnSys.Code, sysOnSys.Header().Get("Location"))
+	}
+}
+
+func TestTenantAuthPagesRenderAndScopeSSOSettings(t *testing.T) {
+	app := setupOriginTestMux(t)
+	store.add(Tenant{ID: "t-acme", Name: "Acme Cloud", Slug: "acme", Domain: "portal.acme.test"})
+	RegisterTestUser("owner@acme.test", "Acme Owner", "AcmePass123", RoleTenant, "acme")
+
+	// Tenant sign-in and registration routes render correctly in path-scoped and
+	// custom-domain modes, with no system-level SSO Guide link.
+	for _, tc := range []struct {
+		host string
+		path string
+		want string
+	}{
+		{host: "127.0.0.1:8021", path: "/t/acme/login", want: "Sign in to Acme Cloud"},
+		{host: "portal.acme.test", path: "/", want: "Sign in to Acme Cloud"},
+	} {
+		res := doGet(app, tc.host, tc.path)
+		if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), tc.want) {
+			t.Fatalf("GET %s on %s failed to render tenant login (status=%d)", tc.path, tc.host, res.Code)
+		}
+		if strings.Contains(res.Body.String(), "SSO Guide") {
+			t.Fatalf("tenant login on %s unexpectedly showed the system SSO Guide", tc.host)
+		}
+	}
+
+	for _, tc := range []struct {
+		host string
+		path string
+	}{
+		{host: "127.0.0.1:8021", path: "/t/acme/register"},
+		{host: "portal.acme.test", path: "/register"},
+	} {
+		res := doGet(app, tc.host, tc.path)
+		if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), "Create your account") {
+			t.Fatalf("GET %s on %s failed to render tenant registration (status=%d): %s", tc.path, tc.host, res.Code, res.Body.String())
+		}
+		if strings.Contains(res.Body.String(), "SSO Guide") {
+			t.Fatalf("tenant registration on %s unexpectedly showed the system SSO Guide", tc.host)
+		}
+	}
+
+	// Tenant administrators can manage provider visibility; the saved settings
+	// are reflected on both public tenant auth pages.
+	login := doFormPost(app, "127.0.0.1:8021", "/t/acme/login", url.Values{
+		"email":    {"owner@acme.test"},
+		"password": {"AcmePass123"},
+	})
+	if login.Code != http.StatusSeeOther {
+		t.Fatalf("tenant login for settings test: status=%d", login.Code)
+	}
+	ownerCookie := sessionCookieFrom(t, login)
+
+	settings := doGet(app, "127.0.0.1:8021", "/t/acme/sso/", ownerCookie)
+	if settings.Code != http.StatusOK || !strings.Contains(settings.Body.String(), "Third-party providers") {
+		t.Fatalf("tenant SSO settings page failed to render (status=%d)", settings.Code)
+	}
+	saved := doFormPost(app, "127.0.0.1:8021", "/t/acme/sso/", url.Values{
+		"provider_google": {"on"},
+		"provider_github": {"on"},
+	}, ownerCookie)
+	if saved.Code != http.StatusSeeOther || saved.Header().Get("Location") != "/t/acme/sso/?saved=1" {
+		t.Fatalf("saving tenant SSO settings failed (status=%d, location=%q)", saved.Code, saved.Header().Get("Location"))
+	}
+
+	for _, tc := range []struct {
+		host string
+		path string
+	}{
+		{host: "127.0.0.1:8021", path: "/t/acme/login"},
+		{host: "portal.acme.test", path: "/"},
+		{host: "127.0.0.1:8021", path: "/t/acme/register"},
+		{host: "portal.acme.test", path: "/register"},
+	} {
+		res := doGet(app, tc.host, tc.path)
+		body := res.Body.String()
+		if res.Code != http.StatusOK || !strings.Contains(body, "Google") || !strings.Contains(body, "GitHub") {
+			t.Fatalf("enabled tenant SSO providers missing from %s on %s (status=%d)", tc.path, tc.host, res.Code)
+		}
+		if strings.Contains(body, "SSO Guide") {
+			t.Fatalf("tenant page on %s showed the system SSO Guide", tc.host)
+		}
+	}
+
+	// The first-party provider guide is exposed from the system-level login only;
+	// tenant provider settings must not leak onto the system login page.
+	if _, err := origins.addDomain(context.Background(), "control.platform.test", "System", true); err != nil {
+		t.Fatalf("add system origin: %v", err)
+	}
+	systemLogin := doGet(app, "control.platform.test", "/")
+	if systemLogin.Code != http.StatusOK || !strings.Contains(systemLogin.Body.String(), "SSO Guide") {
+		t.Fatalf("system login should include the SSO Guide (status=%d)", systemLogin.Code)
+	}
+	if strings.Contains(systemLogin.Body.String(), "Organization sign-in options") || strings.Contains(systemLogin.Body.String(), "GitHub") {
+		t.Fatalf("tenant-level providers leaked onto system login")
+	}
+	guide := doGet(app, "control.platform.test", "/sso-guide")
+	if guide.Code != http.StatusOK || !strings.Contains(guide.Body.String(), "SSO Developer Guide") {
+		t.Fatalf("system SSO Guide link target should render successfully (status=%d)", guide.Code)
 	}
 }
 

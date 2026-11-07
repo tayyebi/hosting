@@ -1,0 +1,53 @@
+{{define "tenant-sso-content"}}
+<div class="tenant-sso-page">
+    <div class="ds-page-header">
+        <h1 class="ds-page-title">Sign-in &amp; SSO</h1>
+        <p class="ds-page-subtitle">Choose which third-party identity providers are shown on {{.Tenant.Name}}'s sign-in and registration pages.</p>
+    </div>
+
+    {{if .Saved}}
+    <div class="tenant-sso-flash" role="status" aria-live="polite">Provider visibility settings saved.</div>
+    {{end}}
+
+    <form method="POST" action="/t/{{.Tenant.Slug}}/sso/" class="tenant-sso-form">
+        <section class="tenant-sso-panel" aria-labelledby="tenant-sso-panel-title">
+            <header class="tenant-sso-panel__header">
+                <div>
+                    <h2 id="tenant-sso-panel-title">Third-party providers</h2>
+                    <p>Enabled providers are listed on both tenant authentication pages.</p>
+                </div>
+                <span class="tenant-sso-panel__scope">Tenant-level</span>
+            </header>
+
+            <div class="tenant-sso-provider-list">
+                {{range .Providers}}
+                <label class="tenant-sso-provider-row">
+                    <span class="tenant-sso-provider-row__identity">
+                        <span class="tenant-sso-provider-row__mark" aria-hidden="true">{{if eq .Key "custom_oidc"}}OIDC{{else if eq .Key "custom_saml"}}SAML{{else if eq .Key "github"}}GH{{else}}{{slice .Name 0 1}}{{end}}</span>
+                        <span class="tenant-sso-provider-row__copy">
+                            <span class="tenant-sso-provider-row__name">{{.Name}}</span>
+                            <span class="tenant-sso-provider-row__protocol">{{.Protocol}}</span>
+                        </span>
+                    </span>
+                    <span class="tenant-sso-provider-row__control">
+                        <span class="tenant-sso-provider-row__state">Show on auth pages</span>
+                        <span class="tenant-sso-toggle">
+                            <input type="checkbox" name="provider_{{.Key}}" value="on" aria-label="Show {{.Name}} on tenant auth pages" {{if .Enabled}}checked{{end}} />
+                            <span class="tenant-sso-toggle__track" aria-hidden="true"></span>
+                        </span>
+                    </span>
+                </label>
+                {{end}}
+            </div>
+        </section>
+
+        <aside class="tenant-sso-note" role="note">
+            <strong>Tenant scope.</strong> These choices are saved for this tenant only. The platform's first-party identity provider and its SSO Guide remain system-level features. Provider selection controls visibility; third-party authentication hand-offs are not implemented in this app yet.
+        </aside>
+
+        <div class="tenant-sso-actions">
+            <button type="submit" class="st-btn-primary">Save provider settings</button>
+        </div>
+    </form>
+</div>
+{{end}}

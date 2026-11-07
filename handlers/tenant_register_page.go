@@ -14,11 +14,12 @@ import (
 )
 
 type RegisterPageData struct {
-	Tenant     Tenant
-	Brand      TenantLoginBrand
-	FormAction string
-	SignInURL  string
-	Error      string
+	Tenant       Tenant
+	Brand        TenantLoginBrand
+	SSOProviders []db.TenantSSOProvider
+	FormAction   string
+	SignInURL    string
+	Error        string
 }
 
 func resolveRegisterTenant(r *http.Request) (Tenant, string, string, bool) {
@@ -52,11 +53,12 @@ func renderTenantRegisterPage(w http.ResponseWriter, r *http.Request, tenant Ten
 		tenant.Name = brand.Name
 	}
 	data := RegisterPageData{
-		Tenant:     tenant,
-		Brand:      brand,
-		FormAction: formAction,
-		SignInURL:  signInURL,
-		Error:      errMsg,
+		Tenant:       tenant,
+		Brand:        brand,
+		SSOProviders: enabledTenantSSOProviders(r.Context(), tenant),
+		FormAction:   formAction,
+		SignInURL:    signInURL,
+		Error:        errMsg,
 	}
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, "Render error: "+err.Error(), http.StatusInternalServerError)

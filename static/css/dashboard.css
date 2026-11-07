@@ -78,7 +78,10 @@
 
 .ds-layout {
     display: flex;
+    width: 100%;
+    min-width: 0;
     min-height: 100vh;
+    overflow-x: clip;
 }
 
 /* ============================================================
@@ -372,9 +375,11 @@
 
 .ds-main {
     margin-left: var(--sidebar-w);
-    flex: 1;
+    flex: 1 1 0%;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
     min-height: 100vh;
     transition: margin-left 240ms cubic-bezier(.4,0,.2,1);
     background: var(--content-bg);
@@ -390,6 +395,10 @@
     position: sticky;
     top: 0;
     z-index: 50;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     height: var(--topbar-h);
     display: flex;
     align-items: center;
@@ -406,6 +415,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 }
 
 .ds-topbar__menu-btn {
@@ -431,6 +441,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    overflow: hidden;
     font-size: 13.5px;
 }
 
@@ -444,6 +456,10 @@
 }
 
 .ds-breadcrumb__current {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--topbar-text-dark);
     font-weight: 400;
 }
@@ -510,6 +526,9 @@
 
 .ds-content {
     flex: 1;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
     padding: 32px 32px;
 }
 

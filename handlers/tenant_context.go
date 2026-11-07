@@ -148,6 +148,7 @@ func tenantNavGroups(slug string) []TenantNavGroup {
 				{ID: "brand", Label: "Brand", Icon: "brand", Path: base + "/brand/"},
 				{ID: "localization", Label: "Localization", Icon: "localization", Path: base + "/localization/"},
 				{ID: "registration", Label: "Registration", Icon: "registration", Path: base + "/registration/"},
+				{ID: "sso", Label: "Sign-in & SSO", Icon: "sso", Path: base + "/sso/"},
 			},
 		},
 	}
